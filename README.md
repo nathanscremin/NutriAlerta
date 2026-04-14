@@ -1,4 +1,5 @@
-**```mermaid
+```mermaid
+
 graph TD
     subgraph Sources ["Fontes de Dados Externas"]
         D1[SISVAN: Dados Nutricionais] -->|ETL| Proc
@@ -36,4 +37,4 @@ graph TD
 
     classDef health fill:#f9f,stroke:#333,stroke-width:2px;
     classDef school fill:#ff9,stroke:#333,stroke-width:2px;
-````
+```
