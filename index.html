@@ -350,16 +350,37 @@
 
 <script>
   // --- Estado ---
-  const SESSION_ID = 'test-' + Math.random().toString(36).slice(2, 9);
+  const SESSION_ID = localStorage.getItem('nutribot_session') || 'session-' + Math.random().toString(36).slice(2, 9);
+  localStorage.setItem('nutribot_session', SESSION_ID);
   document.getElementById('session-id-display').textContent = 'session: ' + SESSION_ID;
 
   let screenData = null;
 
-  // --- Toggle form contexto ---
-  const contextForm = document.getElementById('context-form');
-  document.getElementById('toggle-context').addEventListener('click', () => {
-    contextForm.style.display = contextForm.style.display === 'none' ? 'grid' : 'none';
-  });
+  // --- Carregar Histórico ---
+  async function loadHistory() {
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: SESSION_ID,
+        message: '__GET_HISTORY__',
+        context: { screenData: null }
+      })
+    });
+    const data = await res.json();
+    if (data.history && data.history.length > 0) {
+      data.history.forEach(entry => {
+        const role = entry.role === 'user' ? 'user' : 'bot';
+        entry.parts.forEach(part => {
+          if (part.text) addMessage(role, part.text);
+        });
+      });
+    }
+  } catch (e) {}
+}
+
+loadHistory();
 
   // --- Aplicar contexto ---
   document.getElementById('apply-context').addEventListener('click', () => {
