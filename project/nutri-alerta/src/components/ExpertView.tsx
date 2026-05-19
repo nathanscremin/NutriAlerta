@@ -302,7 +302,7 @@ export default function ExpertView() {
                   <RechartsTooltip
                     cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                     contentStyle={{ backgroundColor: '#0B0E14', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}
-                    formatter={(v: number) => [`+${v}%`, 'Delta']}
+                    formatter={(v: any) => [`+${v}%`, 'Delta']}
                   />
                   <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
                     {RANKING_ACELERACAO.map((_: any, i: number) => (
