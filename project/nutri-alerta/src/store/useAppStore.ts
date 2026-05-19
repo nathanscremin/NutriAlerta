@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { DADOS_TEMPORAIS } from '@/lib/mockData';
 
 type ViewMode = 'expert' | 'consultant';
 
@@ -19,6 +20,19 @@ interface AppState {
   setSelectedPoi: (poi: any | null) => void;
   faixaEtaria: '0-10' | '10-18';
   setFaixaEtaria: (faixa: '0-10' | '10-18') => void;
+  
+  // Real-time Dynamic Data state
+  temporalData: Array<{
+    ano: string;
+    desnutricao: number;
+    obesidade: number;
+    isPrevisao: boolean;
+  }>;
+  regionalData: Record<string, Record<string, any>>;
+  yearsList: string[];
+  loading: boolean;
+  error: string | null;
+  initializeData: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -30,10 +44,39 @@ export const useAppStore = create<AppState>((set) => ({
   setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
   indicador: 'obesidade',
   setIndicador: (ind) => set({ indicador: ind }),
-  activePoiTypes: ['UBS', 'Educação', 'Alimentação - Mercado'], // Default visible
+  activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante/Fast-food', 'Alimentação - Mercado'],
   setActivePoiTypes: (types) => set({ activePoiTypes: types }),
   selectedPoi: null,
   setSelectedPoi: (poi) => set({ selectedPoi: poi }),
   faixaEtaria: '10-18',
   setFaixaEtaria: (faixa) => set({ faixaEtaria: faixa }),
+
+  // Initial State Hydration with Mock Data Fallback
+  temporalData: DADOS_TEMPORAIS,
+  regionalData: {},
+  yearsList: ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026 ★', '2027 ★'],
+  loading: false,
+  error: null,
+
+  initializeData: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch('/api/data');
+      const data = await res.json();
+      if (data.success) {
+        set({
+          temporalData: data.temporalData,
+          regionalData: data.regionalData,
+          // Extract plain and prediction-starred years
+          yearsList: data.temporalData.map((d: any) => d.ano),
+          loading: false
+        });
+      } else {
+        set({ error: data.error || 'Failed to load CSV model data', loading: false });
+      }
+    } catch (err: any) {
+      console.error("Zustand Hydration Error:", err);
+      set({ error: err.message || 'Connection to API failed', loading: false });
+    }
+  }
 }));

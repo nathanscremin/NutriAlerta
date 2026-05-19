@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import Header from '@/components/Header';
 import ExpertView from '@/components/ExpertView';
 import ConsultantView from '@/components/ConsultantView';
@@ -8,7 +8,11 @@ import { useAppStore } from '@/store/useAppStore';
 import { AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
-  const { viewMode } = useAppStore();
+  const { viewMode, initializeData } = useAppStore();
+
+  useEffect(() => {
+    initializeData();
+  }, [initializeData]);
 
   return (
     <div className="flex flex-col h-screen bg-slate-950 overflow-hidden font-sans relative">

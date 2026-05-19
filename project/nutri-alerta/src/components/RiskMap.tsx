@@ -3,8 +3,29 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '@/store/useAppStore';
-import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
+import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE, getVirtualAnchor } from '@/lib/mockData';
 import { useMap } from 'react-leaflet';
+
+// Helper to calculate geographical proximity
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
+}
+
+// Map coordinates to standard frontend UBS names
+function findNearestUbsName(lat: number, lon: number) {
+  let nearest = null;
+  let minDistance = Infinity;
+  for (const u of UNIDADES_SAUDE) {
+    if (u.categoria !== 'UBS') continue;
+    const anchor = getVirtualAnchor(u.nome, u.lat, u.lon);
+    const dist = getDistance(lat, lon, anchor.lat, anchor.lon);
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = u;
+    }
+  }
+  return nearest ? nearest.nome : null;
+}
 
 // Leaflet não funciona com SSR e precisa de desmontagem segura
 const MapContainer  = dynamic(() => import('react-leaflet').then(m => m.MapContainer),  { ssr: false });
@@ -42,10 +63,30 @@ function MapController() {
   return null;
 }
 
+const getChoroplethColor = (value: number, indicator: string) => {
+  if (indicator === 'desnutricao') {
+    if (value < 2.0) return '#10b981'; // Healthy Emerald
+    if (value < 3.2) return '#00e5ff'; // Warning Cyan
+    return '#9900ff'; // High Risk Electric Violet
+  } else if (indicator === 'sobrepeso') {
+    if (value < 12) return '#10b981'; // Healthy Emerald
+    if (value < 18) return '#ffbb00'; // Warning Amber
+    return '#f97316'; // High Risk Orange
+  } else {
+    // Obesidade
+    if (value < 8) return '#10b981'; // Healthy Emerald
+    if (value < 13.5) return '#ffbb00'; // Warning Amber
+    return '#ff3366'; // High Risk Neon Rose
+  }
+};
+
 export default function RiskMap() {
   const [bairros, setBairros] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
-  const { activePoiTypes, selectedBairro, setSelectedBairro, setSelectedPoi } = useAppStore();
+  const { 
+    activePoiTypes, selectedBairro, setSelectedBairro, setSelectedPoi,
+    indicador, anoSelecionado, regionalData
+  } = useAppStore();
 
   useEffect(() => {
     setMounted(true);
@@ -55,10 +96,32 @@ export default function RiskMap() {
   }, []);
 
   const getFeatureStyle = (feature: any) => {
-    if (selectedBairro && feature.properties?.nome_bairro === selectedBairro) {
-      return ACTIVE_STYLE;
+    const nome = feature.properties?.nome_bairro || 'Desconhecido';
+    
+    // Look up dynamic ML/historical risk value
+    const cleanYear = anoSelecionado.replace('★', '').trim();
+    const yearData = regionalData && regionalData[cleanYear] ? regionalData[cleanYear] : null;
+    const regionRecord = yearData ? yearData[nome] : null;
+    
+    let riskValue = 0;
+    if (indicador === 'desnutricao') {
+      riskValue = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
+    } else if (indicador === 'sobrepeso') {
+      riskValue = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
+    } else {
+      riskValue = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
     }
-    return BASE_STYLE;
+
+    const fillColor = getChoroplethColor(riskValue, indicador);
+    const isActive = selectedBairro && nome === selectedBairro;
+    
+    return {
+      fillColor,
+      weight: isActive ? 2.5 : 1,
+      opacity: 0.9,
+      color: isActive ? '#00ff9d' : 'rgba(255,255,255,0.15)',
+      fillOpacity: selectedBairro ? (isActive ? 0.65 : 0.15) : 0.45,
+    };
   };
 
   const onEachFeature = (feature: any, layer: any) => {
@@ -67,13 +130,19 @@ export default function RiskMap() {
     layer.on({
       mouseover: (e: any) => { 
         if (selectedBairro !== nome) {
-          e.target.setStyle(HOVER_STYLE); 
+          const baseStyle = getFeatureStyle(feature);
+          e.target.setStyle({
+            ...baseStyle,
+            weight: 2,
+            color: '#38bdf8',
+            fillOpacity: 0.7
+          }); 
           e.target.bringToFront(); 
         }
       },
       mouseout:  (e: any) => { 
         if (selectedBairro !== nome) {
-          e.target.setStyle(BASE_STYLE); 
+          e.target.setStyle(getFeatureStyle(feature)); 
         }
       },
       click: () => { 
@@ -129,7 +198,7 @@ export default function RiskMap() {
           <MapController />
           {bairros && (
             <GeoJSONLayer
-              key={`base-map-${selectedBairro}`} // Re-render to apply styles when selectedBairro changes
+              key={`base-map-${selectedBairro}-${anoSelecionado}-${Object.keys(regionalData).length}-${indicador}`} // Re-render to apply styles when state changes
               data={bairros}
               style={getFeatureStyle}
               onEachFeature={onEachFeature}
@@ -152,7 +221,15 @@ export default function RiskMap() {
                 fillColor={poi.color}
                 fillOpacity={opacity}
                 eventHandlers={{
-                  click: () => setSelectedPoi(poi),
+                  click: () => {
+                    setSelectedPoi(poi);
+                    if (isGov) {
+                      const nearestUbs = findNearestUbsName(poi.lat, poi.lon);
+                      if (nearestUbs) {
+                        setSelectedBairro(nearestUbs);
+                      }
+                    }
+                  },
                 }}
               >
                 <Tooltip direction="top" className="custom-glass-tooltip" sticky>

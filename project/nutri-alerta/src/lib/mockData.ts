@@ -181,7 +181,7 @@ export const UNIDADES_SAUDE = [
   { nome: "UBS Wenzel", categoria: "UBS", lat: -22.3891756, lon: -47.5870718 },
   { nome: "UBS Vila Cristina", categoria: "UBS", lat: -22.3841679, lon: -47.5501818 },
   { nome: "USF Assistência", categoria: "UBS", lat: -22.4968707, lon: -47.586236 },
-  { nome: "USF Ferraz", categoria: "UBS", lat: -22.2610329, lon: -47.5888310 },
+  { nome: "USF Ferraz", categoria: "UBS", lat: -22.261032998683, lon: -47.588831031504 },
   { nome: "USF Nosso Teto / Boa Vista", categoria: "UBS", lat: -22.3806919, lon: -47.5897807 },
   { nome: "USF Ajapi", categoria: "UBS", lat: -22.2594742, lon: -47.5874974 },
   { nome: "USF Mãe Preta I/II", categoria: "UBS", lat: -22.3784852, lon: -47.5515221 },
@@ -192,7 +192,7 @@ export const UNIDADES_SAUDE = [
   { nome: "USF Jardim das Flores", categoria: "UBS", lat: -22.3775292, lon: -47.5818228 },
   { nome: "USF Guanabara", categoria: "UBS", lat: -22.4408403, lon: -47.5792059 },
   { nome: "USF Panorama", categoria: "UBS", lat: -22.3873908, lon: -47.5901844 },
-  { nome: "USF Terra Nova", categoria: "UBS", lat: -22.4982769, lon: -47.5826972 }
+  { nome: "USF Terra Nova", categoria: "UBS", lat: -22.498276923094, lon: -47.582697262242 }
 ];
 
 import extractedPois from './extractedPois.json';
@@ -209,6 +209,18 @@ import { Delaunay } from 'd3-delaunay';
 import { intersect, polygon, featureCollection } from '@turf/turf';
 import rioClaroBoundary from './rio_claro_boundary.json';
 
+// Mapeamento de âncoras virtuais para expandir matematicamente as células de Voronoi
+// sem distorcer visualmente a renderização física dos marcadores no mapa.
+export function getVirtualAnchor(nome: string, realLat: number, realLon: number) {
+  if (nome === 'USF Ferraz') return { lat: -22.2610, lon: -47.6300 };
+  if (nome === 'USF Ajapi') return { lat: -22.2595, lon: -47.5400 };
+  if (nome === 'USF Assistência') return { lat: -22.4969, lon: -47.6062 };
+  if (nome === 'USF Terra Nova') return { lat: -22.4983, lon: -47.5627 };
+  if (nome === 'USF Palmeiras') return { lat: -22.4600, lon: -47.6500 };
+  if (nome === 'USF Bonsucesso / Novo Wenzel') return { lat: -22.4067, lon: -47.6229 };
+  return { lat: realLat, lon: realLon };
+}
+
 // Gerador de diagrama de Voronoi geográfico matematicamente exato (Delaunay-based)
 // e recortado no formato oficial do município de Rio Claro, SP.
 export const getVoronoiGeoJSON = () => {
@@ -220,7 +232,10 @@ export const getVoronoiGeoJSON = () => {
   const min_lat = -22.56;
   const max_lat = -22.24;
   
-  const points = ubs_pts.map(u => [u.lon, u.lat]);
+  const points = ubs_pts.map(u => {
+    const anchor = getVirtualAnchor(u.nome, u.lat, u.lon);
+    return [anchor.lon, anchor.lat];
+  });
   const delaunay = Delaunay.from(points);
   
   // O voronoi do d3 recebe: [minX, minY, maxX, maxY]

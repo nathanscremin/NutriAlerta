@@ -58,12 +58,15 @@ function KpiCard({
 }
 
 export default function ExpertView() {
-  const { anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi, faixaEtaria } = useAppStore();
+  const { 
+    anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi, faixaEtaria,
+    temporalData, regionalData
+  } = useAppStore();
 
   // Encontra os dados do ano selecionado
-  const dadosAno = DADOS_TEMPORAIS.find(d => d.ano === anoSelecionado) || DADOS_TEMPORAIS[0];
+  const dadosAno = temporalData.find(d => d.ano === anoSelecionado) || temporalData[0] || { desnutricao: 0, obesidade: 0 };
   // Pega a projeção de 2027
-  const dadosProj = DADOS_TEMPORAIS.find(d => d.ano === '2027') || DADOS_TEMPORAIS[0];
+  const dadosProj = temporalData.find(d => d.ano === '2027 ★') || temporalData.find(d => d.ano.includes('2027')) || temporalData[temporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
 
   // Configuração baseada no indicador selecionado
   const isObs = indicador === 'obesidade';
@@ -76,6 +79,69 @@ export default function ExpertView() {
   const mainBg = indicador === 'desnutricao' ? 'bg-[#00e5ff]/5' : indicador === 'sobrepeso' ? 'bg-[#ffbb00]/5' : 'bg-[#ff3366]/5';
   const mainBorder = indicador === 'desnutricao' ? 'border-[#00e5ff]/20' : indicador === 'sobrepeso' ? 'border-[#ffbb00]/20' : 'border-[#ff3366]/20';
   const mainLabel = indicador === 'desnutricao' ? 'Desnutrição' : indicador === 'sobrepeso' ? 'Sobrepeso' : 'Obesidade';
+
+  const cleanYear = anoSelecionado.replace('★', '').trim();
+  // Compute dynamic ranking from loaded regional data
+  const currentYearRegions = regionalData && regionalData[cleanYear] 
+    ? Object.values(regionalData[cleanYear]) 
+    : [];
+
+  const dynamicRanking = currentYearRegions.length > 0
+    ? currentYearRegions
+        .map((reg: any) => {
+          const deltaVal = indicador === 'obesidade' 
+            ? reg.delta_obesidade 
+            : reg.delta_desnutricao;
+          return {
+            name: reg.nome.replace('UBS ', '').replace('USF ', ''),
+            delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
+          };
+        })
+        .sort((a, b) => b.delta - a.delta)
+        .slice(0, 5)
+    : [
+        { name: 'Chervezon', delta: 2.1 },
+        { name: 'Vila Cristina', delta: 1.8 },
+        { name: 'Wenzel', delta: 1.5 },
+        { name: 'Bela Vista', delta: 1.2 },
+        { name: 'Mãe Preta', delta: 0.9 }
+      ];
+
+  // Compute dynamic distribution averages for selected year
+  let eutrofiaAvg = 61.2;
+  let sobrepesoAvg = 16.3;
+  let obesidadeAvg = isObs ? mainValue : (dadosAno.obesidade || 12.93);
+  let desnutricaoAvg = !isObs ? mainValue : (dadosAno.desnutricao || 2.62);
+  let graveAvg = 6.95;
+
+  if (currentYearRegions.length > 0) {
+    let sumEutrofia = 0, sumSobrepeso = 0, sumGrave = 0, count = 0;
+    currentYearRegions.forEach((reg: any) => {
+      if (typeof reg.eutrofia === 'number') {
+        sumEutrofia += reg.eutrofia;
+        sumSobrepeso += reg.sobrepeso || 0;
+        sumGrave += reg.obesidade_grave || 0;
+        count++;
+      }
+    });
+    if (count > 0) {
+      eutrofiaAvg = Number((sumEutrofia / count).toFixed(2));
+      sobrepesoAvg = Number((sumSobrepeso / count).toFixed(2));
+      graveAvg = Number((sumGrave / count).toFixed(2));
+      obesidadeAvg = Number((dadosAno.obesidade).toFixed(2));
+      desnutricaoAvg = Number((dadosAno.desnutricao).toFixed(2));
+
+      // Normalize so sum is exactly 100% or close
+      const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg + graveAvg;
+      if (totalSum > 0) {
+        eutrofiaAvg = Number((eutrofiaAvg / totalSum * 100).toFixed(1));
+        sobrepesoAvg = Number((sobrepesoAvg / totalSum * 100).toFixed(1));
+        obesidadeAvg = Number((obesidadeAvg / totalSum * 100).toFixed(1));
+        desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
+        graveAvg = Number((graveAvg / totalSum * 100).toFixed(1));
+      }
+    }
+  }
 
   return (
     <motion.div
@@ -197,11 +263,11 @@ export default function ExpertView() {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: 'Peso Adequado', value: 61.2, fill: '#00ff9d' },
-                      { name: 'Sobrepeso', value: 16.3, fill: '#ffbb00' },
-                      { name: 'Obesidade', value: 12.93, fill: '#ff3366' },
-                      { name: 'Magreza', value: 2.62, fill: '#00e5ff' },
-                      { name: 'Obesidade Grave', value: 6.95, fill: '#9900ff' }
+                      { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#00ff9d' },
+                      { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#ffbb00' },
+                      { name: 'Obesidade', value: obesidadeAvg, fill: '#ff3366' },
+                      { name: 'Magreza', value: desnutricaoAvg, fill: '#00e5ff' },
+                      { name: 'Obesidade Grave', value: graveAvg, fill: '#9900ff' }
                     ]}
                     innerRadius="58%"
                     outerRadius="80%"
@@ -241,7 +307,7 @@ export default function ExpertView() {
             </div>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={DADOS_TEMPORAIS} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                <LineChart data={temporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="ano" stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
                   <YAxis stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
@@ -289,7 +355,7 @@ export default function ExpertView() {
             </div>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={RANKING_ACELERACAO} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                <BarChart data={dynamicRanking} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
                   <XAxis type="number" hide />
                   <YAxis
                     dataKey="name"
@@ -305,7 +371,7 @@ export default function ExpertView() {
                     formatter={(v: any) => [`+${v}%`, 'Delta']}
                   />
                   <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
-                    {RANKING_ACELERACAO.map((_: any, i: number) => (
+                    {dynamicRanking.map((_: any, i: number) => (
                       <Cell key={i} fill={i < 2 ? '#ff3366' : i < 4 ? '#ffbb00' : 'rgba(255,255,255,0.15)'} />
                     ))}
                   </Bar>

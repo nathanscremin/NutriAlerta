@@ -24,12 +24,22 @@ function getSessionId() {
 }
 
 export default function ConsultantView() {
-  const { anoSelecionado, indicador, selectedBairro, faixaEtaria } = useAppStore();
+  const { anoSelecionado, indicador, selectedBairro, faixaEtaria, temporalData, regionalData } = useAppStore();
 
-  const dadosAno = DADOS_TEMPORAIS.find(d => d.ano === anoSelecionado) || DADOS_TEMPORAIS[0];
-  const dadosProj = DADOS_TEMPORAIS.find(d => d.ano === '2027') || DADOS_TEMPORAIS[0];
+  const dadosAno = temporalData.find(d => d.ano === anoSelecionado) || temporalData[0] || { desnutricao: 0, obesidade: 0 };
+  const dadosProj = temporalData.find(d => d.ano === '2027 ★') || temporalData.find(d => d.ano.includes('2027')) || temporalData[temporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
   const isObs = indicador === 'obesidade';
-  const mainValue = isObs ? dadosAno.obesidade : dadosAno.desnutricao;
+
+  const cleanYear = anoSelecionado.replace('★', '').trim();
+  // Find specific neighborhood data for the selected year
+  const bairroData = selectedBairro && regionalData && regionalData[cleanYear] && regionalData[cleanYear][selectedBairro]
+    ? regionalData[cleanYear][selectedBairro]
+    : null;
+
+  const mainValue = bairroData 
+    ? (isObs ? (bairroData.obesidade || 0) : (bairroData.desnutricao || 0))
+    : (isObs ? dadosAno.obesidade : dadosAno.desnutricao);
+
   const mainProj = isObs ? dadosProj.obesidade : dadosProj.desnutricao;
   const mainColor = indicador === 'desnutricao' ? 'text-[#00e5ff]' : indicador === 'sobrepeso' ? 'text-[#ffbb00]' : 'text-[#ff3366]';
   const mainLabel = indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
@@ -71,8 +81,8 @@ export default function ConsultantView() {
               ano: anoSelecionado,
               faixaEtaria,
               indicador,
-              obesidade: dadosAno.obesidade,
-              desnutricao: dadosAno.desnutricao,
+              obesidade: bairroData ? (bairroData.obesidade || 0) : dadosAno.obesidade,
+              desnutricao: bairroData ? (bairroData.desnutricao || 0) : dadosAno.desnutricao,
             }
           }
         })
@@ -203,7 +213,7 @@ export default function ConsultantView() {
           </div>
           <div className="flex-1 min-h-[200px] mt-2 z-10">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={DADOS_TEMPORAIS} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+              <AreaChart data={temporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={isObs ? '#ff3366' : '#00e5ff'} stopOpacity={0.3} />
@@ -234,7 +244,7 @@ export default function ConsultantView() {
           </div>
           <div className="mt-5 pt-5 border-t border-white/5 z-10">
             <p className="text-xs text-white/60 leading-relaxed font-medium">
-              A taxa de {mainLabel} em Rio Claro evoluiu de <strong className="text-white">{(isObs ? DADOS_TEMPORAIS[0].obesidade : DADOS_TEMPORAIS[0].desnutricao).toFixed(2)}% (2018)</strong> para <strong className="text-white">{mainValue}% ({anoSelecionado})</strong>. O modelo preditivo projeta <strong className={mainColor}>{mainProj}% em 2027</strong>.
+              A taxa de {mainLabel} em Rio Claro evoluiu de <strong className="text-white">{(isObs ? temporalData[0]?.obesidade || 8.98 : temporalData[0]?.desnutricao || 2.81).toFixed(2)}% (2018)</strong> para <strong className="text-white">{mainValue}% ({anoSelecionado})</strong>. O modelo preditivo projeta <strong className={mainColor}>{mainProj}% em 2027</strong>.
             </p>
           </div>
         </div>

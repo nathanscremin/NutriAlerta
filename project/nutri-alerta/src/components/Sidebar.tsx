@@ -20,7 +20,9 @@ export default function Sidebar() {
     indicador, setIndicador, 
     selectedBairro, setSelectedBairro, 
     activePoiTypes, setActivePoiTypes,
-    faixaEtaria, setFaixaEtaria 
+    faixaEtaria, setFaixaEtaria,
+    yearsList,
+    temporalData
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -49,6 +51,7 @@ export default function Sidebar() {
   );
 
   const togglePoi = (poi: PoiType) => {
+    if (poi === 'UBS') return;
     if (activePoiTypes.includes(poi)) {
       setActivePoiTypes(activePoiTypes.filter(p => p !== poi));
     } else {
@@ -56,8 +59,12 @@ export default function Sidebar() {
     }
   };
 
+  const selectedYearData = temporalData.find(d => d.ano === anoSelecionado);
+  const avgObs = selectedYearData ? `${selectedYearData.obesidade.toFixed(2)}%` : '...';
+  const avgDes = selectedYearData ? `${selectedYearData.desnutricao.toFixed(2)}%` : '...';
+
   return (
-    <aside className="w-56 bg-[#0B0E14]/90 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+    <aside className="w-64 bg-[#0B0E14]/90 backdrop-blur-2xl border-r border-white/5 flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.5)]">
       {/* Logo / Brand */}
       <div className="px-5 py-5 border-b border-white/5 bg-gradient-to-b from-white/[0.02] to-transparent">
         <div className="flex items-center gap-2.5">
@@ -84,7 +91,7 @@ export default function Sidebar() {
               onChange={e => setAnoSelecionado(e.target.value)}
               className="w-full bg-[#131823] border border-white/10 rounded-xl px-4 py-2.5 text-xs font-medium text-white focus:outline-none focus:ring-2 focus:ring-[#00ff9d]/30 focus:border-[#00ff9d]/50 transition-all appearance-none cursor-pointer hover:bg-[#1a2130]"
             >
-              {ANOS.map(a => (
+              {yearsList.map(a => (
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
@@ -165,33 +172,6 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Filtro de Pontos */}
-        <div>
-          <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-            <Layers className="w-3 h-3" /> Camadas (POIs)
-          </label>
-          <div className="space-y-1.5">
-            {POI_CATEGORIES.map(({ id, label, color }) => {
-              const isActive = activePoiTypes.includes(id);
-              return (
-                <button
-                  key={id}
-                  onClick={() => togglePoi(id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all duration-300 ${
-                    isActive 
-                      ? 'bg-[#131823] border border-white/10 text-white shadow-md' 
-                      : 'text-white/40 hover:bg-[#131823]/50 hover:text-white/70 border border-transparent'
-                  }`}
-                >
-                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${color} ${isActive ? 'shadow-[0_0_8px_currentColor] opacity-100' : 'opacity-30'}`} />
-                  <span className="truncate">{label}</span>
-                  {isActive && <MapPin className="w-3 h-3 ml-auto opacity-50" />}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
         {/* Separador */}
         <div className="border-t border-white/5" />
 
@@ -257,15 +237,53 @@ export default function Sidebar() {
         {/* Separador */}
         <div className="border-t border-white/5" />
 
+        {/* Filtro de Pontos */}
+        <div>
+          <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <Layers className="w-3 h-3" /> Camadas (POIs)
+          </label>
+          <div className="space-y-1.5">
+            {POI_CATEGORIES.map(({ id, label, color }) => {
+              const isActive = activePoiTypes.includes(id);
+              const isUbs = id === 'UBS';
+              return (
+                <button
+                  key={id}
+                  onClick={() => togglePoi(id)}
+                  disabled={isUbs}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all duration-300 ${
+                    isUbs
+                      ? 'bg-[#131823] border border-white/10 text-white cursor-default'
+                      : isActive 
+                        ? 'bg-[#131823] border border-white/10 text-white shadow-md cursor-pointer' 
+                        : 'text-white/40 hover:bg-[#131823]/50 hover:text-white/70 border border-transparent cursor-pointer'
+                  }`}
+                >
+                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${color} shadow-[0_0_8px_currentColor] opacity-100`} />
+                  <span className="truncate">{label}</span>
+                  {isUbs ? (
+                    <span className="ml-auto text-[9px] font-black uppercase tracking-wider text-[#00ff9d] bg-[#00ff9d]/10 px-1.5 py-0.5 rounded">Fixo</span>
+                  ) : (
+                    isActive && <MapPin className="w-3 h-3 ml-auto opacity-50" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Separador */}
+        <div className="border-t border-white/5" />
+
         {/* Métricas rápidas reais */}
         <div>
           <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3 block">
-            Resumo · Rio Claro 2025
+            Resumo · Rio Claro {anoSelecionado}
           </label>
           <div className="space-y-2">
-            <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-[#ff3366]" />} label="Obesidade média" value="12.93%" color="text-[#ff3366]" />
-            <MetricRow icon={<Activity className="w-3.5 h-3.5 text-[#00e5ff]" />}   label="Desnutrição média" value="2.62%"  color="text-[#00e5ff]" />
-            <MetricRow icon={<Users className="w-3.5 h-3.5 text-white/50" />}    label="Pacientes avaliados" value="45.2K" color="text-white" />
+            <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-[#ff3366]" />} label="Obesidade média" value={avgObs} color="text-[#ff3366]" />
+            <MetricRow icon={<Activity className="w-3.5 h-3.5 text-[#00e5ff]" />}   label="Desnutrição média" value={avgDes}  color="text-[#00e5ff]" />
+            <MetricRow icon={<Users className="w-3.5 h-3.5 text-white/50" />}    label="Pacientes avaliados" value={anoSelecionado.includes('2026') || anoSelecionado.includes('2027') ? 'Projetado' : '45.2K'} color="text-white" />
             <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-[#00ff9d]" />} label="UBS monitoradas" value="18" color="text-[#00ff9d]" />
           </div>
         </div>
