@@ -63,7 +63,7 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     return 2 * asin(sqrt(sin((lat2 - lat1)/2)**2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1)/2)**2)) * 6371
 
-print("A treinar o Modelo de Desnutrição...")
+print("Treinando o Modelo de Desnutricao...")
 df_nutri = pd.read_csv(localizacao_arquivo("Base_Nutricional_Consolidada_Final.csv"))
 df_ubs = pd.read_csv(localizacao_arquivo("ubs_rio_claro (1).csv")) 
 df_escolas = pd.read_csv(localizacao_arquivo("escolas_prontas (1).csv"))
@@ -110,39 +110,42 @@ features = ['Ano', 'Faixa_Etaria_Cod', 'Desnutricao_Ano_Anterior', 'qtd_esc_publ
 X = df_modelo[features]
 y = df_modelo['Delta_Desnutricao'] # IA prevê o crescimento da magreza
 
-train_mask = df_modelo['Ano'] < 2024
-test_mask = df_modelo['Ano'] >= 2024
+max_ano = int(df_modelo['Ano'].max())
+print(f"Ano maximo encontrado nos dados de modelagem: {max_ano}")
+
+train_mask = df_modelo['Ano'] < (max_ano - 1)
+test_mask = df_modelo['Ano'] >= (max_ano - 1)
 X_train, y_train = X[train_mask], y[train_mask]
 X_test, y_test = X[test_mask], y[test_mask]
 
 modelo = RandomForestRegressor(n_estimators=300, random_state=42, max_depth=8)
 modelo.fit(X_train, y_train)
 
-# PROJEÇÕES 2026 E 2027
-df_2025 = df_modelo[df_modelo['Ano'] == 2025].copy()
+# PROJEÇÕES DINÂMICAS PARA OS 2 ANOS SEGUINTES
+df_anchor = df_modelo[df_modelo['Ano'] == max_ano].copy()
 
-# 2026
-df_2026 = df_2025.copy()
-df_2026['Ano'] = 2026
-df_2026['Desnutricao_Ano_Anterior'] = df_2025['Tendencia_Desnutricao']
-df_2026['Delta_Predito'] = modelo.predict(df_2026[features])
-df_2026['Delta_Desnutricao'] = df_2026['Delta_Predito']
-df_2026['Tendencia_Desnutricao'] = df_2026['Desnutricao_Ano_Anterior'] + df_2026['Delta_Predito']
-df_2026['Status'] = 'PREVISÃO FUTURA'
+# max_ano + 1
+df_proj1 = df_anchor.copy()
+df_proj1['Ano'] = max_ano + 1
+df_proj1['Desnutricao_Ano_Anterior'] = df_anchor['Tendencia_Desnutricao']
+df_proj1['Delta_Predito'] = modelo.predict(df_proj1[features])
+df_proj1['Delta_Desnutricao'] = df_proj1['Delta_Predito']
+df_proj1['Tendencia_Desnutricao'] = df_proj1['Desnutricao_Ano_Anterior'] + df_proj1['Delta_Predito']
+df_proj1['Status'] = 'PREVISÃO FUTURA'
 
-# 2027
-df_2027 = df_2026.copy()
-df_2027['Ano'] = 2027
-df_2027['Desnutricao_Ano_Anterior'] = df_2026['Tendencia_Desnutricao']
-df_2027['Delta_Predito'] = modelo.predict(df_2027[features])
-df_2027['Delta_Desnutricao'] = df_2027['Delta_Predito']
-df_2027['Tendencia_Desnutricao'] = df_2027['Desnutricao_Ano_Anterior'] + df_2027['Delta_Predito']
-df_2027['Status'] = 'PREVISÃO FUTURA'
+# max_ano + 2
+df_proj2 = df_proj1.copy()
+df_proj2['Ano'] = max_ano + 2
+df_proj2['Desnutricao_Ano_Anterior'] = df_proj1['Tendencia_Desnutricao']
+df_proj2['Delta_Predito'] = modelo.predict(df_proj2[features])
+df_proj2['Delta_Desnutricao'] = df_proj2['Delta_Predito']
+df_proj2['Tendencia_Desnutricao'] = df_proj2['Desnutricao_Ano_Anterior'] + df_proj2['Delta_Predito']
+df_proj2['Status'] = 'PREVISÃO FUTURA'
 
 df_modelo['Status'] = 'DADO HISTÓRICO'
-df_final = pd.concat([df_modelo, df_2026, df_2027], ignore_index=True)
+df_final = pd.concat([df_modelo, df_proj1, df_proj2], ignore_index=True)
 
 # Guardar o novo ficheiro focado na desnutrição no caminho adequado do projeto
 caminho_salvar = obter_caminho_salvamento("NutriAlerta_Projecao_Desnutricao.csv")
 df_final.to_csv(caminho_salvar, index=False)
-print(f"✅ Ficheiro '{caminho_salvar}' gerado com sucesso!")
+print(f"[OK] Arquivo '{caminho_salvar}' gerado com sucesso!")

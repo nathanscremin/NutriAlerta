@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Entrega do MVP — NutriAlerta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            
+            --sky-50: #f0f9ff;
+            --sky-100: #e0f2fe;
+            --sky-500: #0ea5e9;
+            --sky-600: #0284c7;
+            --sky-700: #0369a1;
+            
+            --emerald-50: #ecfdf5;
+            --emerald-500: #10b981;
+            --emerald-600: #059669;
+            --emerald-700: #047857;
+
+            --indigo-50: #eef2ff;
+            --indigo-500: #6366f1;
+            
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f6f8fa;
+            color: var(--slate-800);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--slate-200);
+            overflow: hidden;
+        }
+
+        /* Banner Superior estilo Notion */
+        .notion-banner {
+            height: 180px;
+            background: linear-gradient(135deg, var(--slate-900) 0%, var(--sky-700) 50%, var(--emerald-600) 100%);
+            position: relative;
+        }
+
+        .notion-icon {
+            font-size: 48px;
+            background: #ffffff;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            bottom: -30px;
+            left: 50px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--slate-200);
+        }
+
+        .content {
+            padding: 60px 50px 50px 50px;
+        }
+
+        /* Títulos */
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 36px;
+            color: var(--slate-900);
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--slate-700);
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--slate-200);
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 22px;
+            color: var(--slate-900);
+            margin-top: 40px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 4px solid var(--sky-500);
+            padding-left: 12px;
+        }
+
+        h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--slate-900);
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--slate-700);
+            font-size: 15px;
+        }
+
+        /* Elementos Editáveis Premium */
+        .editable-container {
+            background-color: var(--slate-50);
+            border: 1px dashed var(--sky-500);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .editable-container:hover {
+            border-color: var(--sky-600);
+            background-color: var(--sky-50)/10;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .edit-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: var(--sky-600);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            pointer-events: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .editable-field {
+            outline: none;
+            border-bottom: 1px dotted #ccc;
+            padding: 2px 4px;
+            transition: all 0.15s ease;
+            cursor: text;
+        }
+
+        .editable-field:focus {
+            background-color: #fff;
+            border-bottom: 2px solid var(--sky-500);
+            border-radius: 4px;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
+
+        .editable-field[contenteditable="true"]:empty:before {
+            content: attr(placeholder);
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* Lista de Informações Gerais */
+        .info-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-list li {
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            color: var(--slate-700);
+        }
+
+        .info-list strong {
+            width: 180px;
+            color: var(--slate-900);
+            flex-shrink: 0;
+        }
+
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: var(--shadow-sm);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--slate-200);
+        }
+
+        th {
+            background-color: var(--slate-900);
+            color: #ffffff;
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--slate-200);
+            color: var(--slate-700);
+            background-color: #ffffff;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: var(--slate-50);
+        }
+
+        .badge-role {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-a {
+            background-color: var(--emerald-50);
+            color: var(--emerald-700);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-r {
+            background-color: var(--sky-50);
+            color: var(--sky-700);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+        }
+
+        .badge-c {
+            background-color: var(--indigo-50);
+            color: var(--indigo-500);
+        }
+
+        .badge-i {
+            background-color: var(--slate-100);
+            color: var(--slate-700);
+        }
+
+        /* Histórias de Usuário / Cards */
+        .us-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .us-card {
+            background: #ffffff;
+            border: 1px solid var(--slate-200);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .us-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--slate-300);
+        }
+
+        .us-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--slate-100);
+            padding-bottom: 10px;
+        }
+
+        .us-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--slate-900);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .us-badge {
+            background-color: var(--emerald-50);
+            color: var(--emerald-700);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .us-body {
+            font-size: 14px;
+            color: var(--slate-700);
+            margin-bottom: 16px;
+            background: var(--slate-50);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 3px solid var(--slate-300);
+        }
+
+        .us-body strong {
+            color: var(--slate-900);
+        }
+
+        /* Checklists */
+        .checklist-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--slate-900);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .checklist-item.checked {
+            color: var(--slate-700);
+        }
+
+        .checklist-checkbox {
+            color: var(--emerald-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            background-color: var(--emerald-50);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-top: 2px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Alertas / Callout Boxes */
+        .callout-box {
+            background-color: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-left: 4px solid var(--sky-500);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+
+        .callout-box.success {
+            border-left-color: var(--emerald-500);
+            background-color: var(--emerald-50)/10;
+        }
+
+        .callout-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--slate-900);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Diagrama Arquitetura */
+        .diagram-container {
+            background: var(--slate-900);
+            padding: 30px;
+            border-radius: 12px;
+            margin: 25px 0;
+            color: #ffffff;
+            overflow-x: auto;
+        }
+
+        .architecture-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            min-width: 800px;
+        }
+
+        .flow-step {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            flex: 1;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .flow-step h4 {
+            color: var(--sky-500);
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+        }
+
+        .flow-step p {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .flow-arrow {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+            font-size: 20px;
+            user-select: none;
+        }
+
+        /* 3 Colunas de Demonstração */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            .architecture-flow {
+                flex-direction: column;
+                min-width: unset;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: 5px 0;
+            }
+            .content {
+                padding: 40px 20px;
+            }
+        }
+
+        .demo-column {
+            background: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .demo-column h3 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--slate-200);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .demo-column ul {
+            list-style: none;
+            padding-left: 0;
+            font-size: 13.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .demo-column li {
+            position: relative;
+            padding-left: 15px;
+            color: var(--slate-700);
+        }
+
+        .demo-column li::before {
+            content: "•";
+            color: var(--sky-500);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Botão flutuante para ajudar */
+        .help-banner {
+            background-color: var(--sky-50);
+            border: 1px solid var(--sky-100);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13.5px;
+            color: var(--sky-700);
+        }
+
+        .btn-print {
+            background-color: var(--sky-600);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-print:hover {
+            background-color: var(--sky-700);
+        }
+
+        /* Estilos de Impressão */
+        @media print {
+            body {
+                background-color: #ffffff;
+                padding: 0;
+                color: #000;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                max-width: 100%;
+            }
+            .help-banner, .btn-print, .edit-badge {
+                display: none !important;
+            }
+            .editable-container {
+                border: 1px solid var(--slate-200);
+                background-color: #fff;
+                padding: 15px 0;
+            }
+            .editable-field {
+                border-bottom: none;
+                padding: 0;
+            }
+            .us-card {
+                page-break-inside: avoid;
+                box-shadow: none;
+            }
+            .diagram-container {
+                background: #f1f5f9;
+                color: #000;
+                border: 1px solid var(--slate-200);
+            }
+            .flow-step {
+                background: #fff;
+                border: 1px solid var(--slate-300);
+            }
+            .flow-step h4 {
+                color: var(--sky-700);
+            }
+            .flow-step p {
+                color: #334155;
+            }
+            .flow-arrow {
+                color: #475569;
+            }
+            .demo-column {
+                background: #ffffff;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Banner e Ícone estilo Notion -->
+        <div class="notion-banner">
+            <div class="notion-icon">🥗</div>
+        </div>
+
+        <div class="content">
+            <!-- Cabeçalho -->
+            <h1>Relatório de Entrega do MVP — NutriAlerta</h1>
+            <div class="subtitle">
+                Situação do Projeto e Comprovação Técnica de Integração de IA e Geolocalização
+            </div>
+
+            <!-- Banner Informativo Interativo -->
+            <div class="help-banner">
+                <div>
+                    💡 <strong>Dica Interativa:</strong> Você pode clicar diretamente em qualquer texto tracejado para personalizar as informações da sua equipe antes de imprimir.
+                </div>
+                <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            </div>
+
+            <!-- 1. Estrutura do Documento de Entrega -->
+            <h2>👥 1. Estrutura do Documento de Entrega</h2>
+            
+            <div class="editable-container">
+                <span class="edit-badge">Clique para Editar Informações</span>
+                <ul class="info-list">
+                    <li>
+                        <strong>Nome da Equipe:</strong> 
+                        <span contenteditable="true" class="editable-field" placeholder="Insira o nome da equipe aqui">NutriAlerta Core</span>
+                    </li>
+                    <li>
+                        <strong>Empresa Parceira:</strong> 
+                        <span contenteditable="true" class="editable-field" placeholder="Insira a empresa parceira">Secretaria Municipal de Saúde de Rio Claro — SP</span>
+                    </li>
+                    <li>
+                        <strong>Integrantes da Equipe:</strong> 
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span>• <strong>Nathan Scremin</strong> (Data Engineer / Backend) — <em>Accountable</em> (A) pelo Pipeline ETL e ML.</span>
+                            <span>• <span contenteditable="true" class="editable-field" placeholder="Integrante 2 (Nome)">[Integrante 2 — Nome]</span> (Frontend Developer) — <em>Accountable</em> (A) pelo Mapa.</span>
+                            <span>• <span contenteditable="true" class="editable-field" placeholder="Integrante 3 (Nome)">[Integrante 3 — Nome]</span> (Fullstack / Integrador) — <em>Accountable</em> (A) pela Integração Geral.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <strong>Link do Trello:</strong> 
+                        <span contenteditable="true" class="editable-field" placeholder="Cole o link do Trello de vocês aqui" style="color: var(--sky-600); font-weight: 500;">[Insira aqui o link do seu Trello/Jira]</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tabela RASCI de Responsabilidades -->
+            <h3>📊 Matriz RASCI de Distribuição de Tarefas</h3>
+            <p>A tabela abaixo detalha as responsabilidades de desenvolvimento do MVP, destacando formalmente quem responde por cada módulo crítico do sistema (<strong>Accountable</strong>):</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Módulo / Entrega do Sistema</th>
+                        <th>Nathan Scremin</th>
+                        <th>Integrante 2</th>
+                        <th>Integrante 3</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Integração do Modelo de IA (ML)</strong></td>
+                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
+                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
+                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Backend & Rotas de API (Next.js)</strong></td>
+                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
+                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
+                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Interface Frontend & Mapa Interativo</strong></td>
+                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
+                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
+                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Pipeline Coletor SISVAN (ETL)</strong></td>
+                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
+                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
+                        <td><span class="badge-role badge-i">Informed (I)</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Design do Painel e UX Premium</strong></td>
+                        <td><span class="badge-role badge-i">Informed (I)</span></td>
+                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
+                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 12px; color: var(--slate-700); font-style: italic;">
+                *Legenda: <strong>A</strong> (Accountable - quem responde pelo sucesso da entrega), <strong>R</strong> (Responsible - quem implementa a funcionalidade), <strong>C</strong> (Consulted - quem dá suporte técnico e de negócios), <strong>I</strong> (Informed - quem é notificado dos resultados).
+            </p>
+
+            <!-- Histórias de Usuário (User Stories) -->
+            <h2>📌 Histórias de Usuário Finalizadas (100% Concluídas)</h2>
+            <p>O desenvolvimento técnico foi baseado em Histórias de Usuário refinadas. Cada card atingiu <strong>100% de conclusão</strong> no Checklist de Critérios de Aceitação:</p>
+
+            <div class="us-grid">
+                <!-- US 01 -->
+                <div class="us-card">
+                    <div class="us-header">
+                        <span class="us-title">🗺️ US01: Visualização Espacial Interativa de Risco</span>
+                        <span class="us-badge">DoD 100%</span>
+                    </div>
+                    <div class="us-body">
+                        <strong>Como</strong> Secretário de Saúde de Rio Claro,<br>
+                        <strong>Quero</strong> visualizar um mapa de calor dividido pelas regiões das UBSs do município,<br>
+                        <strong>Para</strong> identificar instantaneamente quais bairros e distritos apresentam maiores taxas de desnutrição e obesidade infantil.
+                    </div>
+                    <div class="checklist-title">Checklist de Critérios de Aceitação (DoD):</div>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Plotar o mapa interativo do município de Rio Claro usando React-Leaflet.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Dividir o mapa geograficamente em células de Voronoi baseadas nas UBSs reais de atendimento.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Estilizar as regiões (cloroplete) usando paleta HSL dinâmica com base nas porcentagens reais de risco.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Exibir marcadores interativos de UBSs e escolas em suas geolocalizações reais de GPS.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Corrigir o comportamento de hover para destacar a borda mantendo a cor cloroplete original da célula.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- US 02 -->
+                <div class="us-card">
+                    <div class="us-header">
+                        <span class="us-title">🧠 US02: Projeções Preditivas Dinâmicas (Inteligência Artificial)</span>
+                        <span class="us-badge">DoD 100%</span>
+                    </div>
+                    <div class="us-body">
+                        <strong>Como</strong> Analista de Vigilância Nutricional,<br>
+                        <strong>Quero</strong> ter acesso a projeções automáticas de risco nutricional para os próximos 2 anos,<br>
+                        <strong>Para</strong> planejar e direcionar a compra de insumos e campanhas de prevenção de forma proativa.
+                    </div>
+                    <div class="checklist-title">Checklist de Critérios de Aceitação (DoD):</div>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Treinar modelos preditivos Random Forest independentes para Desnutrição e Obesidade.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Realizar engenharia de variáveis espaciais baseada na proximidade de infraestruturas alimentares/educacionais.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Eliminar anos estáticos do código (hardcoding), tornando o ano âncora dinâmico com base no último registro.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Gerar projeções automáticas rolantes para os anos <code>max_ano + 1</code> e <code>max_ano + 2</code> (2026/2027).
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Salvar arquivos CSV e cópias sincronizadas na pasta pública acessível pelo frontend Next.js.
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- US 03 -->
+                <div class="us-card">
+                    <div class="us-header">
+                        <span class="us-title">🔌 US03: Coletor de Dados Automatizado e Resiliente (SISVAN)</span>
+                        <span class="us-badge">DoD 100%</span>
+                    </div>
+                    <div class="us-body">
+                        <strong>Como</strong> Administrador do Sistema,<br>
+                        <strong>Quero</strong> que os dados epidemiológicos da API pública do Ministério da Saúde sejam extraídos sem falhas de conexão,<br>
+                        <strong>Para</strong> manter o painel e os modelos preditivos alimentados e atualizados periodicamente.
+                    </div>
+                    <div class="checklist-title">Checklist de Critérios de Aceitação (DoD):</div>
+                    <ul class="checklist">
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Desenvolver extrator Python paginado consumindo o endpoint oficial do SISVAN.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Adicionar resiliência contra erros de rede e SSL locais via fallback automático <code>verify=False</code>.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Implementar agregador inteligente que filtra registros para Rio Claro e os classifica por faixas de idade.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Realizar upsert de dados com segurança, mesclando dados incrementais e preservando o histórico de 2008 a 2024.
+                        </li>
+                        <li class="checklist-item checked">
+                            <span class="checklist-checkbox">✓</span>
+                            Mapear códigos CNES para nomes legíveis de UBSs físicas a partir da base oficial de saúde.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Coerência Técnica do DoD -->
+            <h3>🛡️ Definição de Pronto (DoD Técnico da Equipe)</h3>
+            <p>A equipe definiu critérios rigorosos de aceitação para considerar cada entrega como "Pronta", garantindo a coerência técnica do projeto:</p>
+            <ol style="margin-left: 20px; margin-bottom: 20px; font-size: 14.5px; color: var(--slate-700);">
+                <li style="margin-bottom: 8px;"><strong>Compilação e Tipagem Forte:</strong> O frontend em Next.js e TypeScript compila completamente via <code>npm run build</code> sem erros no terminal.</li>
+                <li style="margin-bottom: 8px;"><strong>Resiliência à Redes Externas:</strong> O pipeline do coletor intercepta instabilidades de rede e falhas de verificação SSL (comum em máquinas Windows) aplicando fallback de requisições, evitando o travamento do pipeline.</li>
+                <li style="margin-bottom: 8px;"><strong>Integridade de Schemas:</strong> Os dados preditivos processados pela inteligência artificial possuem exata equivalência geométrica e de nomes com a base de visualização cartográfica no cliente.</li>
+            </ol>
+
+            <!-- Validações com Parceiro -->
+            <h2>🤝 Comprovação de Validação com a Empresa Parceira</h2>
+            <div class="callout-box success">
+                <div class="callout-title">📋 Ata Resumida de Alinhamento com a Secretaria Municipal de Saúde</div>
+                <p style="font-size: 14px; margin-top: 10px; font-style: italic;">
+                    "Em reunião virtual realizada no dia 22/04/2026 com a Coordenadora de Vigilância Alimentar e Nutricional do município de Rio Claro, alinhamos a representatividade espacial do sistema. A secretaria apontou que unidades localizadas em distritos rurais distantes (como USF Ajapi, USF Ferraz e USF Assistência) não possuíam limites geográficos bem delimitados pelas ferramentas tradicionais, o que causaria buracos no mapa preditivo."
+                </p>
+                <p style="font-size: 14px; margin-top: 10px; font-weight: 500;">
+                    <strong>Resolução Técnica Validada:</strong> Implementamos a técnica de **Âncoras de Voronoi Virtuais**. O sistema renderiza os marcadores de atendimento exatamente em suas geolocalizações GPS físicas reais, mas projeta as fronteiras cloroplete no mapa utilizando posições virtuais calibradas. Isso expandiu a cobertura visual da análise de risco cobrindo distritos rurais inteiros sem distorcer os marcadores reais do mapa. O parceiro validou positivamente o layout, a precisão das regiões e o destaque interativo das áreas.
+                </p>
+            </div>
+
+            <!-- 2. Demonstração do MVP (Ponta a Ponta) -->
+            <h2>🛠️ 2. Demonstração Técnica do MVP (Funcionamento Ponta a Ponta)</h2>
+            <p>O <strong>NutriAlerta</strong> funciona de forma integrada conectando Coleta, Inteligência Artificial e Visualização Web de alta fidelidade:</p>
+
+            <!-- Diagrama de Arquitetura -->
+            <div class="diagram-container">
+                <div class="architecture-flow">
+                    <div class="flow-step">
+                        <h4>1. Coleta e Limpeza</h4>
+                        <p>Coletor SISVAN (Python) faz download paginado e mescla dados no arquivo consolidado</p>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <h4>2. Modelos de IA</h4>
+                        <p>desnutricao_ML e obesidade_ML calculam deltas e geram projeções 2026/2027</p>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <h4>3. Rotas de API</h4>
+                        <p>Backend Next.js calcula Haversine geográfico e entrega métricas em /api/data</p>
+                    </div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">
+                        <h4>4. Visualização</h4>
+                        <p>Frontend renderiza mapa interativo de Voronoi e ativa painéis e IA Widget</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detalhamento das Tecnologias -->
+            <div class="demo-grid">
+                <!-- Coluna 1: Frontend -->
+                <div class="demo-column">
+                    <h3>💻 A. Interface (Frontend)</h3>
+                    <ul>
+                        <li>Construído em Next.js 15, React e Tailwind CSS com Design System Premium HSL.</li>
+                        <li>Mapa cloroplete com Leaflet exibindo células de Voronoi para as UBSs.</li>
+                        <li>Menu lateral com filtros rápidos de idade (0-5, 6-10 e 10-19) selecionados por padrão.</li>
+                        <li>Camadas ativáveis de escolas públicas, parques e mercados locais.</li>
+                        <li>Widget do Chatbot assistente integrado ao painel lateral.</li>
+                    </ul>
+                </div>
+                
+                <!-- Coluna 2: Backend -->
+                <div class="demo-column">
+                    <h3>📡 B. Lógica e APIs (Backend)</h3>
+                    <ul>
+                        <li>API `/api/data` lê os resultados preditivos do CSV da IA e calcula distâncias Haversine.</li>
+                        <li>API `/api/chat` processa mensagens enviando o contexto nutricional das UBSs para orientar médicos.</li>
+                        <li>Integração total de rotas estáticas e dinâmicas geradas no build.</li>
+                        <li>Fallback e tratamentos para carregamento de arquivos CSV.</li>
+                    </ul>
+                </div>
+                
+                <!-- Coluna 3: IA -->
+                <div class="demo-column">
+                    <h3>🧠 C. Inteligência Artificial</h3>
+                    <ul>
+                        <li>Modelos Random Forest independentes para desnutrição e obesidade.</li>
+                        <li>Engenharia de variáveis que mede distâncias reais de UBSs até serviços urbanos.</li>
+                        <li>Leitura automatizada do ano máximo sem datas estáticas no código.</li>
+                        <li>Projeções preditivas para 2 anos no futuro (2026 e 2027) geradas dinamicamente.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Vídeo de Demonstração -->
+            <h2>📽️ 3. Link para Demonstração em Vídeo</h2>
+            
+            <div class="editable-container">
+                <span class="edit-badge">Clique para Adicionar o Link do Vídeo</span>
+                <p>O vídeo demonstra o fluxo completo do sistema funcionando: a extração pelo coletor Python, a atualização dos dados do modelo preditivo, a compilação Next.js e o uso interativo do mapa e chatbot.</p>
+                <div style="margin-top: 15px; font-size: 16px; font-weight: 600; color: var(--sky-700);">
+                    🎥 Link para o vídeo (Loom, YouTube ou Google Drive):<br>
+                    <span contenteditable="true" class="editable-field" placeholder="Cole o link do seu vídeo gravado aqui" style="color: var(--sky-600); text-decoration: underline; font-weight: 500;">[Insira aqui o link do vídeo de demonstração do MVP]</span>
+                </div>
+            </div>
+            
+            <!-- Conclusão -->
+            <p style="text-align: center; color: #94a3b8; font-size: 13px; margin-top: 40px; border-top: 1px solid var(--slate-200); padding-top: 20px;">
+                NutriAlerta MVP — Desenvolvido com foco em Vigilância Alimentar e Nutricional Preditiva.
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>

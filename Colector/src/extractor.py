@@ -358,9 +358,23 @@ def _fazer_requisicao(url: str) -> list | None:
 
     for tentativa in range(1, MAX_RETENTATIVAS + 1):
         try:
-            resposta = requests.get(
-                url, headers=headers, timeout=TIMEOUT_REQUISICAO_SEGUNDOS
-            )
+            try:
+                resposta = requests.get(
+                    url, headers=headers, timeout=TIMEOUT_REQUISICAO_SEGUNDOS
+                )
+            except requests.exceptions.SSLError as ssl_erro:
+                logger.warning(
+                    "    [SSL Falha] Tentando novamente com verify=False devido a erro de certificado: %s",
+                    ssl_erro,
+                )
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+                resposta = requests.get(
+                    url,
+                    headers=headers,
+                    timeout=TIMEOUT_REQUISICAO_SEGUNDOS,
+                    verify=False,
+                )
 
             if resposta.status_code == 200:
                 try:

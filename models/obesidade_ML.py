@@ -129,52 +129,59 @@ X = df_modelo[features]
 # A variável alvo agora é o Delta!
 y = df_modelo['Delta_Obesidade']
 
-train_mask = df_modelo['Ano'] < 2024
-test_mask = df_modelo['Ano'] >= 2024
+max_ano = int(df_modelo['Ano'].max())
+print(f"Ano maximo encontrado nos dados de modelagem: {max_ano}")
+
+train_mask = df_modelo['Ano'] < (max_ano - 1)
+test_mask = df_modelo['Ano'] >= (max_ano - 1)
 X_train, y_train = X[train_mask], y[train_mask]
 X_test, y_test = X[test_mask], y[test_mask]
 
 # 5. Treinar a Inteligência Artificial (Mais Agressiva)
-print("\nA treinar a Inteligência Artificial no modelo de Crescimento...")
+print("\nTreinando o modelo de Crescimento da Obesidade...")
 modelo = RandomForestRegressor(n_estimators=300, random_state=42, max_depth=8)
 modelo.fit(X_train, y_train)
 
 # 6. A Nova Máquina do Tempo (Projeções com o Delta)
-print("\nA gerar projeções dinâmicas para 2026 e 2027...")
-df_2025 = df_modelo[df_modelo['Ano'] == 2025].copy()
+print(f"\nGerando projecoes dinamicas para {max_ano + 1} e {max_ano + 2}...")
+df_anchor = df_modelo[df_modelo['Ano'] == max_ano].copy()
 
-# Previsão para 2026
-df_2026 = df_2025.copy()
-df_2026['Ano'] = 2026
-df_2026['Obesidade_Ano_Anterior'] = df_2025['Tendencia_Obesidade']
+# Previsão para max_ano + 1
+df_proj1 = df_anchor.copy()
+df_proj1['Ano'] = max_ano + 1
+df_proj1['Obesidade_Ano_Anterior'] = df_anchor['Tendencia_Obesidade']
 
 # A IA prevê o crescimento (Delta)
-df_2026['Delta_Predito'] = modelo.predict(df_2026[features])
-df_2026['Delta_Obesidade'] = df_2026['Delta_Predito']
+df_proj1['Delta_Predito'] = modelo.predict(df_proj1[features])
+df_proj1['Delta_Obesidade'] = df_proj1['Delta_Predito']
 # A Tendência real é o Ano Anterior + O Delta que a IA calculou
-df_2026['Tendencia_Obesidade'] = df_2026['Obesidade_Ano_Anterior'] + df_2026['Delta_Predito']
-df_2026['Status'] = 'PREVISÃO FUTURA'
+df_proj1['Tendencia_Obesidade'] = df_proj1['Obesidade_Ano_Anterior'] + df_proj1['Delta_Predito']
+df_proj1['Status'] = 'PREVISÃO FUTURA'
 
-# Previsão para 2027
-df_2027 = df_2026.copy()
-df_2027['Ano'] = 2027
-df_2027['Obesidade_Ano_Anterior'] = df_2026['Tendencia_Obesidade']
+# Previsão para max_ano + 2
+df_proj2 = df_proj1.copy()
+df_proj2['Ano'] = max_ano + 2
+df_proj2['Obesidade_Ano_Anterior'] = df_proj1['Tendencia_Obesidade']
 
 # A IA prevê o crescimento de novo
-df_2027['Delta_Predito'] = modelo.predict(df_2027[features])
-df_2027['Delta_Obesidade'] = df_2027['Delta_Predito']
-# Soma-se o novo Delta à base de 2026
-df_2027['Tendencia_Obesidade'] = df_2027['Obesidade_Ano_Anterior'] + df_2027['Delta_Predito']
-df_2027['Status'] = 'PREVISÃO FUTURA'
+df_proj2['Delta_Predito'] = modelo.predict(df_proj2[features])
+df_proj2['Delta_Obesidade'] = df_proj2['Delta_Predito']
+# Soma-se o novo Delta à base de max_ano + 1
+df_proj2['Tendencia_Obesidade'] = df_proj2['Obesidade_Ano_Anterior'] + df_proj2['Delta_Predito']
+df_proj2['Status'] = 'PREVISÃO FUTURA'
 
 # Guardar o histórico (Para os anos passados, a tendência é o valor que já tínhamos)
 df_modelo['Status'] = 'DADO HISTÓRICO'
 
-df_final = pd.concat([df_modelo, df_2026, df_2027], ignore_index=True)
+df_final = pd.concat([df_modelo, df_proj1, df_proj2], ignore_index=True)
 
 # Guardar o novo ficheiro no caminho adequado do projeto
 caminho_salvar = obter_caminho_salvamento("NutriAlerta_Projecao_Futura.csv")
 df_final.to_csv(caminho_salvar, index=False)
 
-print(f"\n✅ Fluxo Concluído! O modelo aprendeu a prever o CRESCIMENTO do risco.")
-print(f"Ficheiro '{caminho_salvar}' gerado com sucesso!")
+# Gravar cópia para NutriAlerta_Projecao_Futura-2.csv
+caminho_salvar_2 = obter_caminho_salvamento("NutriAlerta_Projecao_Futura-2.csv")
+df_final.to_csv(caminho_salvar_2, index=False)
+
+print(f"\n[OK] Fluxo Concluido! O modelo aprendeu a prever o CRESCIMENTO do risco.")
+print(f"Ficheiro '{caminho_salvar}' e copia '{caminho_salvar_2}' gerados com sucesso!")
