@@ -34,12 +34,10 @@ Desenvolvimento, ETL, modelagem preditiva
 ## Arthur Araujo Leite
 ## Dev Team
 Desenvolvimento, ETL, modelagem preditiva
-## Pedro Henrique Carvalho
-de Paula
+## Pedro Henrique Carvalho de Paula
 ## Dev Team
 Desenvolvimento, ETL, modelagem preditiva
-## Matheus Henrique
-Domingos da Silva
+## Matheus Henrique Domingos da Silva
 ## Dev Team
 Desenvolvimento, ETL, modelagem preditiva
 
