@@ -32,18 +32,24 @@ const MapContainer  = dynamic(() => import('react-leaflet').then(m => m.MapConta
 const TileLayer     = dynamic(() => import('react-leaflet').then(m => m.TileLayer),     { ssr: false });
 const GeoJSONLayer  = dynamic(() => import('react-leaflet').then(m => m.GeoJSON),       { ssr: false });
 const CircleMarker  = dynamic(() => import('react-leaflet').then(m => m.CircleMarker),  { ssr: false });
-const Popup         = dynamic(() => import('react-leaflet').then(m => m.Popup),         { ssr: false });
 const Tooltip       = dynamic(() => import('react-leaflet').then(m => m.Tooltip),       { ssr: false });
 
-const BASE_STYLE = {
-  fillColor: '#0f172a',
-  weight: 1,
-  opacity: 0.8,
-  color: 'rgba(255,255,255,0.15)',
-  fillOpacity: 0.4,
+const getChoroplethColor = (value: number, indicator: string) => {
+  if (indicator === 'desnutricao') {
+    if (value < 2.0) return '#a7f3d0'; // Soft emerald
+    if (value < 3.2) return '#bae6fd'; // Soft sky blue
+    return '#7dd3fc'; // Warning blue
+  } else if (indicator === 'sobrepeso') {
+    if (value < 12) return '#a7f3d0'; // Soft emerald
+    if (value < 18) return '#fde68a'; // Soft yellow/amber
+    return '#fed7aa'; // Soft orange
+  } else {
+    // Obesidade
+    if (value < 8) return '#a7f3d0'; // Soft emerald
+    if (value < 13.5) return '#fde68a'; // Soft yellow/amber
+    return '#fca5a5'; // Soft red/rose
+  }
 };
-const HOVER_STYLE = { weight: 2, color: '#38bdf8', fillOpacity: 0.7 };
-const ACTIVE_STYLE = { weight: 2, color: '#00ff9d', fillOpacity: 0.6 };
 
 function MapController() {
   const map = useMap();
@@ -63,29 +69,12 @@ function MapController() {
   return null;
 }
 
-const getChoroplethColor = (value: number, indicator: string) => {
-  if (indicator === 'desnutricao') {
-    if (value < 2.0) return '#10b981'; // Healthy Emerald (Verde)
-    if (value < 3.2) return '#38bdf8'; // Warning Sky Blue (Azul Céu)
-    return '#00e5ff'; // High Risk Electric Cyan (Ciano Elétrico)
-  } else if (indicator === 'sobrepeso') {
-    if (value < 12) return '#10b981'; // Healthy Emerald
-    if (value < 18) return '#ffbb00'; // Warning Amber
-    return '#f97316'; // High Risk Orange
-  } else {
-    // Obesidade
-    if (value < 8) return '#10b981'; // Healthy Emerald
-    if (value < 13.5) return '#ffbb00'; // Warning Amber
-    return '#ff3366'; // High Risk Neon Rose
-  }
-};
-
 export default function RiskMap() {
   const [bairros, setBairros] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
   const { 
     activePoiTypes, selectedBairro, setSelectedBairro, setSelectedPoi,
-    indicador, anoSelecionado, regionalData
+    indicador, anoSelecionado, regionalData, darkMode
   } = useAppStore();
 
   useEffect(() => {
@@ -143,8 +132,8 @@ export default function RiskMap() {
       fillColor,
       weight: isActive ? 2.5 : 1,
       opacity: 0.9,
-      color: isActive ? '#00ff9d' : 'rgba(255,255,255,0.15)',
-      fillOpacity: selectedBairro ? (isActive ? 0.65 : 0.15) : 0.45,
+      color: isActive ? '#0d9488' : (darkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(15, 23, 42, 0.1)'),
+      fillOpacity: selectedBairro ? (isActive ? 0.8 : 0.25) : 0.6,
     };
   };
 
@@ -158,7 +147,7 @@ export default function RiskMap() {
           e.target.setStyle({
             ...baseStyle,
             weight: 2,
-            color: '#38bdf8',
+            color: '#0d9488',
             fillOpacity: 0.7
           }); 
           e.target.bringToFront(); 
@@ -179,7 +168,7 @@ export default function RiskMap() {
     });
     
     layer.bindTooltip(
-      `<div class="font-semibold text-slate-200 text-xs">${nome}</div>`,
+      `<div class="font-bold text-xs">${nome}</div>`,
       { className: 'custom-glass-tooltip', sticky: true, direction: 'auto' }
     );
   };
@@ -193,36 +182,43 @@ export default function RiskMap() {
 
   if (!mounted) return null;
 
+  const mapBackground = darkMode ? '#1c1c1e' : '#f8fafc';
+
   return (
     <>
       <style>{`
         .custom-glass-tooltip {
-          background: rgba(15, 23, 42, 0.85) !important;
+          background: ${darkMode ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)'} !important;
           backdrop-filter: blur(8px) !important;
-          border: 1px solid rgba(255,255,255,0.1) !important;
-          box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
-          color: white !important;
+          border: 1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'} !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+          color: ${darkMode ? '#f5f5f7' : '#0f172a'} !important;
           border-radius: 8px !important;
           padding: 5px 10px !important;
+          font-weight: 600 !important;
         }
         .custom-glass-tooltip::before { display: none !important; }
-        .leaflet-container { background: #080c14 !important; }
+        .leaflet-container { background: ${mapBackground} !important; }
       `}</style>
       <div className="h-full w-full">
         <MapContainer
           center={[-22.405, -47.555]}
           zoom={13}
-          style={{ height: '100%', width: '100%', background: '#080c14' }}
+          style={{ height: '100%', width: '100%', background: mapBackground }}
           zoomControl={true}
         >
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+            key={darkMode ? 'dark-tiles' : 'light-tiles'}
+            url={darkMode 
+              ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+            }
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           <MapController />
           {bairros && (
             <GeoJSONLayer
-              key={`base-map-${selectedBairro}-${anoSelecionado}-${Object.keys(regionalData).length}-${indicador}`} // Re-render to apply styles when state changes
+              key={`base-map-${selectedBairro}-${anoSelecionado}-${Object.keys(regionalData).length}-${indicador}-${darkMode}`} // Re-render to apply styles when state changes
               data={bairros}
               style={getFeatureStyle}
               onEachFeature={onEachFeature}
@@ -268,8 +264,8 @@ export default function RiskMap() {
               >
                 <Tooltip direction="top" className="custom-glass-tooltip" sticky>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-bold text-white text-xs">{poi.nome}</span>
-                    <span className="text-[10px] text-white/50">{poi.categoria}</span>
+                    <span className="font-bold text-xs">{poi.nome}</span>
+                    <span className="text-[10px] opacity-80 font-bold">{poi.categoria}</span>
                   </div>
                 </Tooltip>
               </CircleMarker>

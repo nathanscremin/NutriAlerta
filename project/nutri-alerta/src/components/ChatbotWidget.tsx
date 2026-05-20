@@ -74,43 +74,43 @@ export default function ChatbotWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       {isOpen ? (
-        <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl w-80 h-96 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
+        <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-2xl rounded-2xl w-80 h-96 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 transition-colors duration-300">
           {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 p-4 flex justify-between items-center border-b border-white/10">
+          <div className="bg-slate-50 dark:bg-zinc-800/40 border-b border-slate-200 dark:border-[#2c2c2e] p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <div className="bg-emerald-500/20 p-2 rounded-lg">
-                <Bot className="w-5 h-5 text-emerald-400" />
+              <div className="bg-teal-50 dark:bg-teal-950/40 p-2 rounded-lg border border-teal-100 dark:border-teal-900/60 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-teal-600 dark:text-teal-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-200 text-sm">NutriAI Guia</h3>
-                <p className="text-[10px] text-emerald-400">Online</p>
+                <h3 className="font-bold text-slate-800 dark:text-[#f5f5f7] text-sm">NutriAI Guia</h3>
+                <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 dark:text-zinc-550 hover:text-slate-650 dark:hover:text-[#f5f5f7] transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
+          <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-white dark:bg-[#1c1c1e] scrollbar-thin">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`rounded-2xl p-3 max-w-[85%] text-xs text-slate-300 ${
+                className={`rounded-2xl p-3 max-w-[85%] text-xs font-semibold ${
                   msg.role === 'user'
-                    ? 'bg-emerald-500/20 border border-emerald-500/20 self-end rounded-tr-none'
-                    : 'bg-white/5 border border-white/5 self-start rounded-tl-none'
+                    ? 'bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 text-teal-850 dark:text-teal-300 self-end rounded-tr-none shadow-sm'
+                    : 'bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] text-slate-700 dark:text-zinc-200 self-start rounded-tl-none shadow-sm'
                 }`}
               >
                 {msg.text}
               </div>
             ))}
             {loading && (
-              <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-none p-3 max-w-[85%] self-start">
+              <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] rounded-2xl rounded-tl-none p-3 max-w-[85%] self-start shadow-sm">
                 <div className="flex gap-1 items-center h-4">
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             )}
@@ -118,7 +118,7 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-white/10 bg-black/20">
+          <div className="p-3 border-t border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
             <div className="relative">
               <input
                 type="text"
@@ -126,12 +126,12 @@ export default function ChatbotWidget() {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}
                 placeholder="Pergunte sobre os dados..."
-                className="w-full bg-slate-900 border border-white/10 rounded-full py-2 pl-4 pr-10 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
               />
               <button
                 onClick={sendMessage}
                 disabled={loading}
-                className="absolute right-2 top-1.5 text-emerald-400 hover:text-emerald-300 disabled:opacity-40"
+                className="absolute right-2 top-1.5 text-teal-600 dark:text-teal-500 hover:text-teal-700 dark:hover:text-teal-400 disabled:opacity-40 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -141,7 +141,7 @@ export default function ChatbotWidget() {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-emerald-500 hover:bg-emerald-400 text-white p-4 rounded-full shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 flex items-center justify-center"
+          className="bg-teal-600 dark:bg-teal-650 hover:bg-teal-700 dark:hover:bg-teal-700 text-white p-4 rounded-full shadow-lg shadow-teal-500/20 transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
         >
           <MessageSquare className="w-6 h-6" />
         </button>

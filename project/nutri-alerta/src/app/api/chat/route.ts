@@ -73,7 +73,7 @@ function getLocalFallbackResponse(message: string, screenData: any) {
   const riskLabel = isHighRisk ? 'Alto' : 'Moderado';
 
   if (msgLower.includes('olá') || msgLower.includes('oi') || msgLower.includes('bom') || msgLower.includes('boa')) {
-    return `Olá! Sou o EpidemiologistBot, seu assistente de vigilância nutricional em Rio Claro.
+    return `Olá! Sou o NutrIA, seu assistente de vigilância nutricional em Rio Claro.
     
 Atualmente estamos analisando os dados de **${bairro}** para o ano **${ano}**. 
 A taxa de **${indicador}** nesta região está em **${valor}%** (Risco ${riskLabel}). 

@@ -8,14 +8,23 @@ import { useAppStore } from '@/store/useAppStore';
 import { AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
-  const { viewMode, initializeData } = useAppStore();
+  const { viewMode, initializeData, darkMode } = useAppStore();
 
   useEffect(() => {
     initializeData();
   }, [initializeData]);
 
+  // Sync dark class on HTML element
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   return (
-    <div className="flex flex-col h-screen bg-slate-950 overflow-hidden font-sans relative">
+    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden font-sans relative transition-colors duration-300">
       <Header />
       
       <main className="flex-1 relative overflow-hidden">

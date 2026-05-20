@@ -21,6 +21,12 @@ interface AppState {
   faixaEtaria: '0-10' | '10-18';
   setFaixaEtaria: (faixa: '0-10' | '10-18') => void;
   
+  // Dark mode & Sidebar toggles
+  darkMode: boolean;
+  setDarkMode: (val: boolean) => void;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (val: boolean) => void;
+
   // Real-time Dynamic Data state
   temporalData: Array<{
     ano: string;
@@ -51,6 +57,12 @@ export const useAppStore = create<AppState>((set) => ({
   faixaEtaria: '10-18',
   setFaixaEtaria: (faixa) => set({ faixaEtaria: faixa }),
 
+  // Theme & Layout toggles
+  darkMode: false,
+  setDarkMode: (val) => set({ darkMode: val }),
+  sidebarCollapsed: false,
+  setSidebarCollapsed: (val) => set({ sidebarCollapsed: val }),
+
   // Initial State Hydration with Mock Data Fallback
   temporalData: DADOS_TEMPORAIS,
   regionalData: {},
@@ -67,7 +79,6 @@ export const useAppStore = create<AppState>((set) => ({
         set({
           temporalData: data.temporalData,
           regionalData: data.regionalData,
-          // Extract plain and prediction-starred years
           yearsList: data.temporalData.map((d: any) => d.ano),
           loading: false
         });

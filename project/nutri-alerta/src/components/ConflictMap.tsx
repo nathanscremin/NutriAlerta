@@ -3,64 +3,93 @@ import React from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MERCADOS_GERAIS, ESPORTE_LAZER, AMBIENTE_OBESOGENICO } from '@/lib/mockData';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function ConflictMap() {
+  const { darkMode } = useAppStore();
+  const mapBackground = darkMode ? '#1c1c1e' : '#f8fafc';
+
   return (
-    <MapContainer
-      center={[-22.405, -47.565]}
-      zoom={13}
-      style={{ height: '100%', width: '100%', background: '#080c14' }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-      />
+    <>
+      <style>{`
+        .custom-glass-tooltip {
+          background: ${darkMode ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)'} !important;
+          backdrop-filter: blur(8px) !important;
+          border: 1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'} !important;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
+          color: ${darkMode ? '#f5f5f7' : '#0f172a'} !important;
+          border-radius: 8px !important;
+          padding: 5px 10px !important;
+        }
+        .custom-glass-tooltip::before { display: none !important; }
+        .leaflet-container { background: ${mapBackground} !important; }
+      `}</style>
+      <MapContainer
+        center={[-22.405, -47.565]}
+        zoom={13}
+        style={{ height: '100%', width: '100%', background: mapBackground }}
+        scrollWheelZoom={false}
+      >
+        <TileLayer
+          key={darkMode ? 'dark-tiles' : 'light-tiles'}
+          url={darkMode 
+            ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+          }
+          attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+        />
 
-      {/* Ambiente Obesogênico — vermelho */}
-      {AMBIENTE_OBESOGENICO.map((p, i) => (
-        <CircleMarker
-          key={`risco-${i}`}
-          center={[p.lat, p.lon]}
-          radius={7}
-          pathOptions={{ color: '#f43f5e', fillColor: '#f43f5e', fillOpacity: 0.85, weight: 1 }}
-        >
-          <Tooltip>
-            <span className="text-xs font-semibold">{p.nome}</span><br />
-            <span className="text-[10px] text-slate-400">{p.tipo}</span>
-          </Tooltip>
-        </CircleMarker>
-      ))}
+        {/* Ambiente Obesogênico — vermelho */}
+        {AMBIENTE_OBESOGENICO.map((p, i) => (
+          <CircleMarker
+            key={`risco-${i}`}
+            center={[p.lat, p.lon]}
+            radius={7}
+            pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.8, weight: 1 }}
+          >
+            <Tooltip className="custom-glass-tooltip">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
+                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        ))}
 
-      {/* Mercados / Oásis alimentares — verde */}
-      {MERCADOS_GERAIS.map((p, i) => (
-        <CircleMarker
-          key={`mercado-${i}`}
-          center={[p.lat, p.lon]}
-          radius={6}
-          pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.85, weight: 1 }}
-        >
-          <Tooltip>
-            <span className="text-xs font-semibold">{p.nome}</span><br />
-            <span className="text-[10px] text-slate-400">{p.tipo}</span>
-          </Tooltip>
-        </CircleMarker>
-      ))}
+        {/* Mercados / Oásis alimentares — verde */}
+        {MERCADOS_GERAIS.map((p, i) => (
+          <CircleMarker
+            key={`mercado-${i}`}
+            center={[p.lat, p.lon]}
+            radius={6}
+            pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.8, weight: 1 }}
+          >
+            <Tooltip className="custom-glass-tooltip">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
+                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        ))}
 
-      {/* Parques e Esportes — azul/ciano */}
-      {ESPORTE_LAZER.filter(p => ['park', 'fitness_station'].includes(p.tipo)).map((p, i) => (
-        <CircleMarker
-          key={`esporte-${i}`}
-          center={[p.lat, p.lon]}
-          radius={5}
-          pathOptions={{ color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.7, weight: 1 }}
-        >
-          <Tooltip>
-            <span className="text-xs font-semibold">{p.nome}</span><br />
-            <span className="text-[10px] text-slate-400">{p.tipo}</span>
-          </Tooltip>
-        </CircleMarker>
-      ))}
-    </MapContainer>
+        {/* Parques e Esportes — azul/ciano */}
+        {ESPORTE_LAZER.filter(p => ['park', 'fitness_station'].includes(p.tipo)).map((p, i) => (
+          <CircleMarker
+            key={`esporte-${i}`}
+            center={[p.lat, p.lon]}
+            radius={5}
+            pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.7, weight: 1 }}
+          >
+            <Tooltip className="custom-glass-tooltip">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
+                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        ))}
+      </MapContainer>
+    </>
   );
 }

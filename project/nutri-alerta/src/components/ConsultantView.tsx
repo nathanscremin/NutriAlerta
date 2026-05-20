@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, BrainCircuit, Sparkles, TrendingUp } from 'lucide-react';
+import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid } from 'recharts';
-import { DADOS_TEMPORAIS } from '@/lib/mockData';
+import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
+import { SparklesIcon } from './Header';
 
 interface Message {
   role: 'user' | 'bot';
@@ -23,26 +23,47 @@ function getSessionId() {
   return id;
 }
 
+function getRiskBadge(value: number, indicator: string) {
+  if (indicator === 'desnutricao') {
+    if (value < 2.0) return { label: 'Risco Baixo', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
+    if (value < 3.2) return { label: 'Risco Médio', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
+    return { label: 'Risco Alto', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
+  } else if (indicator === 'sobrepeso') {
+    if (value < 12) return { label: 'Risco Baixo', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
+    if (value < 18) return { label: 'Risco Médio', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
+    return { label: 'Risco Alto', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
+  } else {
+    if (value < 8) return { label: 'Risco Baixo', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
+    if (value < 13.5) return { label: 'Risco Médio', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
+    return { label: 'Risco Alto', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
+  }
+}
+
 export default function ConsultantView() {
-  const { anoSelecionado, indicador, selectedBairro, faixaEtaria, temporalData, regionalData, yearsList, activePoiTypes } = useAppStore();
+  const { 
+    anoSelecionado, indicador, selectedBairro, setSelectedBairro, 
+    faixaEtaria, temporalData, regionalData, yearsList, activePoiTypes 
+  } = useAppStore();
+
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
   const { multObs, multDes } = React.useMemo(() => {
     let mObs = 1.0;
     let mDes = 1.0;
     if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
-      mObs *= 0.88; // Redução de 12% na obesidade ao controlar fast-food
+      mObs *= 0.88;
     }
     if (!activePoiTypes.includes('Esporte e Lazer')) {
-      mObs *= 1.10; // Aumento de 10% na obesidade se não houver parques/esportes
+      mObs *= 1.10;
     }
     if (!activePoiTypes.includes('Alimentação - Mercado')) {
-      mDes *= 1.15; // Aumento de 15% na desnutrição sem mercados saudáveis
-      mObs *= 1.08; // Aumento de 8% na obesidade sem mercados saudáveis
+      mDes *= 1.15;
+      mObs *= 1.08;
     }
     if (!activePoiTypes.includes('Educação')) {
-      mDes *= 1.05; // Aumento de 5% se não houver escolas/campanhas
-      mObs *= 1.05; // Aumento de 5% se não houver escolas/campanhas
+      mDes *= 1.05;
+      mObs *= 1.05;
     }
     return { multObs: mObs, multDes: mDes };
   }, [activePoiTypes]);
@@ -70,22 +91,14 @@ export default function ConsultantView() {
   }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
 
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0 };
-  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
-  const isObs = indicador === 'obesidade';
 
   const cleanYear = anoSelecionado.replace('★', '').trim();
-  const mainValue = Number((isObs ? dadosAno.obesidade : dadosAno.desnutricao).toFixed(2));
-  const mainProj = Number((isObs ? dadosProj.obesidade : dadosProj.desnutricao).toFixed(2));
-
-  const mainColor = indicador === 'desnutricao' ? 'text-[#00e5ff]' : indicador === 'sobrepeso' ? 'text-[#ffbb00]' : 'text-[#ff3366]';
   const mainLabel = indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'bot',
-      text: selectedBairro
-        ? `Analisando dados de ${selectedBairro} — Rio Claro (${anoSelecionado}). A taxa de ${mainLabel} está em ${mainValue}%. Como posso ajudar na análise?`
-        : `Olá. Sou o EpidemiologistBot. Selecione um bairro no mapa para análise contextualizada, ou faça uma pergunta geral sobre os dados nutricionais de Rio Claro.`
+      text: 'Olá! Sou o NutrIA. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
     }
   ]);
   const [input, setInput] = useState('');
@@ -140,55 +153,103 @@ export default function ConsultantView() {
     }
   }
 
+  // Filtrar UBS da lista de saúde e ordenar em ordem alfabética pelo nome limpo (sem prefixos)
+  const ubsList = UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
+    const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
+    const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
+    return nameA.localeCompare(nameB);
+  });
+  const filteredUbs = ubsList.filter(u =>
+    u.nome.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Métrica consolidada para a opção Geral
+  let geralVal = 0;
+  if (indicador === 'desnutricao') {
+    geralVal = dadosAno.desnutricao;
+  } else if (indicador === 'sobrepeso') {
+    const currentYearRegions = regionalData && regionalData[cleanYear] 
+      ? Object.values(regionalData[cleanYear]) 
+      : [];
+    if (currentYearRegions.length > 0) {
+      let sumSobrepeso = 0, count = 0;
+      currentYearRegions.forEach((reg: any) => {
+        if (typeof reg.sobrepeso === 'number') {
+          sumSobrepeso += reg.sobrepeso;
+          count++;
+        }
+      });
+      geralVal = count > 0 ? Number((sumSobrepeso / count).toFixed(2)) : 16.3;
+    } else {
+      geralVal = 16.3;
+    }
+  } else {
+    geralVal = dadosAno.obesidade;
+  }
+  const geralBadge = getRiskBadge(geralVal, indicador);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden p-6 gap-6 bg-[#0B0E14]"
+      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden p-6 gap-6 bg-background transition-colors duration-300"
     >
       {/* Left: Chatbot */}
-      <div className="w-[60%] flex flex-col bg-[#131823] border border-white/5 rounded-2xl overflow-hidden relative shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0B0E14] via-[#00ff9d]/50 to-[#0B0E14]" />
-
+      <div className="w-[60%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
+        
         {/* Header */}
-        <div className="p-5 border-b border-white/5 flex items-center gap-4 bg-[#0B0E14]/50">
-          <div className="bg-[#00ff9d]/10 p-2.5 rounded-xl border border-[#00ff9d]/20 shadow-[0_0_15px_rgba(0,255,157,0.15)]">
-            <BrainCircuit className="w-6 h-6 text-[#00ff9d]" />
+        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
+          <div className="flex items-center gap-3">
+            <div className="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shadow-sm">
+              <SparklesIcon className="w-6 h-6 text-teal-600 dark:text-teal-500" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
+                NutrIA
+                <SparklesIcon className="w-5 h-5 text-amber-500" />
+              </h2>
+              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">IA de Apoio à Decisão Epidemiológica · Rio Claro</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-black text-white flex items-center gap-2">
-              EpidemiologistBot
-              <Sparkles className="w-4 h-4 text-[#00ff9d]" />
-            </h2>
-            <p className="text-[10px] font-medium text-white/50 tracking-wide">IA de Apoio à Decisão Epidemiológica · Rio Claro</p>
-          </div>
-          <div className="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-[#00ff9d] bg-[#00ff9d]/10 px-3 py-1.5 rounded-full border border-[#00ff9d]/20">
-            <span className="w-2 h-2 rounded-full bg-[#00ff9d] animate-pulse shadow-[0_0_8px_rgba(0,255,157,1)]" />
-            Online
+          
+          {/* Signal / Active Context Pill */}
+          <div className="flex flex-wrap items-center gap-2 md:ml-auto">
+            <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border flex items-center gap-1 ${
+              selectedBairro 
+                ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-100 dark:border-teal-900/60 font-bold' 
+                : 'text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-[#2c2c2e] font-semibold'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${selectedBairro ? 'bg-teal-500 animate-pulse' : 'bg-slate-400'}`} />
+              Sinal: {selectedBairro ? selectedBairro : 'Rio Claro (Geral)'}
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-full border border-teal-100 dark:border-teal-900/60">
+              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+              Online
+            </div>
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-[#1c1c1e] scrollbar-thin">
           {messages.map((msg, i) => (
             msg.role === 'bot' ? (
               <div key={i} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-[#00ff9d]/10 border border-[#00ff9d]/20 flex items-center justify-center shrink-0 mt-1">
-                  <Bot className="w-4 h-4 text-[#00ff9d]" />
+                <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                  <SparklesIcon className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
-                <div className="bg-[#0B0E14]/80 border border-white/5 p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-lg">
-                  <p className="text-sm text-white/80 leading-relaxed font-medium whitespace-pre-wrap">{msg.text}</p>
+                <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
+                  <p className="text-sm text-slate-705 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ) : (
               <div key={i} className="flex gap-4 flex-row-reverse">
-                <div className="w-8 h-8 rounded-full bg-[#1a2130] border border-white/10 flex items-center justify-center shrink-0 mt-1">
-                  <span className="text-[10px] font-black text-white/70">EU</span>
+                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] flex items-center justify-center shrink-0 mt-1">
+                  <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400">EU</span>
                 </div>
-                <div className="bg-[#00ff9d]/10 border border-[#00ff9d]/20 p-5 rounded-2xl rounded-tr-sm max-w-[80%]">
-                  <p className="text-sm text-[#00ff9d] leading-relaxed font-semibold">{msg.text}</p>
+                <div className="bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 p-5 rounded-2xl rounded-tr-sm max-w-[80%]">
+                  <p className="text-sm text-teal-855 dark:text-teal-300 leading-relaxed font-bold">{msg.text}</p>
                 </div>
               </div>
             )
@@ -196,14 +257,14 @@ export default function ConsultantView() {
 
           {loading && (
             <div className="flex gap-4">
-              <div className="w-8 h-8 rounded-full bg-[#00ff9d]/10 border border-[#00ff9d]/20 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 text-[#00ff9d]" />
+              <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4 text-teal-600 dark:text-teal-500" />
               </div>
-              <div className="bg-[#0B0E14]/80 border border-white/5 px-5 py-4 rounded-2xl rounded-tl-sm flex items-center gap-2.5 shadow-lg">
+              <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] px-5 py-4 rounded-2xl rounded-tl-sm flex items-center gap-2.5 shadow-sm">
                 {[0, 150, 300].map(d => (
-                  <div key={d} className="w-2 h-2 bg-[#00ff9d] rounded-full animate-bounce shadow-[0_0_8px_rgba(0,255,157,0.8)]" style={{ animationDelay: `${d}ms` }} />
+                  <div key={d} className="w-2 h-2 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
                 ))}
-                <span className="text-[11px] font-bold text-white/40 ml-2 tracking-wide">Analisando correlações...</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-550 ml-2 tracking-wide">Analisando correlações...</span>
               </div>
             </div>
           )}
@@ -212,7 +273,7 @@ export default function ConsultantView() {
         </div>
 
         {/* Input */}
-        <div className="p-5 border-t border-white/5 bg-[#0B0E14]/50">
+        <div className="p-5 border-t border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="relative">
             <input
               type="text"
@@ -220,85 +281,129 @@ export default function ConsultantView() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Faça uma pergunta sobre os dados epidemiológicos..."
-              className="w-full bg-[#1a2130] border border-white/10 rounded-xl py-4 pl-5 pr-14 text-sm font-medium text-white placeholder-white/30 focus:outline-none focus:border-[#00ff9d]/50 focus:ring-2 focus:ring-[#00ff9d]/20 transition-all shadow-inner"
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl py-4 pl-5 pr-14 text-sm font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-sm"
             />
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-[#00ff9d] hover:bg-[#00e68d] disabled:opacity-40 rounded-lg flex items-center justify-center transition-colors shadow-[0_0_15px_rgba(0,255,157,0.3)]"
+              className="absolute right-2 top-2 bottom-2 aspect-square bg-teal-600 hover:bg-teal-700 disabled:opacity-40 rounded-lg flex items-center justify-center transition-colors shadow-sm cursor-pointer"
             >
-              <Send className="w-5 h-5 text-[#0B0E14]" />
+              <Send className="w-5 h-5 text-white" />
             </button>
           </div>
-          <p className="text-[10px] font-bold tracking-wider text-white/30 mt-3 text-center uppercase">IA baseada nos dados reais SISVAN/CNES de Rio Claro</p>
+          <p className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-550 mt-3 text-center uppercase">IA baseada nos dados reais SISVAN/CNES de Rio Claro</p>
         </div>
       </div>
 
-      {/* Right: Contexto */}
-      <div className="w-[40%] flex flex-col gap-6">
-        <div className="bg-[#131823] border border-white/5 rounded-2xl p-6 flex flex-col flex-1 shadow-[0_10px_40px_rgba(0,0,0,0.6)] relative overflow-hidden">
-          <div className={`absolute -right-20 -top-20 w-64 h-64 ${isObs ? 'bg-[#ff3366]/5' : 'bg-[#00e5ff]/5'} rounded-full blur-3xl pointer-events-none`} />
-          <div className="flex items-center justify-between mb-4 z-10">
-            <div>
-              <h3 className="text-base font-black text-white tracking-wide">Tendência de {mainLabel.charAt(0).toUpperCase() + mainLabel.slice(1)}</h3>
-              <p className="text-[10px] font-medium text-white/40 tracking-wider mt-1">
-                {selectedBairro ? selectedBairro.toUpperCase() : 'RIO CLARO (GERAL)'} · 2018–2027 · SISVAN + ML
-              </p>
-            </div>
-            <div className={`flex items-center gap-1.5 text-[10px] font-bold ${isObs ? 'text-[#ff3366] bg-[#ff3366]/10 border-[#ff3366]/20' : 'text-[#00e5ff] bg-[#00e5ff]/10 border-[#00e5ff]/20'} px-3 py-1.5 rounded-lg border shadow-lg`}>
-              <TrendingUp className="w-3.5 h-3.5" /> Alta projetada
-            </div>
-          </div>
-          <div className="flex-1 min-h-[200px] mt-2 z-10">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={isObs ? '#ff3366' : '#00e5ff'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={isObs ? '#ff3366' : '#00e5ff'} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="ano" stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
-                <YAxis stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
-                <RechartsTooltip
-                  contentStyle={{ backgroundColor: '#0B0E14', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}
-                  formatter={(v: any, n: any) => [`${Number(v).toFixed(2)}%`, n]}
-                />
-                <Area
-                  type="monotone"
-                  dataKey={isObs ? "obesidade" : "desnutricao"}
-                  name={mainLabel}
-                  stroke={isObs ? "#ff3366" : "#00e5ff"}
-                  strokeWidth={3}
-                  fill="url(#gradArea)"
-                  dot={(props: any) => props.payload.isPrevisao
-                    ? <circle cx={props.cx} cy={props.cy} r={5} fill="none" stroke={isObs ? "#ff3366" : "#00e5ff"} strokeWidth={2} strokeDasharray="3 1" />
-                    : <circle cx={props.cx} cy={props.cy} r={4} fill={isObs ? "#ff3366" : "#00e5ff"} strokeWidth={0} />}
-                  activeDot={{ r: 6, fill: '#fff', stroke: isObs ? "#ff3366" : "#00e5ff", strokeWidth: 3 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-5 pt-5 border-t border-white/5 z-10">
-            <p className="text-xs text-white/60 leading-relaxed font-medium">
-              A taxa de {mainLabel} {selectedBairro ? `na região de ${selectedBairro}` : 'em Rio Claro (geral)'} evoluiu de <strong className="text-white">{(isObs ? activeTemporalData[0]?.obesidade || 8.98 : activeTemporalData[0]?.desnutricao || 2.81).toFixed(2)}% (2018)</strong> para <strong className="text-white">{mainValue}% ({anoSelecionado})</strong>. O modelo preditivo projeta <strong className={mainColor}>{mainProj}% em 2027</strong>.
-            </p>
+      {/* Right: UBS / USF List */}
+      <div className="w-[40%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
+        
+        {/* List Header */}
+        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
+          <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide uppercase">Unidades de Saúde (UBS/USF)</h3>
+          <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">
+            Selecione uma UBS para cruzar os dados no chatbot (Ano: {cleanYear})
+          </p>
+
+          {/* Search bar inside list */}
+          <div className="relative mt-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar UBS/USF..."
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-colors"
+            />
           </div>
         </div>
 
-        <div className="bg-[#ffbb00]/10 border border-[#ffbb00]/20 rounded-2xl p-6 shadow-[0_10px_30px_rgba(255,187,0,0.1)]">
-          <div className="flex items-start gap-4">
-            <div className="bg-[#ffbb00]/20 p-3 rounded-xl border border-[#ffbb00]/30 shrink-0">
-              <TrendingUp className="w-5 h-5 text-[#ffbb00]" />
+        {/* List content */}
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800 scrollbar-thin">
+          
+          {/* Opção GERAL (Todo o Município) */}
+          <div
+            onClick={() => {
+              setSelectedBairro(null);
+              setSearchQuery('');
+            }}
+            className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
+              selectedBairro === null 
+                ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
+                : 'hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+            }`}
+          >
+            <div className={`p-2 rounded-xl border shrink-0 ${selectedBairro === null ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'}`}>
+              <Globe className="w-4 h-4" />
             </div>
-            <div>
-              <p className="text-sm font-black text-[#ffbb00] mb-2 tracking-wide">Alerta de Projeção</p>
-              <p className="text-xs text-white/70 leading-relaxed font-medium">
-                O modelo detectou aceleração em 3 UBSs para 2026–2027. Intervenção preventiva é recomendada para as unidades <span className="text-white font-bold">Bela Vista</span> e <span className="text-white font-bold">Celestino Donato</span>.
-              </p>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
+                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
+                  {geralBadge.label}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
+                <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{geralVal}%</strong></span>
+                <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">45.2K</strong></span>
+              </div>
             </div>
           </div>
+
+          {/* Lista Filtrada de UBSs */}
+          {filteredUbs.map(ubs => {
+            const isSelected = selectedBairro === ubs.nome;
+            const ubsData = regionalData[cleanYear]?.[ubs.nome];
+            let val = 0;
+            if (indicador === 'desnutricao') {
+              val = ubsData ? ubsData.desnutricao : 2.62;
+            } else if (indicador === 'sobrepeso') {
+              val = ubsData ? ubsData.sobrepeso : 16.3;
+            } else {
+              val = ubsData ? ubsData.obesidade : 12.93;
+            }
+            const multiplier = indicador === 'desnutricao' ? multDes : multObs;
+            const finalVal = Number((val * multiplier).toFixed(2));
+            const badge = getRiskBadge(finalVal, indicador);
+            const totalAvaliados = ubsData ? (ubsData.total_avaliados ?? 'N/D') : 'N/D';
+
+            return (
+              <div
+                key={ubs.nome}
+                onClick={() => setSelectedBairro(isSelected ? null : ubs.nome)}
+                className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
+                  isSelected 
+                    ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
+                    : 'hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                }`}
+              >
+                <div className={`p-2 rounded-xl border shrink-0 ${isSelected ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'}`}>
+                  <MapPin className="w-4 h-4" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="text-xs font-bold text-slate-805 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
+                    <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{finalVal}%</strong></span>
+                    <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">{totalAvaliados}</strong></span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filteredUbs.length === 0 && (
+            <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">
+              Nenhuma unidade de saúde encontrada.
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
