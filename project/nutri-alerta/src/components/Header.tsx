@@ -47,7 +47,7 @@ export default function Header() {
         </motion.div>
         <div>
           <h1 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">NutriAlerta</h1>
-          <p className="text-[10px] text-slate-500 dark:text-zinc-450 font-medium tracking-wider">RIO CLARO · SP · SISVAN 2025</p>
+          <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium tracking-wider">RIO CLARO · SP · SISVAN 2025</p>
         </div>
       </div>
 

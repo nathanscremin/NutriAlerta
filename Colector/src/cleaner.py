@@ -448,6 +448,78 @@ def agregar_para_modelo(df_limpo: pd.DataFrame, df_ubs_caminho: str, base_existe
     df_novos_agregados['Ano'] = df_novos_agregados['Ano'].astype(int)
     df_novos_agregados['Faixa_Etaria'] = df_novos_agregados['Faixa_Etaria'].astype(str)
 
+    # 2b. Consolidação: criar linhas unificadas '0 a 18 anos'
+    linhas_unificadas = []
+    for (cnes, ano), grp in df_novos_agregados.groupby(['CNES', 'Ano']):
+        total_geral = grp['Total'].sum()
+        if total_geral == 0:
+            continue
+
+        primeira = grp.iloc[0]
+
+        # Magreza: peso muito baixo + peso baixo (0-5 e 6-10) + magreza acentuada + magreza (10-19)
+        total_magreza = 0.0
+        total_obesidade = 0.0
+        total_obesidade_grave = 0.0
+        total_sobrepeso = 0.0
+        total_eutrofia = 0.0
+
+        for _, r in grp.iterrows():
+            faixa = r['Faixa_Etaria']
+            if faixa in ('0 a 5 anos', '6 a 10 anos'):
+                total_magreza += (0.0 if pd.isna(r.get('Peso_Muito_Baixo_Quantidade')) else r['Peso_Muito_Baixo_Quantidade']) \
+                               + (0.0 if pd.isna(r.get('Peso_Baixo_Quantidade')) else r['Peso_Baixo_Quantidade'])
+                total_obesidade += 0.0 if pd.isna(r.get('Peso_Elevado_Quantidade')) else r['Peso_Elevado_Quantidade']
+                total_eutrofia += 0.0 if pd.isna(r.get('Peso_Adequado_Quantidade')) else r['Peso_Adequado_Quantidade']
+            elif faixa == '10 a 19 anos':
+                total_magreza += (0.0 if pd.isna(r.get('Magreza_Acentuada_Qtd')) else r['Magreza_Acentuada_Qtd']) \
+                               + (0.0 if pd.isna(r.get('Magreza_Qtd')) else r['Magreza_Qtd'])
+                total_obesidade += (0.0 if pd.isna(r.get('Obesidade_Qtd')) else r['Obesidade_Qtd']) \
+                                 + (0.0 if pd.isna(r.get('Obesidade_Grave_Qtd')) else r['Obesidade_Grave_Qtd'])
+                total_obesidade_grave += 0.0 if pd.isna(r.get('Obesidade_Grave_Qtd')) else r['Obesidade_Grave_Qtd']
+                total_sobrepeso += 0.0 if pd.isna(r.get('Sobrepeso_Qtd')) else r['Sobrepeso_Qtd']
+                total_eutrofia += 0.0 if pd.isna(r.get('Eutrofia_Qtd')) else r['Eutrofia_Qtd']
+
+        row_unif = {
+            'UF': primeira['UF'],
+            'IBGE': primeira['IBGE'],
+            'Municipio': primeira['Municipio'],
+            'CNES': cnes,
+            'EAS': primeira['EAS'],
+            'Total': float(total_geral),
+            'Local': 'SP',
+            'Ano': int(ano),
+            'Faixa_Etaria': '0 a 18 anos',
+            # Colunas peso-por-idade não se aplicam à faixa unificada
+            'Peso_Muito_Baixo_Quantidade': np.nan,
+            'Peso_Muito_Baixo_Porcentagem': np.nan,
+            'Peso_Baixo_Quantidade': np.nan,
+            'Peso_Baixo_Porcentagem': np.nan,
+            'Peso_Adequado_Quantidade': np.nan,
+            'Peso_Adequado_Porcentagem': np.nan,
+            'Peso_Elevado_Quantidade': np.nan,
+            'Peso_Elevado_Porcentagem': np.nan,
+            # Métricas unificadas
+            'Magreza_Acentuada_Qtd': np.nan,
+            'Magreza_Acentuada_Pct': np.nan,
+            'Magreza_Qtd': total_magreza,
+            'Magreza_Pct': total_magreza / total_geral * 100,
+            'Eutrofia_Qtd': total_eutrofia,
+            'Eutrofia_Pct': total_eutrofia / total_geral * 100,
+            'Sobrepeso_Qtd': total_sobrepeso,
+            'Sobrepeso_Pct': total_sobrepeso / total_geral * 100,
+            'Obesidade_Qtd': total_obesidade,
+            'Obesidade_Pct': total_obesidade / total_geral * 100,
+            'Obesidade_Grave_Qtd': total_obesidade_grave,
+            'Obesidade_Grave_Pct': total_obesidade_grave / total_geral * 100,
+        }
+        linhas_unificadas.append(row_unif)
+
+    if linhas_unificadas:
+        df_unificados = pd.DataFrame(linhas_unificadas)
+        df_novos_agregados = pd.concat([df_novos_agregados, df_unificados], ignore_index=True)
+        logger.info("Linhas unificadas '0 a 18 anos' criadas: %d", len(df_unificados))
+
     # 3. Upsert com a base existente
     if os.path.exists(base_existente_caminho):
         logger.info("Mesclando dados novos com a base existente: '%s'", base_existente_caminho)

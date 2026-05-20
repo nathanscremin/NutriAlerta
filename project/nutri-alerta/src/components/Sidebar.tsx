@@ -20,6 +20,7 @@ export default function Sidebar() {
     activePoiTypes, setActivePoiTypes,
     yearsList,
     temporalData,
+    regionalData,
     darkMode, setDarkMode,
     sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
@@ -66,6 +67,18 @@ export default function Sidebar() {
   const avgObs = selectedYearData ? `${selectedYearData.obesidade.toFixed(2)}%` : '...';
   const avgDes = selectedYearData ? `${selectedYearData.desnutricao.toFixed(2)}%` : '...';
 
+  const cleanYear = anoSelecionado.replace(' ★', '');
+  const currentYearRegions = regionalData && regionalData[cleanYear]
+    ? Object.values(regionalData[cleanYear])
+    : [];
+  const sumAvaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
+  const isPrevisao = anoSelecionado.includes('★');
+  const evaluatedStr = isPrevisao 
+    ? 'Projetado' 
+    : (sumAvaliados > 0 
+        ? (sumAvaliados >= 1000 ? `${(sumAvaliados / 1000).toFixed(1)}K` : String(sumAvaliados))
+        : (anoSelecionado === '2025' ? '45.2K' : anoSelecionado === '2024' ? '41.1K' : '38.5K'));
+
   // Ocultar completamente o menu lateral caso esteja recolhido
   if (sidebarCollapsed) return null;
 
@@ -76,7 +89,7 @@ export default function Sidebar() {
         {/* Botão de Recolher (Collapse) */}
         <button
           onClick={() => setSidebarCollapsed(true)}
-          className="text-slate-400 hover:text-slate-650 dark:text-zinc-500 dark:hover:text-[#f5f5f7] p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800/60 rounded-xl transition-colors cursor-pointer"
+          className="text-slate-400 hover:text-slate-700 dark:text-zinc-500 dark:hover:text-[#f5f5f7] p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800/60 rounded-xl transition-colors cursor-pointer"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -126,7 +139,7 @@ export default function Sidebar() {
               }}
               onFocus={() => setIsDropdownOpen(true)}
               placeholder="Pesquisar UBS..."
-              className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-800"
+              className="w-full bg-slate-50 dark:bg-zinc-800/50 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-800"
             />
             {selectedBairro ? (
               <button
@@ -140,7 +153,7 @@ export default function Sidebar() {
                 ✕
               </button>
             ) : (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 pointer-events-none text-[10px]">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 pointer-events-none text-[10px]">
                 🔍
               </div>
             )}
@@ -209,16 +222,6 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Separador */}
-        <div className="border-t border-slate-100 dark:border-[#2c2c2e]" />
-
-        {/* Faixa Etária Alert */}
-        <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200 dark:border-[#2c2c2e] rounded-xl p-3">
-          <p className="text-[10px] font-bold text-slate-700 dark:text-[#f5f5f7] mb-1">Faixa Monitorada (0–18 anos)</p>
-          <p className="text-[9px] text-slate-500 dark:text-zinc-400 leading-relaxed font-semibold">
-            Os dados consolidados abrangem de **0 a 18 anos** (infanto-juvenil). Filtros específicos de idade não apresentaram relevância prática e foram ocultados.
-          </p>
-        </div>
 
         {/* Separador */}
         <div className="border-t border-slate-100 dark:border-[#2c2c2e]" />
@@ -239,7 +242,7 @@ export default function Sidebar() {
                   disabled={isUbs}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all duration-300 ${
                     isUbs
-                      ? 'bg-slate-50 dark:bg-zinc-850 border border-slate-200 dark:border-[#2c2c2e] text-slate-800 dark:text-[#f5f5f7] cursor-default'
+                      ? 'bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] text-slate-800 dark:text-[#f5f5f7] cursor-default'
                       : isActive 
                         ? 'bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] text-slate-800 dark:text-[#f5f5f7] shadow-sm cursor-pointer' 
                         : 'text-slate-400 dark:text-zinc-500 hover:bg-slate-50 dark:hover:bg-zinc-800/40 hover:text-slate-700 dark:hover:text-[#f5f5f7] border border-transparent cursor-pointer'
@@ -269,7 +272,7 @@ export default function Sidebar() {
           <div className="space-y-2">
             <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade média" value={avgObs} color="text-red-500" />
             <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição média" value={avgDes}  color="text-blue-500" />
-            <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />}    label="Pacientes avaliados" value={anoSelecionado.includes('2026') || anoSelecionado.includes('2027') ? 'Projetado' : '45.2K'} color="text-slate-750 dark:text-zinc-300" />
+            <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />}    label="Pacientes avaliados" value={evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
             <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-600" />} label="UBS monitoradas" value="18" color="text-teal-600 dark:text-teal-500" />
           </div>
         </div>
@@ -299,7 +302,7 @@ export default function Sidebar() {
 
         {/* Fonte de dados */}
         <div className="border-t border-slate-100 dark:border-[#2c2c2e] pt-4">
-          <p className="text-[9px] text-slate-400 dark:text-zinc-550 leading-relaxed font-medium">
+          <p className="text-[9px] text-slate-400 dark:text-zinc-500 leading-relaxed font-medium">
             Fonte: SISVAN/CNES · Status: Dados reais + ML (2026–2027)
           </p>
         </div>

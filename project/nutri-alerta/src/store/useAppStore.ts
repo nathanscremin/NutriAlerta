@@ -18,8 +18,6 @@ interface AppState {
   setActivePoiTypes: (types: PoiType[]) => void;
   selectedPoi: any | null;
   setSelectedPoi: (poi: any | null) => void;
-  faixaEtaria: '0-10' | '10-18';
-  setFaixaEtaria: (faixa: '0-10' | '10-18') => void;
   
   // Dark mode & Sidebar toggles
   darkMode: boolean;
@@ -54,8 +52,6 @@ export const useAppStore = create<AppState>((set) => ({
   setActivePoiTypes: (types) => set({ activePoiTypes: types }),
   selectedPoi: null,
   setSelectedPoi: (poi) => set({ selectedPoi: poi }),
-  faixaEtaria: '10-18',
-  setFaixaEtaria: (faixa) => set({ faixaEtaria: faixa }),
 
   // Theme & Layout toggles
   darkMode: false,

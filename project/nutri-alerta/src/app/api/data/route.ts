@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 // Define the health units to perform geographical proximity mapping
@@ -102,27 +102,28 @@ function parseCSV(content: string) {
 }
 
 // Dynamic CSV Finder
-function findCSVFile(filenames: string[]): string | null {
+async function findCSVFile(filenames: string[]): Promise<string | null> {
   const cwd = process.cwd();
   const checkPaths = [
-    ...filenames.map(f => path.join(/*turbopackIgnore: true*/ cwd, '..', 'csv', f)),
-    ...filenames.map(f => path.join(/*turbopackIgnore: true*/ cwd, 'csv', f)),
-    ...filenames.map(f => path.join(/*turbopackIgnore: true*/ cwd, 'project', 'csv', f)),
-    ...filenames.map(f => path.join(/*turbopackIgnore: true*/ cwd, f)),
+    ...filenames.map(f => path.join(cwd, '..', 'csv', f)),
+    ...filenames.map(f => path.join(cwd, 'csv', f)),
+    ...filenames.map(f => path.join(cwd, 'project', 'csv', f)),
+    ...filenames.map(f => path.join(cwd, f)),
   ];
 
   for (const p of checkPaths) {
-    if (fs.existsSync(p)) {
+    try {
+      await fs.access(p);
       return p;
-    }
+    } catch {}
   }
   return null;
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const obesityPath = findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
-    const desnutricaoPath = findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
+    const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
+    const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
 
     if (!obesityPath || !desnutricaoPath) {
       console.warn("CSV Files not found! Falling back to static mock data structures.");
@@ -134,8 +135,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const obesityContent = fs.readFileSync(obesityPath, 'utf-8');
-    const desnutricaoContent = fs.readFileSync(desnutricaoPath, 'utf-8');
+    const obesityContent = await fs.readFile(obesityPath, 'utf-8');
+    const desnutricaoContent = await fs.readFile(desnutricaoPath, 'utf-8');
 
     const obesityRows = parseCSV(obesityContent);
     const desnutricaoRows = parseCSV(desnutricaoContent);

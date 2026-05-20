@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-2 mb-1">
           <span className="w-2.5 h-2.5 rounded-full" style={{ background: p.color }} />
-          <span className="text-slate-650 dark:text-zinc-350">{p.name}:</span>
+          <span className="text-slate-600 dark:text-zinc-300">{p.name}:</span>
           <span className="font-bold text-slate-900 dark:text-[#f5f5f7]">{Number(p.value).toFixed(2)}%</span>
         </div>
       ))}
@@ -40,9 +40,9 @@ function KpiCard({
 }) {
   const TrendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : Minus;
   const trendColor = trend === 'up' 
-    ? 'text-red-650 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20' 
+    ? 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20' 
     : trend === 'down' 
-      ? 'text-emerald-650 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20' 
+      ? 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20' 
       : 'text-slate-500 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800';
 
   return (
@@ -55,7 +55,7 @@ function KpiCard({
       <div className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-2 font-black flex items-center justify-between relative z-10">
         <span>{label}</span>
         {tooltip && (
-          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-zinc-300">
+          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300">
             <Info className="w-3.5 h-3.5" />
             <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-medium normal-case tracking-normal leading-normal border dark:border-zinc-700">
               {tooltip}
@@ -140,7 +140,7 @@ export default function ExpertView() {
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
 
-  const mainColor = indicador === 'desnutricao' ? 'text-blue-600 dark:text-blue-400' : indicador === 'sobrepeso' ? 'text-amber-600 dark:text-amber-400' : 'text-red-650 dark:text-red-400';
+  const mainColor = indicador === 'desnutricao' ? 'text-blue-600 dark:text-blue-400' : indicador === 'sobrepeso' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
   const mainBg = indicador === 'desnutricao' ? 'bg-blue-50/50 dark:bg-blue-950/20' : indicador === 'sobrepeso' ? 'bg-amber-50/50 dark:bg-amber-950/20' : 'bg-red-50/50 dark:bg-red-950/20';
   const mainBorder = indicador === 'desnutricao' ? 'border-blue-100' : indicador === 'sobrepeso' ? 'border-amber-100' : 'border-red-100';
   const mainLabel = indicador === 'desnutricao' ? 'Desnutrição' : indicador === 'sobrepeso' ? 'Sobrepeso' : 'Obesidade';
@@ -173,9 +173,10 @@ export default function ExpertView() {
       ];
 
   const currentBairroRecord = selectedBairro && regionalData[cleanYear]?.[selectedBairro];
+  const sumAvaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
   const avaliadosVal = selectedBairro 
     ? (currentBairroRecord ? (currentBairroRecord.total_avaliados ?? 0) : 0)
-    : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500);
+    : (sumAvaliados > 0 ? sumAvaliados : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500));
 
   const avaliadosStr = avaliadosVal >= 1000 
     ? `${(avaliadosVal / 1000).toFixed(1)}K` 
@@ -254,7 +255,7 @@ export default function ExpertView() {
               <button
                 onClick={() => setSidebarCollapsed(false)}
                 title="Mostrar menu lateral"
-                className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-sm p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all text-slate-500 dark:text-zinc-450 hover:text-slate-800 dark:hover:text-[#f5f5f7] cursor-pointer flex items-center justify-center"
+                className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-sm p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] cursor-pointer flex items-center justify-center"
               >
                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
@@ -278,7 +279,7 @@ export default function ExpertView() {
             label={`Avaliados (${anoSelecionado})`}
             value={avaliadosStr}
             sub={avaliadosSub}
-            accentColor="text-slate-850 dark:text-zinc-200"
+            accentColor="text-slate-800 dark:text-zinc-200"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
             tooltip="Quantidade total de indivíduos pesados e avaliados no SISVAN na região selecionada."
@@ -311,7 +312,7 @@ export default function ExpertView() {
             sub="Outro indicador acompanhado · SISVAN"
             trend="neutral"
             trendLabel="estável"
-            accentColor="text-slate-650 dark:text-zinc-300"
+            accentColor="text-slate-600 dark:text-zinc-300"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
             tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado."
@@ -337,8 +338,8 @@ export default function ExpertView() {
             {selectedPoi && (
               <div className="absolute bottom-4 left-4 z-[400] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-xl p-4 shadow-lg w-64 animate-in slide-in-from-bottom-4 text-slate-800 dark:text-zinc-200">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-sm font-bold text-slate-850 dark:text-[#f5f5f7] leading-tight pr-4">{selectedPoi.nome}</h4>
-                  <button onClick={() => setSelectedPoi(null)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-[#f5f5f7] transition-colors font-bold text-lg leading-none -mt-1 cursor-pointer">×</button>
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] leading-tight pr-4">{selectedPoi.nome}</h4>
+                  <button onClick={() => setSelectedPoi(null)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-lg leading-none -mt-1 cursor-pointer">×</button>
                 </div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: selectedPoi.color }} />
@@ -348,10 +349,10 @@ export default function ExpertView() {
                   Ponto de interesse integrado via motor de geoprocessamento. Pronto para análise pelo modelo de IA.
                 </p>
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[10px] text-slate-750 dark:text-zinc-200 font-bold py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer">
+                  <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[10px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer">
                     Detalhes
                   </button>
-                  <button className="flex-1 bg-teal-650 hover:bg-teal-700 text-[10px] text-white font-bold py-1.5 rounded-lg transition-colors bg-teal-600 cursor-pointer">
+                  <button className="flex-1 hover:bg-teal-700 text-[10px] text-white font-bold py-1.5 rounded-lg transition-colors bg-teal-600 cursor-pointer">
                     Simular
                   </button>
                 </div>
@@ -417,7 +418,7 @@ export default function ExpertView() {
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
                 Destaque para: <span className="text-slate-800 dark:text-zinc-200 font-bold">{mainLabel}</span> &nbsp;·&nbsp;
-                {selectedBairro ? <span className="text-slate-650 dark:text-zinc-355 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
+                {selectedBairro ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
                 <span className="text-amber-600 dark:text-amber-400">★ 2026–2027</span>
               </p>
             </div>

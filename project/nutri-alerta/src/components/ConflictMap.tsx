@@ -50,7 +50,7 @@ export default function ConflictMap() {
             <Tooltip className="custom-glass-tooltip">
               <div>
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>
@@ -67,7 +67,7 @@ export default function ConflictMap() {
             <Tooltip className="custom-glass-tooltip">
               <div>
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>
@@ -84,7 +84,7 @@ export default function ConflictMap() {
             <Tooltip className="custom-glass-tooltip">
               <div>
                 <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>

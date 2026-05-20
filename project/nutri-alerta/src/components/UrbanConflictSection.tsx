@@ -85,7 +85,7 @@ export default function UrbanConflictSection() {
         {/* Mapa de Conflito */}
         <div className="w-full md:w-[65%] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
           <div className="absolute top-3 left-3 z-10 pointer-events-none">
-            <p className="text-[10px] font-black text-slate-705 dark:text-zinc-205 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm">
+            <p className="text-[10px] font-black text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm">
               Mapa de Conflito Urbano — Pântanos Alimentares
             </p>
           </div>
@@ -187,7 +187,7 @@ function KpiCard({
           )}
         </div>
         <h3 className={`text-2xl font-black ${textColor}`}>{value}</h3>
-        {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-550 mt-0.5 font-bold">{subtitle}</p>}
+        {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-500 mt-0.5 font-bold">{subtitle}</p>}
       </div>
       <div className={`p-2.5 rounded-xl border ${colorClass} flex items-center justify-center`}>{icon}</div>
     </div>

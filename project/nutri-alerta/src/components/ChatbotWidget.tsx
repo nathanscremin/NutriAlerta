@@ -86,7 +86,7 @@ export default function ChatbotWidget() {
                 <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-slate-400 dark:text-zinc-550 hover:text-slate-650 dark:hover:text-[#f5f5f7] transition-colors cursor-pointer">
+            <button onClick={() => setIsOpen(false)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -98,7 +98,7 @@ export default function ChatbotWidget() {
                 key={i}
                 className={`rounded-2xl p-3 max-w-[85%] text-xs font-semibold ${
                   msg.role === 'user'
-                    ? 'bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 text-teal-850 dark:text-teal-300 self-end rounded-tr-none shadow-sm'
+                    ? 'bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 text-teal-800 dark:text-teal-300 self-end rounded-tr-none shadow-sm'
                     : 'bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] text-slate-700 dark:text-zinc-200 self-start rounded-tl-none shadow-sm'
                 }`}
               >
@@ -126,7 +126,7 @@ export default function ChatbotWidget() {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKey}
                 placeholder="Pergunte sobre os dados..."
-                className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
+                className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-full py-2 pl-4 pr-10 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all shadow-sm"
               />
               <button
                 onClick={sendMessage}
@@ -141,7 +141,7 @@ export default function ChatbotWidget() {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-teal-600 dark:bg-teal-650 hover:bg-teal-700 dark:hover:bg-teal-700 text-white p-4 rounded-full shadow-lg shadow-teal-500/20 transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
+          className="bg-teal-600 dark:bg-teal-600 hover:bg-teal-700 dark:hover:bg-teal-700 text-white p-4 rounded-full shadow-lg shadow-teal-500/20 transition-all hover:scale-105 flex items-center justify-center cursor-pointer"
         >
           <MessageSquare className="w-6 h-6" />
         </button>

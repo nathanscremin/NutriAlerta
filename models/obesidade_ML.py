@@ -4,7 +4,7 @@ import requests
 import warnings
 import os
 from math import radians, cos, sin, asin, sqrt
-from sklearn.model_selection import train_test_split
+
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import LabelEncoder
@@ -72,6 +72,7 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
 # 2. Carregar as Bases de Dados Locais
 print("\nA carregar os Dataframes...")
 df_nutri = pd.read_csv(localizacao_arquivo("Base_Nutricional_Consolidada_Final.csv"))
+df_nutri = df_nutri[df_nutri['Faixa_Etaria'] == '0 a 18 anos']
 df_ubs = pd.read_csv(localizacao_arquivo("ubs_rio_claro (1).csv")) 
 df_escolas = pd.read_csv(localizacao_arquivo("escolas_prontas (1).csv"))
 df_ambiente = pd.read_csv(localizacao_arquivo("ambiente_alimentar_rio_claro.csv"))
@@ -79,8 +80,10 @@ df_oasis = pd.read_csv(localizacao_arquivo("oasis_alimentares_rio_claro.csv"))
 df_esporte = pd.read_csv(localizacao_arquivo("esporte_lazer_rio_claro.csv"))
 df_transporte = mapear_transporte_publico()
 
-df_nutri['CNES'] = df_nutri['CNES'].astype(str)
-df_ubs['cnes'] = df_ubs['cnes'].astype(str)
+df_nutri = df_nutri.dropna(subset=['CNES'])
+df_nutri['CNES'] = df_nutri['CNES'].astype(float).astype(int).astype(str).str.strip()
+df_ubs = df_ubs.dropna(subset=['cnes'])
+df_ubs['cnes'] = df_ubs['cnes'].astype(int).astype(str).str.strip()
 df_escolas['tipo_rede'] = np.where(df_escolas['nome'].str.contains('E.M.|E.E.', regex=True, na=False), 'publica', 'privada')
 
 # 3. Engenharia de Variáveis Espaciais

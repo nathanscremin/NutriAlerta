@@ -41,8 +41,8 @@ function getRiskBadge(value: number, indicator: string) {
 
 export default function ConsultantView() {
   const { 
-    anoSelecionado, indicador, selectedBairro, setSelectedBairro, 
-    faixaEtaria, temporalData, regionalData, yearsList, activePoiTypes 
+    anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
+    temporalData, regionalData, yearsList, activePoiTypes 
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,7 +128,6 @@ export default function ConsultantView() {
             screenData: {
               bairro: selectedBairro ?? 'Não selecionado',
               ano: anoSelecionado,
-              faixaEtaria,
               indicador,
               obesidade: dadosAno.obesidade,
               desnutricao: dadosAno.desnutricao,
@@ -229,6 +228,27 @@ export default function ConsultantView() {
               Online
             </div>
           </div>
+
+          {/* Indicator Toggle */}
+          <div className="flex items-center bg-slate-100 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl p-0.5 gap-0.5 shadow-inner md:ml-auto">
+            {[
+              { id: 'obesidade', label: 'Obesidade' },
+              { id: 'desnutricao', label: 'Desnutrição' },
+              { id: 'sobrepeso', label: 'Sobrepeso' },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => setIndicador(id)}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 cursor-pointer ${
+                  indicador === id
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/40 dark:hover:bg-zinc-700/40'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Messages */}
@@ -240,7 +260,7 @@ export default function ConsultantView() {
                   <SparklesIcon className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
                 <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <p className="text-sm text-slate-705 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
+                  <p className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ) : (
@@ -249,7 +269,7 @@ export default function ConsultantView() {
                   <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400">EU</span>
                 </div>
                 <div className="bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 p-5 rounded-2xl rounded-tr-sm max-w-[80%]">
-                  <p className="text-sm text-teal-855 dark:text-teal-300 leading-relaxed font-bold">{msg.text}</p>
+                  <p className="text-sm text-teal-800 dark:text-teal-300 leading-relaxed font-bold">{msg.text}</p>
                 </div>
               </div>
             )
@@ -264,7 +284,7 @@ export default function ConsultantView() {
                 {[0, 150, 300].map(d => (
                   <div key={d} className="w-2 h-2 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
                 ))}
-                <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-550 ml-2 tracking-wide">Analisando correlações...</span>
+                <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500 ml-2 tracking-wide">Analisando correlações...</span>
               </div>
             </div>
           )}
@@ -281,7 +301,7 @@ export default function ConsultantView() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Faça uma pergunta sobre os dados epidemiológicos..."
-              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl py-4 pl-5 pr-14 text-sm font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-sm"
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl py-4 pl-5 pr-14 text-sm font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-sm"
             />
             <button
               onClick={sendMessage}
@@ -291,7 +311,7 @@ export default function ConsultantView() {
               <Send className="w-5 h-5 text-white" />
             </button>
           </div>
-          <p className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-550 mt-3 text-center uppercase">IA baseada nos dados reais SISVAN/CNES de Rio Claro</p>
+          <p className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 mt-3 text-center uppercase">IA baseada nos dados reais SISVAN/CNES de Rio Claro</p>
         </div>
       </div>
 
@@ -313,7 +333,7 @@ export default function ConsultantView() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Pesquisar UBS/USF..."
-              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-550 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-colors"
+              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-colors"
             />
           </div>
         </div>
@@ -385,7 +405,7 @@ export default function ConsultantView() {
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <h4 className="text-xs font-bold text-slate-805 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
                     <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
                       {badge.label}
                     </span>
