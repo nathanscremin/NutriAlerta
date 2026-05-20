@@ -136,6 +136,9 @@ export default function ChatbotWidget() {
                 <Send className="w-4 h-4" />
               </button>
             </div>
+            <p className="text-[9px] text-center text-slate-400 dark:text-zinc-500 mt-2 font-medium">
+              NutriAlerta é uma IA e pode cometer erros.
+            </p>
           </div>
         </div>
       ) : (

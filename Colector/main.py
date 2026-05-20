@@ -133,6 +133,39 @@ def _atualizar_estado(df_limpo, total_linhas: int) -> None:
     )
 
 
+def _atualizar_base_modelo() -> None:
+    """Carrega todo o Parquet acumulado e atualiza a base consolidada do modelo."""
+    logger.info("Gerando base consolidada para o Modelo de Machine Learning...")
+    try:
+        import pandas as pd
+        df_parquet_consolidado = pd.read_parquet(CAMINHO_PARQUET)
+        caminho_ubs = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "project",
+                "csv",
+                "ubs_rio_claro (1).csv",
+            )
+        )
+        caminho_base_final = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "project",
+                "csv",
+                "Base_Nutricional_Consolidada_Final.csv",
+            )
+        )
+        cleaner.agregar_para_modelo(
+            df_limpo=df_parquet_consolidado,
+            df_ubs_caminho=caminho_ubs,
+            base_existente_caminho=caminho_base_final,
+        )
+    except Exception as e:
+        logger.error("Falha ao gerar base consolidada para o modelo: %s", e)
+
+
 def executar_carga_historica(cfg: dict) -> None:
     """
     Executa a Carga Histórica: extrai todos os dados por fase de vida e faixa
@@ -179,6 +212,7 @@ def executar_carga_historica(cfg: dict) -> None:
     logger.info("Convertendo para Parquet...")
     converter.salvar_parquet(df_limpo, CAMINHO_PARQUET)
     _atualizar_estado(df_limpo, len(df_limpo))
+    _atualizar_base_modelo()
 
     logger.info("=" * 60)
     logger.info("Carga Histórica concluída com sucesso!")
@@ -292,6 +326,7 @@ def executar_carga_incremental(cfg: dict) -> None:
         total_linhas=total_final,
         ultimo_sequencial=cleaner.obter_ultimo_sequencial(df_limpo_novo),
     )
+    _atualizar_base_modelo()
 
     logger.info("=" * 60)
     logger.info("Carga Incremental concluída com sucesso!")
