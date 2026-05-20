@@ -65,9 +65,9 @@ function MapController() {
 
 const getChoroplethColor = (value: number, indicator: string) => {
   if (indicator === 'desnutricao') {
-    if (value < 2.0) return '#10b981'; // Healthy Emerald
-    if (value < 3.2) return '#00e5ff'; // Warning Cyan
-    return '#9900ff'; // High Risk Electric Violet
+    if (value < 2.0) return '#10b981'; // Healthy Emerald (Verde)
+    if (value < 3.2) return '#38bdf8'; // Warning Sky Blue (Azul Céu)
+    return '#00e5ff'; // High Risk Electric Cyan (Ciano Elétrico)
   } else if (indicator === 'sobrepeso') {
     if (value < 12) return '#10b981'; // Healthy Emerald
     if (value < 18) return '#ffbb00'; // Warning Amber
@@ -95,6 +95,27 @@ export default function RiskMap() {
     return () => setMounted(false);
   }, []);
 
+  // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
+  const { multObs, multDes } = React.useMemo(() => {
+    let mObs = 1.0;
+    let mDes = 1.0;
+    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
+      mObs *= 0.88;
+    }
+    if (!activePoiTypes.includes('Esporte e Lazer')) {
+      mObs *= 1.10;
+    }
+    if (!activePoiTypes.includes('Alimentação - Mercado')) {
+      mDes *= 1.15;
+      mObs *= 1.08;
+    }
+    if (!activePoiTypes.includes('Educação')) {
+      mDes *= 1.05;
+      mObs *= 1.05;
+    }
+    return { multObs: mObs, multDes: mDes };
+  }, [activePoiTypes]);
+
   const getFeatureStyle = (feature: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
     
@@ -106,10 +127,13 @@ export default function RiskMap() {
     let riskValue = 0;
     if (indicador === 'desnutricao') {
       riskValue = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
+      riskValue = Number((riskValue * multDes).toFixed(2));
     } else if (indicador === 'sobrepeso') {
       riskValue = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
+      riskValue = Number((riskValue * multObs).toFixed(2));
     } else {
       riskValue = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
+      riskValue = Number((riskValue * multObs).toFixed(2));
     }
 
     const fillColor = getChoroplethColor(riskValue, indicador);
@@ -223,10 +247,20 @@ export default function RiskMap() {
                 eventHandlers={{
                   click: () => {
                     setSelectedPoi(poi);
-                    if (isGov) {
+                    if (poi.categoria === 'UBS') {
+                      if (selectedBairro === poi.nome) {
+                        setSelectedBairro(null);
+                      } else {
+                        setSelectedBairro(poi.nome);
+                      }
+                    } else if (isGov) {
                       const nearestUbs = findNearestUbsName(poi.lat, poi.lon);
                       if (nearestUbs) {
-                        setSelectedBairro(nearestUbs);
+                        if (selectedBairro === nearestUbs) {
+                          setSelectedBairro(null);
+                        } else {
+                          setSelectedBairro(nearestUbs);
+                        }
                       }
                     }
                   },

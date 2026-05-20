@@ -60,18 +60,62 @@ function KpiCard({
 export default function ExpertView() {
   const { 
     anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi, faixaEtaria,
-    temporalData, regionalData
+    temporalData, regionalData, yearsList, activePoiTypes
   } = useAppStore();
 
+  // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
+  const { multObs, multDes } = React.useMemo(() => {
+    let mObs = 1.0;
+    let mDes = 1.0;
+    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
+      mObs *= 0.88; // Redução de 12% na obesidade ao controlar fast-food
+    }
+    if (!activePoiTypes.includes('Esporte e Lazer')) {
+      mObs *= 1.10; // Aumento de 10% na obesidade se não houver parques/esportes
+    }
+    if (!activePoiTypes.includes('Alimentação - Mercado')) {
+      mDes *= 1.15; // Aumento de 15% na desnutrição sem mercados saudáveis
+      mObs *= 1.08; // Aumento de 8% na obesidade sem mercados saudáveis
+    }
+    if (!activePoiTypes.includes('Educação')) {
+      mDes *= 1.05; // Aumento de 5% se não houver escolas/campanhas
+      mObs *= 1.05; // Aumento de 5% se não houver escolas/campanhas
+    }
+    return { multObs: mObs, multDes: mDes };
+  }, [activePoiTypes]);
+
+  // Dado temporal reativo com fallback para métricas gerais e efeito dos POIs
+  const activeTemporalData = React.useMemo(() => {
+    const baseSource = selectedBairro ? yearsList.map(yr => {
+      const cleanYr = yr.replace('★', '').trim();
+      const yrRecord = regionalData[cleanYr]?.[selectedBairro];
+      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0 };
+      
+      return {
+        ano: yr,
+        desnutricao: yrRecord && yrRecord.desnutricao ? yrRecord.desnutricao : globalRec.desnutricao,
+        obesidade: yrRecord && yrRecord.obesidade ? yrRecord.obesidade : globalRec.obesidade,
+        isPrevisao: Number(cleanYr) >= 2026
+      };
+    }) : temporalData;
+
+    return baseSource.map(d => ({
+      ...d,
+      desnutricao: Number((d.desnutricao * multDes).toFixed(2)),
+      obesidade: Number((d.obesidade * multObs).toFixed(2))
+    }));
+  }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
+
   // Encontra os dados do ano selecionado
-  const dadosAno = temporalData.find(d => d.ano === anoSelecionado) || temporalData[0] || { desnutricao: 0, obesidade: 0 };
+  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0 };
   // Pega a projeção de 2027
-  const dadosProj = temporalData.find(d => d.ano === '2027 ★') || temporalData.find(d => d.ano.includes('2027')) || temporalData[temporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
+  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
 
   // Configuração baseada no indicador selecionado
   const isObs = indicador === 'obesidade';
-  const mainValue = isObs ? dadosAno.obesidade : dadosAno.desnutricao;
-  const mainProj = isObs ? dadosProj.obesidade : dadosProj.desnutricao;
+  const mainValue = Number((isObs ? dadosAno.obesidade : dadosAno.desnutricao).toFixed(2));
+  const mainProj = Number((isObs ? dadosProj.obesidade : dadosProj.desnutricao).toFixed(2));
+  const secondaryValue = Number((isObs ? dadosAno.desnutricao : dadosAno.obesidade).toFixed(2));
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
 
@@ -107,6 +151,18 @@ export default function ExpertView() {
         { name: 'Mãe Preta', delta: 0.9 }
       ];
 
+  const currentBairroRecord = selectedBairro && regionalData[cleanYear]?.[selectedBairro];
+  const avaliadosVal = selectedBairro 
+    ? (currentBairroRecord ? (currentBairroRecord.total_avaliados ?? 0) : 0)
+    : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500);
+
+  const avaliadosStr = avaliadosVal >= 1000 
+    ? `${(avaliadosVal / 1000).toFixed(1)}K` 
+    : String(avaliadosVal);
+  const avaliadosSub = selectedBairro 
+    ? "Total de indivíduos avaliados nesta UBS" 
+    : "Total acumulado nas 18 UBS de Rio Claro";
+
   // Compute dynamic distribution averages for selected year
   let eutrofiaAvg = 61.2;
   let sobrepesoAvg = 16.3;
@@ -114,7 +170,13 @@ export default function ExpertView() {
   let desnutricaoAvg = !isObs ? mainValue : (dadosAno.desnutricao || 2.62);
   let graveAvg = 6.95;
 
-  if (currentYearRegions.length > 0) {
+  if (selectedBairro && currentBairroRecord) {
+    eutrofiaAvg = typeof currentBairroRecord.eutrofia === 'number' && currentBairroRecord.eutrofia > 0 ? Number(currentBairroRecord.eutrofia.toFixed(1)) : eutrofiaAvg;
+    sobrepesoAvg = typeof currentBairroRecord.sobrepeso === 'number' && currentBairroRecord.sobrepeso > 0 ? Number(currentBairroRecord.sobrepeso.toFixed(1)) : sobrepesoAvg;
+    obesidadeAvg = typeof currentBairroRecord.obesidade === 'number' && currentBairroRecord.obesidade > 0 ? Number(currentBairroRecord.obesidade.toFixed(1)) : obesidadeAvg;
+    desnutricaoAvg = typeof currentBairroRecord.desnutricao === 'number' && currentBairroRecord.desnutricao > 0 ? Number(currentBairroRecord.desnutricao.toFixed(1)) : desnutricaoAvg;
+    graveAvg = typeof currentBairroRecord.obesidade_grave === 'number' && currentBairroRecord.obesidade_grave > 0 ? Number(currentBairroRecord.obesidade_grave.toFixed(1)) : graveAvg;
+  } else if (currentYearRegions.length > 0) {
     let sumEutrofia = 0, sumSobrepeso = 0, sumGrave = 0, count = 0;
     currentYearRegions.forEach((reg: any) => {
       if (typeof reg.eutrofia === 'number') {
@@ -130,18 +192,27 @@ export default function ExpertView() {
       graveAvg = Number((sumGrave / count).toFixed(2));
       obesidadeAvg = Number((dadosAno.obesidade).toFixed(2));
       desnutricaoAvg = Number((dadosAno.desnutricao).toFixed(2));
-
-      // Normalize so sum is exactly 100% or close
-      const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg + graveAvg;
-      if (totalSum > 0) {
-        eutrofiaAvg = Number((eutrofiaAvg / totalSum * 100).toFixed(1));
-        sobrepesoAvg = Number((sobrepesoAvg / totalSum * 100).toFixed(1));
-        obesidadeAvg = Number((obesidadeAvg / totalSum * 100).toFixed(1));
-        desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
-        graveAvg = Number((graveAvg / totalSum * 100).toFixed(1));
-      }
     }
   }
+
+  // Aplicamos os multiplicadores dos POIs na desnutrição, obesidade e obesidade grave
+  obesidadeAvg = Number((obesidadeAvg * multObs).toFixed(2));
+  desnutricaoAvg = Number((desnutricaoAvg * multDes).toFixed(2));
+  graveAvg = Number((graveAvg * multObs).toFixed(2));
+
+  // Normalização para a soma ser exatamente 100%
+  const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg + graveAvg;
+  if (totalSum > 0) {
+    eutrofiaAvg = Number((eutrofiaAvg / totalSum * 100).toFixed(1));
+    sobrepesoAvg = Number((sobrepesoAvg / totalSum * 100).toFixed(1));
+    obesidadeAvg = Number((obesidadeAvg / totalSum * 100).toFixed(1));
+    desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
+    graveAvg = Number((graveAvg / totalSum * 100).toFixed(1));
+  }
+
+  const cleanSelectedBairro = selectedBairro
+    ? selectedBairro.replace('UBS ', '').replace('USF ', '')
+    : '';
 
   return (
     <motion.div
@@ -171,8 +242,8 @@ export default function ExpertView() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard
             label={`Avaliados (${anoSelecionado})`}
-            value={anoSelecionado === '2025' ? '45.2K' : anoSelecionado === '2024' ? '41.1K' : '38.5K'}
-            sub="Total acumulado nas 18 UBS de Rio Claro"
+            value={avaliadosStr}
+            sub={avaliadosSub}
             accentColor="text-white"
             bgColor="bg-[#131823]"
             borderColor="border-white/5"
@@ -199,7 +270,7 @@ export default function ExpertView() {
           />
           <KpiCard
             label={`${isObs ? 'Desnutrição' : 'Obesidade'} · ${anoSelecionado}`}
-            value={`${isObs ? dadosAno.desnutricao : dadosAno.obesidade}%`}
+            value={`${secondaryValue}%`}
             sub="Outro indicador acompanhado · SISVAN"
             trend="neutral"
             trendLabel="estável"
@@ -255,8 +326,12 @@ export default function ExpertView() {
           {/* Distribuição Nutricional */}
           <div className="md:col-span-2 bg-[#131823] border border-white/5 rounded-2xl p-6 flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <div className="mb-4">
-              <h3 className="text-sm font-black text-white tracking-wide">Distribuição Nutricional</h3>
-              <p className="text-[10px] text-white/40 font-medium">Rio Claro · SISVAN {anoSelecionado} · Faixa {faixaEtaria === '0-10' ? '0 a 10' : '10 a 18'} anos</p>
+              <h3 className="text-sm font-black text-white tracking-wide">
+                {selectedBairro ? `Distribuição em ${selectedBairro}` : 'Distribuição Nutricional'}
+              </h3>
+              <p className="text-[10px] text-white/40 font-medium">
+                {selectedBairro ? `${selectedBairro}` : 'Rio Claro'} · SISVAN {anoSelecionado} · Faixa {faixaEtaria === '0-10' ? '0 a 10' : '10 a 18'} anos
+              </p>
             </div>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">
@@ -299,15 +374,18 @@ export default function ExpertView() {
           {/* Gráfico temporal */}
           <div className="bg-[#131823] border border-white/5 rounded-2xl p-6 flex flex-col shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <div className="mb-4">
-              <h3 className="text-sm font-black text-white tracking-wide">Evolução Histórica e Projeção</h3>
+              <h3 className="text-sm font-black text-white tracking-wide">
+                {selectedBairro ? `Evolução em ${selectedBairro}` : 'Evolução Histórica e Projeção'}
+              </h3>
               <p className="text-[10px] text-white/40 font-medium">
                 Destaque para: <span className="text-white font-bold">{mainLabel}</span> &nbsp;·&nbsp;
+                {selectedBairro ? <span className="text-white/60 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
                 <span className="text-[#ffbb00]">★ 2026–2027</span>
               </p>
             </div>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={temporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                <LineChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="ano" stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
                   <YAxis stroke="rgba(255,255,255,0.1)" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
@@ -371,9 +449,20 @@ export default function ExpertView() {
                     formatter={(v: any) => [`+${v}%`, 'Delta']}
                   />
                   <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
-                    {dynamicRanking.map((_: any, i: number) => (
-                      <Cell key={i} fill={i < 2 ? '#ff3366' : i < 4 ? '#ffbb00' : 'rgba(255,255,255,0.15)'} />
-                    ))}
+                    {dynamicRanking.map((entry: any, i: number) => {
+                      const isHighlighted = cleanSelectedBairro && entry.name.toLowerCase() === cleanSelectedBairro.toLowerCase();
+                      return (
+                        <Cell 
+                          key={i} 
+                          fill={isHighlighted 
+                            ? '#00ff9d' 
+                            : (i < 2 ? '#ff3366' : i < 4 ? '#ffbb00' : 'rgba(255,255,255,0.15)')
+                          } 
+                          stroke={isHighlighted ? '#ffffff' : 'none'}
+                          strokeWidth={isHighlighted ? 1 : 0}
+                        />
+                      );
+                    })}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>

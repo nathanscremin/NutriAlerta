@@ -1,0 +1,146 @@
+<h2 class="sr-only">Matriz RACI — NutriAlerta</h2>
+<style>
+.p{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;min-width:32px;text-align:center;letter-spacing:.3px;}
+.par{background:#CECBF6;color:#3C3489;}.pr{background:#9FE1CB;color:#085041;}.pa{background:#FAC775;color:#633806;}.pc{background:#B5D4F4;color:#0C447C;}.pi{background:#D3D1C7;color:#5F5E5A;}
+@media(prefers-color-scheme:dark){.par{background:#3C3489;color:#CECBF6;}.pr{background:#085041;color:#9FE1CB;}.pa{background:#633806;color:#FAC775;}.pc{background:#0C447C;color:#B5D4F4;}.pi{background:#2C2C2A;color:#B4B2A9;}}
+.erow td{background:var(--color-background-secondary);font-size:11px;font-weight:500;color:var(--color-text-secondary);padding:5px 8px;letter-spacing:.4px;text-transform:uppercase;}
+.sb{font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;}
+.sd{background:var(--color-background-success);color:var(--color-text-success);}
+.sv{background:var(--color-background-warning);color:var(--color-text-warning);}
+.sa{background:var(--color-background-danger);color:var(--color-text-danger);}
+</style>
+
+<div style="padding:1rem 0">
+
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;">
+  <span style="font-size:12px;color:var(--color-text-secondary);margin-right:2px">Legenda:</span>
+  <span class="p par">A/R</span><span style="font-size:12px;color:var(--color-text-secondary)">Aprova e executa</span>
+  <span class="p pr" style="margin-left:6px">R</span><span style="font-size:12px;color:var(--color-text-secondary)">Responsável</span>
+  <span class="p pa" style="margin-left:6px">A</span><span style="font-size:12px;color:var(--color-text-secondary)">Aprovador</span>
+  <span class="p pc" style="margin-left:6px">C</span><span style="font-size:12px;color:var(--color-text-secondary)">Consultado</span>
+  <span class="p pi" style="margin-left:6px">I</span><span style="font-size:12px;color:var(--color-text-secondary)">Informado</span>
+</div>
+
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;">
+<colgroup>
+  <col style="width:176px"><col style="width:76px">
+  <col style="width:66px"><col style="width:66px"><col style="width:66px">
+  <col style="width:66px"><col style="width:66px"><col style="width:66px">
+</colgroup>
+<thead>
+<tr style="border-bottom:0.5px solid var(--color-border-secondary);">
+  <th style="text-align:left;padding:8px 8px 8px 0;font-weight:500;color:var(--color-text-primary);font-size:12px;">Tarefa</th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-secondary);font-size:11px;">Status</th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Nathan<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">(você)</span></th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Arthur<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">AL</span></th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Matheus<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">MS</span></th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Nicolas<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">NS</span></th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Nanetti<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">N</span></th>
+  <th style="text-align:center;padding:8px 4px;font-weight:500;color:var(--color-text-primary);font-size:11px;">Ph<br><span style="font-weight:400;color:var(--color-text-secondary);font-size:10px">P</span></th>
+</tr>
+</thead>
+<tbody>
+
+<tr class="erow"><td colspan="8">EP-01 — Geoespacial Base</td></tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Ver se dados foram corretamente extraídos</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 1 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+</tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Mapeamento da cidade pelo geopandas</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 1 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+</tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Integração do Site com o Mapa de Calor</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 2 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+</tr>
+
+<tr class="erow"><td colspan="8">EP-02 — Modelo de Dashboard</td></tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Modelo Visual do Site</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 1 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+</tr>
+
+<tr class="erow"><td colspan="8">EP-03 — Mapa de Risco</td></tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Modelo de Classificação/Regressão</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 2 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+</tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">ETL e Ingestão de Comorbidades (DATASUS + SISVAN)</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sd">Sprint 2 ✓</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pa">A</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+</tr>
+
+<tr class="erow"><td colspan="8">EP-04 — Usuário Não-Analista de Dados</td></tr>
+
+<tr style="border-bottom:0.5px solid var(--color-border-tertiary);">
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Criação de API do SISVAN</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sv">Em Revisão</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p par">A/R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+</tr>
+
+<tr>
+  <td style="padding:7px 8px 7px 0;color:var(--color-text-primary);">Desenvolvimento do Chatbot</td>
+  <td style="text-align:center;padding:6px 4px;"><span class="sb sa">Em Andamento</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pa">A</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pi">I</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pc">C</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+  <td style="text-align:center;padding:5px 4px;"><span class="p pr">R</span></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<p style="font-size:11px;color:var(--color-text-secondary);margin-top:1rem;">Papéis inferidos a partir dos membros atribuídos no Trello. Nathan (Flambe) como admin do board é marcado como Aprovador (A) mesmo quando não executa diretamente.</p>
+</div>

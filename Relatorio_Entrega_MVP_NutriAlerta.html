@@ -651,9 +651,12 @@
                     <li>
                         <strong>Integrantes da Equipe:</strong> 
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <span>• <strong>Nathan Scremin</strong> (Data Engineer / Backend) — <em>Accountable</em> (A) pelo Pipeline ETL e ML.</span>
-                            <span>• <span contenteditable="true" class="editable-field" placeholder="Integrante 2 (Nome)">[Integrante 2 — Nome]</span> (Frontend Developer) — <em>Accountable</em> (A) pelo Mapa.</span>
-                            <span>• <span contenteditable="true" class="editable-field" placeholder="Integrante 3 (Nome)">[Integrante 3 — Nome]</span> (Fullstack / Integrador) — <em>Accountable</em> (A) pela Integração Geral.</span>
+                            <span>• <strong>Nathan Scremin</strong> (Product Owner / Data / Integration)</span>
+                            <span>• <strong>Arthur (AL)</strong> (Developer / API / Integration)</span>
+                            <span>• <strong>Matheus (MS)</strong> (Developer / ETL / Design)</span>
+                            <span>• <strong>Nicolas (NS)</strong> (QA / API Support)</span>
+                            <span>• <strong>Nanetti (N)</strong> (Scrum Master / Frontend)</span>
+                            <span>• <strong>Ph (P)</strong> (Developer / GIS / Chatbot)</span>
                         </div>
                     </li>
                     <li>
@@ -663,54 +666,136 @@
                 </ul>
             </div>
 
-            <!-- Tabela RASCI de Responsabilidades -->
-            <h3>📊 Matriz RASCI de Distribuição de Tarefas</h3>
-            <p>A tabela abaixo detalha as responsabilidades de desenvolvimento do MVP, destacando formalmente quem responde por cada módulo crítico do sistema (<strong>Accountable</strong>):</p>
+            <!-- Tabela RACI de Responsabilidades -->
+            <h3>📊 Matriz RACI de Distribuição de Tarefas (Trello)</h3>
+            <p>A tabela abaixo detalha a matriz RACI oficial e o status de conclusão das tarefas divididas por épicos no Trello, mapeando os papéis dos seis integrantes da equipe:</p>
             
-            <table>
-                <thead>
-                    <tr>
-                        <th>Módulo / Entrega do Sistema</th>
-                        <th>Nathan Scremin</th>
-                        <th>Integrante 2</th>
-                        <th>Integrante 3</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Integração do Modelo de IA (ML)</strong></td>
-                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
-                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
-                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Backend & Rotas de API (Next.js)</strong></td>
-                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
-                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
-                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Interface Frontend & Mapa Interativo</strong></td>
-                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
-                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
-                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Pipeline Coletor SISVAN (ETL)</strong></td>
-                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
-                        <td><span class="badge-role badge-c">Consulted (C)</span></td>
-                        <td><span class="badge-role badge-i">Informed (I)</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Design do Painel e UX Premium</strong></td>
-                        <td><span class="badge-role badge-i">Informed (I)</span></td>
-                        <td><span class="badge-role badge-r">Responsible (R)</span></td>
-                        <td><span class="badge-role badge-a">Accountable (A)</span></td>
-                    </tr>
-                </tbody>
-            </table>
-            <p style="font-size: 12px; color: var(--slate-700); font-style: italic;">
-                *Legenda: <strong>A</strong> (Accountable - quem responde pelo sucesso da entrega), <strong>R</strong> (Responsible - quem implementa a funcionalidade), <strong>C</strong> (Consulted - quem dá suporte técnico e de negócios), <strong>I</strong> (Informed - quem é notificado dos resultados).
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; min-width: 800px; font-size: 13px;">
+                    <thead>
+                        <tr style="background-color: var(--slate-900); color: white;">
+                            <th style="padding: 10px; text-align: left; width: 25%;">Tarefa / Cartão</th>
+                            <th style="padding: 10px; text-align: center; width: 15%;">Status</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Nathan</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Arthur (AL)</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Matheus (MS)</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Nicolas (NS)</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Nanetti (N)</th>
+                            <th style="padding: 10px; text-align: center; width: 10%;">Ph (P)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- EP-01 -->
+                        <tr style="background-color: var(--slate-100); font-weight: 700; border-bottom: 2px solid var(--slate-300);">
+                            <td colspan="8" style="padding: 8px 12px; color: var(--slate-900); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">EP-01 — Geoespacial Base</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Ver se dados foram corretamente extraídos</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 1 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Mapeamento da cidade pelo geopandas</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 1 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Integração do Site com o Mapa de Calor</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 2 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                        </tr>
+                        
+                        <!-- EP-02 -->
+                        <tr style="background-color: var(--slate-100); font-weight: 700; border-bottom: 2px solid var(--slate-300);">
+                            <td colspan="8" style="padding: 8px 12px; color: var(--slate-900); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">EP-02 — Modelo de Dashboard</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Modelo Visual do Site</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 1 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                        </tr>
+                        
+                        <!-- EP-03 -->
+                        <tr style="background-color: var(--slate-100); font-weight: 700; border-bottom: 2px solid var(--slate-300);">
+                            <td colspan="8" style="padding: 8px 12px; color: var(--slate-900); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">EP-03 — Mapa de Risco</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Modelo de Classificação/Regressão</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 2 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">ETL e Ingestão de Comorbidades (DATASUS + SISVAN)</td>
+                            <td style="text-align: center;"><span style="background-color: #ecfdf5; color: #047857; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Sprint 2 ✓</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-a">A</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                        </tr>
+                        
+                        <!-- EP-04 -->
+                        <tr style="background-color: var(--slate-100); font-weight: 700; border-bottom: 2px solid var(--slate-300);">
+                            <td colspan="8" style="padding: 8px 12px; color: var(--slate-900); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">EP-04 — Usuário Não-Analista de Dados</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Criação de API do SISVAN</td>
+                            <td style="text-align: center;"><span style="background-color: #fffbeb; color: #b45309; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Em Revisão</span></td>
+                            <td style="text-align: center;"><span class="badge-role" style="background-color: #cecbf6; color: #3c3489; border: 1px solid rgba(60, 52, 137, 0.2);">A / R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 12px;">Desenvolvimento do Chatbot</td>
+                            <td style="text-align: center;"><span style="background-color: #fef2f2; color: #b91c1c; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 600;">Em Andamento</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-a">A</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-i">I</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-c">C</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                            <td style="text-align: center;"><span class="badge-role badge-r">R</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <p style="font-size: 12px; color: var(--slate-700); font-style: italic; margin-top: 12px;">
+                *Legenda: 
+                <span class="badge-role" style="background-color: #cecbf6; color: #3c3489; font-size: 11px; float: none;">A / R</span> Aprova e Executa | 
+                <span class="badge-role badge-r" style="font-size: 11px; float: none;">R</span> Responsável | 
+                <span class="badge-role badge-a" style="font-size: 11px; float: none;">A</span> Aprovador | 
+                <span class="badge-role badge-c" style="font-size: 11px; float: none;">C</span> Consultado | 
+                <span class="badge-role badge-i" style="font-size: 11px; float: none;">I</span> Informado. 
+                <br><em>Nota: Nathan Scremin (PO) possui responsabilidades combinadas de A/R nos módulos principais de engenharia do projeto.</em>
             </p>
 
             <!-- Histórias de Usuário (User Stories) -->
