@@ -38,6 +38,7 @@ jobs:
           CODIGO_MUNICIPIO=354390
           IDADE_MINIMA=0
           IDADE_MAXIMA=18
+          FASES_VIDA=1,2,3,4,5,6
           LIMIT_POR_PAGINA=100
           ANOS_POR_FAIXA=2
           PAUSA_ENTRE_REQUISICOES=0.5

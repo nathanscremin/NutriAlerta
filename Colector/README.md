@@ -37,7 +37,11 @@ Semma/
 
 ## Modos de Execução
 
-**Carga histórica (first run)** — quando não existe Parquet em `data/processed/` ou o `state.json` está ausente/inválido. Extrai todas as faixas etárias (offset 0, 1, 2… por idade).
+**Carga histórica (first run)** — quando não existe Parquet em `data/processed/` ou o `state.json` está ausente/inválido. Extrai todas as **fases de vida** (`codigo_fase_vida` 1–6) e faixas etárias (0–1, 2–3, …, 17–18), com paginação por `offset`.
+
+Endpoint de referência:
+
+`https://apidadosabertos.saude.gov.br/sisvan/estado-nutricional?codigo_municipio=354390&uf=SP&idade_minima=0&idade_maxima=0&codigo_fase_vida=1&limit=100&offset=0`
 
 **Carga incremental** — quando já existem Parquet e watermark válida. Extrai apenas competências posteriores à última processada e faz append ao arquivo existente.
 
@@ -57,7 +61,13 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-3. Ajuste os filtros no `.env` se necessário (município, UF, faixa etária, competência inicial).
+3. Ajuste os filtros no `.env` se necessário (município, UF, faixa etária, `FASES_VIDA`).
+
+| Variável | Descrição |
+| --- | --- |
+| `FASES_VIDA` | Códigos de fase de vida separados por vírgula (padrão `1,2,3,4,5,6`) |
+| `ANOS_POR_FAIXA` | Largura das faixas de idade na API (`2` → 0–1, 2–3…) |
+| `LIMIT_POR_PAGINA` | Parâmetro `limit` da query (a API retorna ~20 registros por página) |
 
 ## Execução
 

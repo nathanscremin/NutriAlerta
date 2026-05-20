@@ -9,9 +9,9 @@ uma Carga Incremental (atualização mensal).
 
 Fluxo de Decisão:
 ─────────────────
-  state.json ausente/inválido?
-    └── SIM → Carga Histórica (extrai todas as faixas etárias)
-    └── NÃO → Carga Incremental (extrai a partir da última watermark + 1 mês)
+  state.json ausente/inválido ou sem Parquet?
+    └── SIM → Carga Histórica (extrai todas as fases e faixas etárias)
+    └── NÃO → Carga Incremental (filtra competências após a watermark)
 
 Uso:
     python main.py
@@ -29,7 +29,7 @@ from datetime import date
 from dotenv import load_dotenv
 
 from src import cleaner, converter, extractor, state_manager
-from src.paths import CAMINHO_CSV_BRUTO_TEMPLATE, CAMINHO_PARQUET
+from src.paths import CAMINHO_CSV_BRUTO, CAMINHO_CSV_BRUTO_TEMPLATE, CAMINHO_PARQUET
 
 # ─────────────────────────────────────────────
 # Configuração de Logging
@@ -44,19 +44,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger("main")
 
+
 def carregar_configuracoes() -> dict:
     """
     Carrega as variáveis de ambiente do arquivo .env e retorna um dicionário
     com todas as configurações necessárias para o pipeline.
 
     Returns:
-        dict: Configurações do pipeline com as chaves:
-              - api_base_url, codigo_municipio, uf, idade_minima,
-                idade_maxima, limit_por_pagina, anos_por_faixa,
-                pausa_entre_requisicoes.
+        dict: Configurações do pipeline.
 
     Raises:
-        SystemExit: Se variáveis obrigatórias estiverem ausentes.
+        SystemExit: Se variáveis obrigatórias estiverem ausentes ou inválidas.
     """
     load_dotenv()
 
@@ -69,6 +67,9 @@ def carregar_configuracoes() -> dict:
             "uf": os.getenv("UF_FILTRO", "SP").strip().upper(),
             "idade_minima": int(os.getenv("IDADE_MINIMA", "0")),
             "idade_maxima": int(os.getenv("IDADE_MAXIMA", "18")),
+            "fases_vida": extractor.parsear_fases_vida(
+                os.getenv("FASES_VIDA", "1,2,3,4,5,6")
+            ),
             "limit_por_pagina": int(os.getenv("LIMIT_POR_PAGINA", "100")),
             "anos_por_faixa": int(os.getenv("ANOS_POR_FAIXA", "2")),
             "pausa_entre_requisicoes": float(
@@ -93,21 +94,49 @@ def carregar_configuracoes() -> dict:
     logger.info("  API Base URL   : %s", configuracoes["api_base_url"])
     logger.info("  UF             : %s", configuracoes["uf"])
     logger.info("  Município IBGE : %s", configuracoes["codigo_municipio"])
-    logger.info("  Faixa etária   : %d – %d anos", configuracoes["idade_minima"], configuracoes["idade_maxima"])
+    logger.info(
+        "  Faixa etária   : %d – %d anos",
+        configuracoes["idade_minima"],
+        configuracoes["idade_maxima"],
+    )
+    logger.info(
+        "  Fases de vida  : %s",
+        ", ".join(str(f) for f in configuracoes["fases_vida"]),
+    )
     logger.info("  Anos por faixa : %d", configuracoes["anos_por_faixa"])
     logger.info(
-        "  Paginação      : limit=%d | faixas de %d ano(s) | offset 0,20,40…",
+        "  Paginação      : limit=%d | offset por página (~20 registros)",
         configuracoes["limit_por_pagina"],
-        configuracoes["anos_por_faixa"],
     )
 
     return configuracoes
 
 
+def _salvar_csvs_brutos(df_bruto, caminho_backup: str) -> None:
+    """Salva CSV principal (PRD) e cópia com sufixo de competência."""
+    converter.salvar_csv_bruto(df_bruto, CAMINHO_CSV_BRUTO)
+    converter.salvar_csv_bruto(df_bruto, caminho_backup)
+
+
+def _atualizar_estado(df_limpo, total_linhas: int) -> None:
+    """Persiste watermark e último ID sequencial no state.json."""
+    ultima_competencia = cleaner.obter_ultima_competencia(df_limpo)
+    ultimo_sequencial = cleaner.obter_ultimo_sequencial(df_limpo)
+    if not ultima_competencia:
+        hoje = date.today()
+        ultima_competencia = f"{hoje.year}{hoje.month:02d}"
+
+    state_manager.save_state(
+        ultima_competencia=ultima_competencia,
+        total_linhas=total_linhas,
+        ultimo_sequencial=ultimo_sequencial,
+    )
+
+
 def executar_carga_historica(cfg: dict) -> None:
     """
-    Executa a Carga Histórica: extrai todos os dados por faixa etária
-    e cria o repositório Parquet do zero.
+    Executa a Carga Histórica: extrai todos os dados por fase de vida e faixa
+    etária e cria o repositório Parquet do zero.
 
     Args:
         cfg (dict): Dicionário de configurações carregado do .env.
@@ -117,21 +146,15 @@ def executar_carga_historica(cfg: dict) -> None:
     logger.info("=" * 60)
 
     hoje = date.today()
-    competencia_fim = f"{hoje.year}{hoje.month:02d}"
 
-    # ── Extração ──────────────────────────────
-    logger.info(
-        "Iniciando extração histórica (API: idades %d–%d, limit=%d)...",
-        cfg["idade_minima"],
-        cfg["idade_maxima"],
-        cfg["limit_por_pagina"],
-    )
+    logger.info("Iniciando extração histórica...")
     df_bruto = extractor.extrair_historico(
         base_url=cfg["api_base_url"],
         codigo_municipio=cfg["codigo_municipio"],
         uf=cfg["uf"],
         idade_minima=cfg["idade_minima"],
         idade_maxima=cfg["idade_maxima"],
+        fases_vida=cfg["fases_vida"],
         limit=cfg["limit_por_pagina"],
         anos_por_faixa=cfg["anos_por_faixa"],
         pausa_segundos=cfg["pausa_entre_requisicoes"],
@@ -141,60 +164,34 @@ def executar_carga_historica(cfg: dict) -> None:
         logger.warning("Nenhum dado foi retornado pela API. Pipeline encerrado.")
         return
 
-    # ── Backup CSV Bruto ──────────────────────
-    caminho_csv = CAMINHO_CSV_BRUTO_TEMPLATE.format(
-        competencias=f"idades_{cfg['idade_minima']}_{cfg['idade_maxima']}_{hoje.isoformat()}"
+    caminho_backup = CAMINHO_CSV_BRUTO_TEMPLATE.format(
+        competencias=f"historico_{hoje.isoformat()}"
     )
-    converter.salvar_csv_bruto(df_bruto, caminho_csv)
+    _salvar_csvs_brutos(df_bruto, caminho_backup)
 
-    # ── Limpeza ───────────────────────────────
-    logger.info("Limpando e organizando dados por ano...")
+    logger.info("Limpando dados...")
     df_limpo = cleaner.limpar(df_bruto, cfg["idade_minima"], cfg["idade_maxima"])
 
     if df_limpo.empty:
         logger.error("Após limpeza, o DataFrame ficou vazio. Verifique a qualidade dos dados.")
         return
 
-    # ── Conversão / Persistência ──────────────
     logger.info("Convertendo para Parquet...")
     converter.salvar_parquet(df_limpo, CAMINHO_PARQUET)
-
-    # ── Atualização do Estado (Watermark) ─────
-    ultima_competencia = cleaner.obter_ultima_competencia(df_limpo) or competencia_fim
-    state_manager.save_state(
-        ultima_competencia=ultima_competencia,
-        total_linhas=len(df_limpo),
-    )
-
-    # ── Agregação para o Modelo de Machine Learning ──
-    logger.info("Gerando base consolidada para o Modelo de Machine Learning...")
-    try:
-        import pandas as pd
-        df_parquet_consolidado = pd.read_parquet(CAMINHO_PARQUET)
-        caminho_ubs = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "project", "csv", "ubs_rio_claro (1).csv"))
-        caminho_base_final = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "project", "csv", "Base_Nutricional_Consolidada_Final.csv"))
-        cleaner.agregar_para_modelo(
-            df_limpo=df_parquet_consolidado,
-            df_ubs_caminho=caminho_ubs,
-            base_existente_caminho=caminho_base_final
-        )
-    except Exception as e:
-        logger.error("Falha ao gerar base consolidada para o modelo: %s", e)
+    _atualizar_estado(df_limpo, len(df_limpo))
 
     logger.info("=" * 60)
     logger.info("Carga Histórica concluída com sucesso!")
     logger.info("  Registros salvos     : %d", len(df_limpo))
-    logger.info("  Última competência   : %s", ultima_competencia)
     logger.info("  Arquivo Parquet      : %s", CAMINHO_PARQUET)
+    logger.info("  CSV bruto (PRD)      : %s", CAMINHO_CSV_BRUTO)
     logger.info("=" * 60)
 
 
 def executar_carga_incremental(cfg: dict) -> None:
     """
-    Executa a Carga Incremental: lê a watermark do state.json e extrai
-    apenas os dados posteriores à última competência processada.
-
-    Os novos dados são adicionados ao Parquet existente via append.
+    Executa a Carga Incremental: lê a watermark do state.json e processa
+    apenas competências posteriores à última processada.
 
     Args:
         cfg (dict): Dicionário de configurações carregado do .env.
@@ -217,7 +214,6 @@ def executar_carga_incremental(cfg: dict) -> None:
     logger.info("Última competência processada (watermark): %s", ultima_competencia)
     logger.info("Total de linhas acumuladas anteriormente : %d", total_historico)
 
-    # Calcula o próximo mês após a última competência processada
     ano = int(ultima_competencia[:4])
     mes = int(ultima_competencia[4:6])
     mes += 1
@@ -242,7 +238,6 @@ def executar_carga_incremental(cfg: dict) -> None:
         competencia_fim,
     )
 
-    # ── Extração ──────────────────────────────
     logger.info("Iniciando extração incremental...")
     df_bruto_novo = extractor.extrair_dados(
         base_url=cfg["api_base_url"],
@@ -250,6 +245,7 @@ def executar_carga_incremental(cfg: dict) -> None:
         uf=cfg["uf"],
         idade_minima=cfg["idade_minima"],
         idade_maxima=cfg["idade_maxima"],
+        fases_vida=cfg["fases_vida"],
         limit=cfg["limit_por_pagina"],
         anos_por_faixa=cfg["anos_por_faixa"],
         pausa_segundos=cfg["pausa_entre_requisicoes"],
@@ -259,14 +255,12 @@ def executar_carga_incremental(cfg: dict) -> None:
         logger.warning("Nenhum dado novo retornado pela API. Pipeline encerrado.")
         return
 
-    # ── Backup CSV Bruto ──────────────────────
-    caminho_csv = CAMINHO_CSV_BRUTO_TEMPLATE.format(
+    caminho_backup = CAMINHO_CSV_BRUTO_TEMPLATE.format(
         competencias=f"{proxima_competencia}_a_{competencia_fim}"
     )
-    converter.salvar_csv_bruto(df_bruto_novo, caminho_csv)
+    _salvar_csvs_brutos(df_bruto_novo, caminho_backup)
 
-    # ── Limpeza ───────────────────────────────
-    logger.info("Limpando e organizando novos dados...")
+    logger.info("Limpando novos dados...")
     df_limpo_novo = cleaner.limpar(
         df_bruto_novo,
         cfg["idade_minima"],
@@ -275,42 +269,35 @@ def executar_carga_incremental(cfg: dict) -> None:
     )
 
     if df_limpo_novo.empty:
-        logger.error("Após limpeza, o DataFrame ficou vazio. Nenhum dado será adicionado.")
+        logger.info(
+            "Nenhum registro novo após filtro de competência >= %s.",
+            proxima_competencia,
+        )
         return
 
-    # ── Append ao Parquet ─────────────────────
     logger.info("Adicionando novos dados ao Parquet existente (append)...")
     total_final = converter.append_parquet(df_limpo_novo, CAMINHO_PARQUET)
 
-    # ── Atualização do Estado (Watermark) ─────
-    nova_watermark = (
-        cleaner.obter_ultima_competencia(df_limpo_novo) or competencia_fim
-    )
-    state_manager.save_state(
-        ultima_competencia=nova_watermark,
-        total_linhas=total_final,
-    )
-
-    # ── Agregação para o Modelo de Machine Learning ──
-    logger.info("Gerando base consolidada para o Modelo de Machine Learning...")
-    try:
-        import pandas as pd
-        df_parquet_consolidado = pd.read_parquet(CAMINHO_PARQUET)
-        caminho_ubs = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "project", "csv", "ubs_rio_claro (1).csv"))
-        caminho_base_final = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "project", "csv", "Base_Nutricional_Consolidada_Final.csv"))
-        cleaner.agregar_para_modelo(
-            df_limpo=df_parquet_consolidado,
-            df_ubs_caminho=caminho_ubs,
-            base_existente_caminho=caminho_base_final
+    ultima_competencia_global = cleaner.obter_ultima_competencia(df_limpo_novo)
+    if ultima_competencia_global:
+        ultima_competencia_final = max(
+            str(ultima_competencia),
+            str(ultima_competencia_global),
         )
-    except Exception as e:
-        logger.error("Falha ao gerar base consolidada para o modelo: %s", e)
+    else:
+        ultima_competencia_final = competencia_fim
+
+    state_manager.save_state(
+        ultima_competencia=ultima_competencia_final,
+        total_linhas=total_final,
+        ultimo_sequencial=cleaner.obter_ultimo_sequencial(df_limpo_novo),
+    )
 
     logger.info("=" * 60)
     logger.info("Carga Incremental concluída com sucesso!")
     logger.info("  Novos registros adicionados : %d", len(df_limpo_novo))
     logger.info("  Total acumulado no Parquet  : %d", total_final)
-    logger.info("  Nova watermark              : %s", nova_watermark)
+    logger.info("  Nova watermark              : %s", ultima_competencia_final)
     logger.info("  Arquivo Parquet             : %s", CAMINHO_PARQUET)
     logger.info("=" * 60)
 

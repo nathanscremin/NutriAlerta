@@ -20,4 +20,5 @@ DIR_PROCESSED = os.path.join(DIR_DATA, "processed")
 # Arquivos de saída e controle
 CAMINHO_PARQUET = os.path.join(DIR_PROCESSED, "dados_finais.parquet")
 CAMINHO_STATE = os.path.join(DIR_DATA, "state.json")
+CAMINHO_CSV_BRUTO = os.path.join(DIR_RAW, "dados_brutos.csv")
 CAMINHO_CSV_BRUTO_TEMPLATE = os.path.join(DIR_RAW, "dados_brutos_{competencias}.csv")

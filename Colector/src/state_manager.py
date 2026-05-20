@@ -89,19 +89,26 @@ def load_state() -> dict:
         return estado_padrao
 
 
-def save_state(ultima_competencia: str, total_linhas: int) -> None:
+def save_state(
+    ultima_competencia: str,
+    total_linhas: int,
+    ultimo_sequencial: int | None = None,
+) -> None:
     """
     Persiste o estado atual do pipeline no arquivo state.json.
 
     Args:
         ultima_competencia (str): Última competência processada no formato 'YYYYMM'.
         total_linhas (int): Total acumulado de linhas já processadas.
+        ultimo_sequencial (int | None): Maior codigo_sequencial_acompanhamento coletado.
     """
     estado = {
         "ultima_competencia": ultima_competencia,
         "total_linhas_processadas": total_linhas,
         "ultima_execucao": datetime.now(timezone.utc).isoformat(),
     }
+    if ultimo_sequencial is not None:
+        estado["ultimo_sequencial"] = ultimo_sequencial
     caminho = os.path.abspath(CAMINHO_STATE)
     os.makedirs(os.path.dirname(caminho), exist_ok=True)
 
