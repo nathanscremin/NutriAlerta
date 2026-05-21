@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { DADOS_TEMPORAIS } from '@/lib/mockData';
 
-type ViewMode = 'expert' | 'consultant';
+type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant';
 
 export type PoiType = 'UBS' | 'Pronto-Atendimento' | 'Saúde Mental' | 'Vigilância Sanitária' | 'Educação' | 'Esporte e Lazer' | 'Alimentação - Restaurante/Fast-food' | 'Alimentação - Mercado';
 
@@ -42,7 +42,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  viewMode: 'expert',
+  viewMode: 'map',
   setViewMode: (mode) => set({ viewMode: mode }),
   selectedBairro: null,
   setSelectedBairro: (bairro) => set({ selectedBairro: bairro }),

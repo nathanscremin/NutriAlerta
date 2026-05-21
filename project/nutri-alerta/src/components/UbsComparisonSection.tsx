@@ -180,7 +180,7 @@ export default function UbsComparisonSection() {
     if (!active || !payload?.length) return null;
     return (
       <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-xl p-3 shadow-lg text-xs transition-colors">
-        <p className="text-slate-500 dark:text-zinc-400 mb-2 font-black uppercase tracking-wider text-[10px]">{label}</p>
+        <p className="text-slate-500 dark:text-zinc-400 mb-2 font-bold uppercase tracking-wider text-[10px]">{label}</p>
         {payload.map((p: any) => (
           <div key={p.dataKey} className="flex items-center justify-between gap-6 mb-1.5 last:mb-0">
             <div className="flex items-center gap-2">
@@ -204,10 +204,10 @@ export default function UbsComparisonSection() {
             <GitCompare className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
               Comparador Territorial de UBS
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold mt-0.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
               Análise comparativa em tempo real entre duas unidades de atenção básica · SISVAN 2025
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function UbsComparisonSection() {
             <button
               key={ind.id}
               onClick={() => setIndicador(ind.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
                 activeIndicator === ind.id 
                   ? ind.activeClass + ' shadow-sm'
                   : 'text-slate-500 dark:text-zinc-400 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
@@ -241,7 +241,7 @@ export default function UbsComparisonSection() {
         
         {/* UBS A Selector */}
         <div className="relative z-30">
-          <label className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
+          <label className="text-[9px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
             Selecione a Unidade de Saúde A:
           </label>
           <div className="relative">
@@ -281,8 +281,8 @@ export default function UbsComparisonSection() {
         </div>
 
         {/* UBS B Selector */}
-        <div className="relative z-20">
-          <label className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
+        <div className="relative z-30">
+          <label className="text-[9px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
             Selecione a Unidade de Saúde B:
           </label>
           <div className="relative">
@@ -332,15 +332,15 @@ export default function UbsComparisonSection() {
           
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-900/50">
+              <span className="px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-900/50">
                 UNIDADE A
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold flex items-center gap-1">
+              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold flex items-center gap-1">
                 <Users className="w-3 h-3" /> {statsA.total} Alunos
               </span>
             </div>
 
-            <h4 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] mb-4 tracking-tight">
+            <h4 className="text-base font-bold text-slate-800 dark:text-[#f5f5f7] mb-4 tracking-tight">
               {ubsA}
             </h4>
 
@@ -357,28 +357,28 @@ export default function UbsComparisonSection() {
           <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-2 gap-3 text-[10px]">
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Peso Adeq.</span>
-              <span className="text-sm font-black text-emerald-500">{demoA.globalAvgAgeEut} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-emerald-500">{demoA.globalAvgAgeEut} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Obes.</span>
-              <span className="text-sm font-black text-red-500">{demoA.globalAvgAgeObs} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-red-500">{demoA.globalAvgAgeObs} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Sobr.</span>
-              <span className="text-sm font-black text-amber-500">{demoA.globalAvgAgeSob} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-amber-500">{demoA.globalAvgAgeSob} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Desn.</span>
-              <span className="text-sm font-black text-blue-500">{demoA.globalAvgAgeDes} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-blue-500">{demoA.globalAvgAgeDes} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40 col-span-2 flex items-center justify-between">
               <div>
                 <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Gênero Mais Acometido (Geral)</span>
-                <span className="text-[11px] font-extrabold text-slate-700 dark:text-zinc-200">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-200">
                   {demoA.globalAvgAgeObs > demoA.globalAvgAgeDes ? "Meninos (Predominante)" : "Meninas (Predominante)"}
                 </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-blue-50 dark:bg-blue-950/20 text-blue-500 border border-blue-100 dark:border-blue-900/35">
+              <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-50 dark:bg-blue-950/20 text-blue-500 border border-blue-100 dark:border-blue-900/35">
                 SISVAN
               </span>
             </div>
@@ -391,15 +391,15 @@ export default function UbsComparisonSection() {
 
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
+              <span className="px-2.5 py-1 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
                 UNIDADE B
               </span>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold flex items-center gap-1">
+              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-semibold flex items-center gap-1">
                 <Users className="w-3 h-3" /> {statsB.total} Alunos
               </span>
             </div>
 
-            <h4 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] mb-4 tracking-tight">
+            <h4 className="text-base font-bold text-slate-800 dark:text-[#f5f5f7] mb-4 tracking-tight">
               {ubsB}
             </h4>
 
@@ -416,28 +416,28 @@ export default function UbsComparisonSection() {
           <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-2 gap-3 text-[10px]">
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Peso Adeq.</span>
-              <span className="text-sm font-black text-emerald-500">{demoB.globalAvgAgeEut} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-emerald-500">{demoB.globalAvgAgeEut} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Obes.</span>
-              <span className="text-sm font-black text-red-500">{demoB.globalAvgAgeObs} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-red-500">{demoB.globalAvgAgeObs} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Sobr.</span>
-              <span className="text-sm font-black text-amber-500">{demoB.globalAvgAgeSob} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-amber-500">{demoB.globalAvgAgeSob} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40">
               <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Idade Média Desn.</span>
-              <span className="text-sm font-black text-blue-500">{demoB.globalAvgAgeDes} <span className="text-[9px] font-bold text-slate-400">anos</span></span>
+              <span className="text-sm font-bold text-blue-500">{demoB.globalAvgAgeDes} <span className="text-[9px] font-semibold text-slate-400">anos</span></span>
             </div>
             <div className="bg-white dark:bg-[#1c1c1e] p-2.5 rounded-xl border border-slate-100 dark:border-zinc-800/40 col-span-2 flex items-center justify-between">
               <div>
                 <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-widest block text-[8px] mb-0.5">Gênero Mais Acometido (Geral)</span>
-                <span className="text-[11px] font-extrabold text-slate-700 dark:text-zinc-200">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-zinc-200">
                   {demoB.globalAvgAgeObs > demoB.globalAvgAgeDes ? "Meninos (Predominante)" : "Meninas (Predominante)"}
                 </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 border border-indigo-100 dark:border-indigo-900/35">
+              <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 border border-indigo-100 dark:border-indigo-900/35">
                 SISVAN
               </span>
             </div>
@@ -450,15 +450,15 @@ export default function UbsComparisonSection() {
       <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-100 dark:border-zinc-800/50 rounded-2xl p-5">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
               Evolução Temporal Comparativa: % {indicatorConfig.label}
             </h4>
-            <p className="text-[9px] text-slate-400 dark:text-zinc-500 font-bold mt-0.5">
-              Comparação histórica real (2018–2025) e projeções preditivas <span className="text-amber-500 font-black">★</span> (2026–2027)
+            <p className="text-[9px] text-slate-400 dark:text-zinc-500 font-semibold mt-0.5">
+              Comparação histórica real (2018–2025) e projeções preditivas <span className="text-amber-500 font-bold">★</span> (2026–2027)
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-[10px] font-black">
+          <div className="flex items-center gap-3 text-[10px] font-bold">
             <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
               <span className="w-3 h-0.5 bg-teal-500 inline-block" /> Unidade A
             </span>
@@ -539,8 +539,8 @@ function IndicatorBar({ label, value, color, valueColor }: { label: string; valu
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[11px] font-semibold">
-        <span className="text-slate-600 dark:text-zinc-400 font-bold">{label}</span>
-        <span className={`font-black ${valueColor} font-mono`}>{value.toFixed(1)}%</span>
+        <span className="text-slate-650 dark:text-zinc-400 font-semibold">{label}</span>
+        <span className={`font-bold ${valueColor} font-mono`}>{value.toFixed(1)}%</span>
       </div>
       <div className="h-2 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
         <motion.div

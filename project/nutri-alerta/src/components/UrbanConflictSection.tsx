@@ -42,7 +42,7 @@ export default function UrbanConflictSection() {
       {/* Título da seção */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-3">
         <ShieldAlert className="w-4 h-4 text-red-500" />
-        <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
           Análise de Conflito Urbano — Infraestrutura Alimentar
         </h2>
       </div>
@@ -90,7 +90,7 @@ export default function UrbanConflictSection() {
         {/* Mapa de Conflito */}
         <div className="w-full md:w-[65%] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
           <div className="absolute top-3 left-3 z-10 pointer-events-none">
-            <p className="text-[10px] font-black text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm">
+            <p className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm">
               Mapa de Conflito Urbano — Pântanos Alimentares
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function UrbanConflictSection() {
 
         {/* Gráfico de proporção */}
         <div className="w-full md:w-[35%] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-5 flex flex-col shadow-sm transition-colors duration-300">
-          <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider mb-1">
+          <h3 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider mb-1">
             Proporção de Infraestrutura
           </h3>
           <p className="text-[10px] text-slate-500 dark:text-zinc-400 mb-3 font-semibold">
@@ -195,8 +195,8 @@ function KpiCard({
             </div>
           )}
         </div>
-        <h3 className={`text-2xl font-black ${textColor}`}>{value}</h3>
-        {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-500 mt-0.5 font-bold">{subtitle}</p>}
+        <h3 className={`text-2xl font-bold ${textColor}`}>{value}</h3>
+        {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-500 mt-0.5 font-semibold">{subtitle}</p>}
       </div>
       <div className={`p-2.5 rounded-xl border ${colorClass} flex items-center justify-center`}>{icon}</div>
     </div>

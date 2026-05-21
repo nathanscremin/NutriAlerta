@@ -4,35 +4,35 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f5f5f7; /* Apple signature system light gray background */
-  --foreground: #1d1d1f; /* Apple deep dark gray primary text */
+  --background: #f8fafc; /* Relaxing off-white canvas */
+  --foreground: #0f172a; /* Slate 900 primary text */
   --card: #ffffff;
-  --card-border: #e5e5ea; /* Apple light gray divider/border */
-  --card-hover-border: #d2d2d7;
-  --text-primary: #1d1d1f;
-  --text-secondary: #86868b; /* Apple gray secondary text */
-  --text-muted: #aeaeb2;
+  --card-border: #e2e8f0; /* Soft border */
+  --card-hover-border: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b; /* Soft slate gray */
+  --text-muted: #94a3b8;
   --sidebar: #ffffff;
-  --sidebar-border: #e5e5ea;
+  --sidebar-border: #e2e8f0;
   --accent: #0d9488;
   --accent-light: #f0fdfa;
   --accent-border: #ccfbf1;
 }
 
 .dark {
-  --background: #000000; /* Apple pure black dark background */
-  --foreground: #f5f5f7; /* Apple signature light gray text */
-  --card: #1c1c1e; /* Apple dark system gray secondary/card */
-  --card-border: #2c2c2e; /* Apple dark gray border */
-  --card-hover-border: #3a3a3c;
-  --text-primary: #f5f5f7;
-  --text-secondary: #8e8e93;
-  --text-muted: #636366;
-  --sidebar: #1c1c1e;
-  --sidebar-border: #2c2c2e;
-  --accent: #14b8a6;
-  --accent-light: #132d28;
-  --accent-border: #164e43;
+  --background: #090a0c; /* Deep rich matte dark charcoal/black */
+  --foreground: #f1f5f9; /* Slate 100 primary text */
+  --card: #121316; /* Clean rich card charcoal */
+  --card-border: #1f2229; /* Refined dark border */
+  --card-hover-border: #2e333e;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8; /* Muted soft slate text */
+  --text-muted: #475569;
+  --sidebar: #121316;
+  --sidebar-border: #1f2229;
+  --accent: #0d9488;
+  --accent-light: #0d2d2a;
+  --accent-border: #0f4e47;
 }
 
 @theme inline {

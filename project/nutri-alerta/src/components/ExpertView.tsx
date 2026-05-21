@@ -1,17 +1,14 @@
 "use client";
 import React from 'react';
-import Sidebar from '@/components/Sidebar';
 import RiskMap from '@/components/RiskMap';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
   LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar, ReferenceLine
 } from 'recharts';
-import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info } from 'lucide-react';
+import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
-import UrbanConflictSection from '@/components/UrbanConflictSection';
-import DemographicsSection from '@/components/DemographicsSection';
-import UbsComparisonSection from '@/components/UbsComparisonSection';
 import { useAppStore } from '@/store/useAppStore';
+import UrbanConflictSection from '@/components/UrbanConflictSection';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -85,10 +82,18 @@ function KpiCard({
   );
 }
 
+const POI_CATEGORIES = [
+  { id: 'UBS' as const, label: 'Saúde (UBS/UPA)', color: 'bg-red-500' },
+  { id: 'Educação' as const, label: 'Educação', color: 'bg-blue-500' },
+  { id: 'Esporte e Lazer' as const, label: 'Esporte & Lazer', color: 'bg-green-500' },
+  { id: 'Alimentação - Restaurante/Fast-food' as const, label: 'Restaurantes/Fast-Food', color: 'bg-orange-500' },
+  { id: 'Alimentação - Mercado' as const, label: 'Mercados', color: 'bg-purple-500' },
+];
+
 export default function ExpertView() {
   const { 
     anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi,
-    temporalData, regionalData, yearsList, activePoiTypes,
+    temporalData, regionalData, yearsList, activePoiTypes, setActivePoiTypes,
     darkMode, sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
 
@@ -96,6 +101,14 @@ export default function ExpertView() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const togglePoi = (poi: any) => {
+    if (activePoiTypes.includes(poi)) {
+      setActivePoiTypes(activePoiTypes.filter((p: any) => p !== poi));
+    } else {
+      setActivePoiTypes([...activePoiTypes, poi]);
+    }
+  };
 
   // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
   const { multObs, multDes } = React.useMemo(() => {
@@ -297,36 +310,32 @@ export default function ExpertView() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-background transition-colors duration-300 relative"
+      className="p-6 space-y-6 max-w-7xl mx-auto w-full transition-colors duration-300 relative"
     >
-      <Sidebar />
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-        {/* ── Cabeçalho da view (Com botão de expandir o menu) ── */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {sidebarCollapsed && (
-              <button
-                onClick={() => setSidebarCollapsed(false)}
-                title="Mostrar menu lateral"
-                className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-sm p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] cursor-pointer flex items-center justify-center"
-              >
-                <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-            <div>
-              <h2 className="text-xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">Rio Claro — Painel Epidemiológico</h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-medium">SISVAN · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 rounded-lg px-3 py-2 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(13,148,136,0.5)] animate-pulse" />
-            LIVE DATA: SISVAN 2025
+      {/* ── Cabeçalho da view (Com botão de expandir o menu) ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {sidebarCollapsed && (
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              title="Mostrar menu lateral"
+              className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-sm p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] cursor-pointer flex items-center justify-center"
+            >
+              <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">Rio Claro — Painel Epidemiológico</h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-medium">SISVAN · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado}</p>
           </div>
         </div>
+        <div className="flex items-center gap-2 text-[10px] text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 rounded-lg px-3 py-2 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(13,148,136,0.5)] animate-pulse" />
+          LIVE DATA: SISVAN 2025
+        </div>
+      </div>
 
         {/* ── KPI Cards ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -379,44 +388,108 @@ export default function ExpertView() {
         {/* ── Mapa + Donut ── */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6" style={{ height: '360px' }}>
 
-          {/* Mapa choropleth */}
-          <div className="md:col-span-3 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
-            <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
-              <span className="text-[10px] font-black text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
-                Mapa de Risco por Região
-              </span>
-              {selectedBairro && (
-                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm inline-block w-fit">
-                  📍 {selectedBairro}
+          {/* Mapa choropleth e lateral de POIs */}
+          <div className="md:col-span-3 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300 flex flex-row h-full">
+            
+            {/* Mapa de Risco - Lado Esquerdo */}
+            <div className="flex-1 relative h-full">
+              <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
+                <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
+                  Mapa de Risco por Região
                 </span>
-              )}
+                {selectedBairro && (
+                  <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm inline-block w-fit">
+                    📍 {selectedBairro}
+                  </span>
+                )}
+              </div>
+              <RiskMap />
             </div>
 
-            {selectedPoi && (
-              <div className="absolute bottom-4 left-4 z-[400] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-xl p-4 shadow-lg w-64 animate-in slide-in-from-bottom-4 text-slate-800 dark:text-zinc-200">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] leading-tight pr-4">{selectedPoi.nome}</h4>
-                  <button onClick={() => setSelectedPoi(null)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-lg leading-none -mt-1 cursor-pointer">×</button>
-                </div>
+            {/* Painel de POIs e Detalhes - Lado Direito */}
+            <div className="w-64 border-l border-slate-200/80 dark:border-zinc-800/80 bg-slate-50/30 dark:bg-[#0c0d10]/15 flex flex-col overflow-y-auto p-4 space-y-4 shrink-0 scrollbar-thin">
+              <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: selectedPoi.color }} />
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold uppercase tracking-wider">{selectedPoi.categoria}</span>
+                  <Layers className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />
+                  <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest leading-none">Camadas no Mapa</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mb-3">
-                  Ponto de interesse integrado via motor de geoprocessamento. Pronto para análise pelo modelo de IA.
-                </p>
-                <div className="flex gap-2">
-                  <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[10px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer">
-                    Detalhes
-                  </button>
-                  <button className="flex-1 hover:bg-teal-700 text-[10px] text-white font-bold py-1.5 rounded-lg transition-colors bg-teal-600 cursor-pointer">
-                    Simular
-                  </button>
+                
+                <div className="space-y-1">
+                  {POI_CATEGORIES.map(({ id, label, color }) => {
+                    const isActive = activePoiTypes.includes(id);
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => togglePoi(id)}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all border ${
+                          isActive
+                            ? 'bg-white dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-[#f5f5f7] shadow-sm'
+                            : 'bg-transparent border-transparent text-slate-500 dark:text-zinc-450 hover:bg-slate-50 dark:hover:bg-zinc-900/30 hover:text-slate-700 dark:hover:text-zinc-300'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
+                        <span className="truncate">{label}</span>
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          readOnly
+                          className="ml-auto w-3.5 h-3.5 rounded text-teal-600 border-slate-350 dark:border-zinc-700 focus:ring-teal-500 focus:ring-opacity-20 pointer-events-none accent-teal-600"
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
 
-            <RiskMap />
+              <div className="border-t border-slate-100 dark:border-zinc-900/60" />
+
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-3 block">Detalhes do Ponto</span>
+                  
+                  {selectedPoi ? (
+                    <div className="bg-white dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/55 rounded-xl p-3 space-y-2.5 text-slate-800 dark:text-zinc-200 animate-in fade-in duration-200">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="text-[11px] font-bold text-slate-800 dark:text-[#f5f5f7] leading-snug truncate w-40" title={selectedPoi.nome}>
+                            {selectedPoi.nome}
+                          </h4>
+                          <button
+                            onClick={() => setSelectedPoi(null)}
+                            className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-xs p-0.5 cursor-pointer leading-none"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedPoi.color }} />
+                          <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">{selectedPoi.categoria}</span>
+                        </div>
+
+                        <p className="text-[10px] text-slate-400 dark:text-zinc-400 leading-normal">
+                          Ponto de interesse integrado via geoprocessamento. Pronto para análise pelo modelo preditivo de IA e intervenção no território.
+                        </p>
+                      </div>
+
+                      <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
+                        <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[9px] text-slate-700 dark:text-zinc-250 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer">
+                          Mais Info
+                        </button>
+                        <button className="flex-1 hover:bg-teal-700 text-[9px] text-white font-bold py-1.5 rounded-md transition-colors bg-teal-600 cursor-pointer">
+                          Simular
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-400 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
+                      <div className="mb-2 text-slate-350 dark:text-zinc-600 text-lg">📍</div>
+                      <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Distribuição Nutricional */}
@@ -625,16 +698,9 @@ export default function ExpertView() {
           </div>
         </div>
 
-        {/* ── Painel Demográfico Escolar (Idade e Gênero) ── */}
-        <DemographicsSection />
-
-        {/* ── Painel Comparador Territorial de UBSs ── */}
-        <UbsComparisonSection />
-
-        {/* ── Seção: Conflito Urbano ── */}
+        {/* ── Seção: Conflito Urbano / Infraestrutura ── */}
         <UrbanConflictSection />
 
-      </div>
     </motion.div>
   );
 }
