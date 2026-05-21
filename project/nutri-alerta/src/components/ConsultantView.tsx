@@ -98,7 +98,7 @@ export default function ConsultantView() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'bot',
-      text: 'Olá! Sou o NutrIA. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
+      text: 'Olá! Sou o NutriBot. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
     }
   ]);
   const [input, setInput] = useState('');
@@ -206,7 +206,7 @@ export default function ConsultantView() {
             </div>
             <div>
               <h2 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
-                NutrIA
+                NutriBot
                 <SparklesIcon className="w-5 h-5 text-amber-500" />
               </h2>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">IA de Apoio à Decisão Epidemiológica · Rio Claro</p>
