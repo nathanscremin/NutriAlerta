@@ -116,6 +116,8 @@ function getSystemInstruction(screenData: any) {
       Indicador em foco: ${screenData.indicador ?? 'não informado'}
       % Obesidade: ${screenData.obesidade ?? 'não informado'}
       % Desnutrição: ${screenData.desnutricao ?? 'não informado'}
+      % Sobrepeso: ${screenData.sobrepeso ?? 'não informado'}
+      % Peso Adequado (Eutrofia): ${screenData.eutrofia ?? 'não informado'}
       `;
     } else {
       context = '[[CONTEXTO]] Nenhum bairro selecionado. Oriente o gestor a clicar em um bairro no mapa.';
