@@ -3,10 +3,10 @@ import React from 'react';
 import RiskMap from '@/components/RiskMap';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
-  LineChart, Line, CartesianGrid, XAxis, YAxis, BarChart, Bar, ReferenceLine
+  LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine, BarChart, Bar
 } from 'recharts';
 import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
 
@@ -97,10 +97,18 @@ export default function ExpertView() {
     darkMode, sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
 
+  const [isLayersOpen, setIsLayersOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Auto-expand layers panel when a POI is selected
+  React.useEffect(() => {
+    if (selectedPoi) {
+      setIsLayersOpen(true);
+    }
+  }, [selectedPoi]);
 
   const togglePoi = (poi: any) => {
     if (activePoiTypes.includes(poi)) {
@@ -385,35 +393,61 @@ export default function ExpertView() {
           />
         </div>
 
-        {/* ── Mapa + Donut ── */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6" style={{ height: '360px' }}>
-
-          {/* Mapa choropleth e lateral de POIs */}
-          <div className="md:col-span-3 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300 flex flex-row h-full">
-            
-            {/* Mapa de Risco - Lado Esquerdo */}
-            <div className="flex-1 relative h-full">
-              <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
-                <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
-                  Mapa de Risco por Região
+        {/* ── Seção 1: Mapa de Calor (Imersivo e Largura Total) ── */}
+        <div className="relative bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300 h-[480px] w-full">
+          {/* Mapa de Risco - Preenche toda a área */}
+          <div className="w-full h-full relative">
+            <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
+                Mapa de Risco por Região
+              </span>
+              {selectedBairro && (
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm inline-block w-fit">
+                  📍 {selectedBairro}
                 </span>
-                {selectedBairro && (
-                  <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm inline-block w-fit">
-                    📍 {selectedBairro}
-                  </span>
-                )}
-              </div>
-              <RiskMap />
+              )}
             </div>
+            <RiskMap />
+          </div>
 
-            {/* Painel de POIs e Detalhes - Lado Direito */}
-            <div className="w-64 border-l border-slate-200/80 dark:border-zinc-800/80 bg-slate-50/30 dark:bg-[#0c0d10]/15 flex flex-col overflow-y-auto p-4 space-y-4 shrink-0 scrollbar-thin">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Layers className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />
-                  <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest leading-none">Camadas no Mapa</span>
+          {/* Botão de Controle de Camadas Flutuante */}
+          <button
+            onClick={() => setIsLayersOpen(!isLayersOpen)}
+            className={`absolute top-4 right-4 z-[1000] p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-lg ${
+              isLayersOpen
+                ? 'bg-teal-600 border-teal-500 text-white shadow-teal-500/10'
+                : 'bg-white/95 dark:bg-[#1c1c1e]/95 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/80'
+            }`}
+            title="Ver Camadas e Detalhes"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+
+          {/* Painel de Controle de Camadas Flutuante Overlay */}
+          <AnimatePresence>
+            {isLayersOpen && (
+              <motion.div
+                initial={{ x: 300, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 300, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                className="absolute top-4 right-4 bottom-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-4 space-y-4 overflow-y-auto shrink-0 scrollbar-thin"
+              >
+                {/* Header do Painel */}
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-900/60 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest leading-none">Camadas no Mapa</span>
+                  </div>
+                  <button
+                    onClick={() => setIsLayersOpen(false)}
+                    className="text-slate-400 dark:text-zinc-555 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer text-xs font-bold leading-none p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg"
+                  >
+                    ✕
+                  </button>
                 </div>
-                
+
+                {/* Lista de Checkboxes de Camadas */}
                 <div className="space-y-1">
                   {POI_CATEGORIES.map(({ id, label, color }) => {
                     const isActive = activePoiTypes.includes(id);
@@ -439,61 +473,66 @@ export default function ExpertView() {
                     );
                   })}
                 </div>
-              </div>
 
-              <div className="border-t border-slate-100 dark:border-zinc-900/60" />
+                <div className="border-t border-slate-100 dark:border-zinc-900/60" />
 
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-3 block">Detalhes do Ponto</span>
-                  
-                  {selectedPoi ? (
-                    <div className="bg-white dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/55 rounded-xl p-3 space-y-2.5 text-slate-800 dark:text-zinc-200 animate-in fade-in duration-200">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="text-[11px] font-bold text-slate-800 dark:text-[#f5f5f7] leading-snug truncate w-40" title={selectedPoi.nome}>
-                            {selectedPoi.nome}
-                          </h4>
-                          <button
-                            onClick={() => setSelectedPoi(null)}
-                            className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-xs p-0.5 cursor-pointer leading-none"
-                          >
-                            ✕
+                {/* Detalhes do Ponto Selecionado */}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-555 uppercase tracking-widest leading-none mb-3 block">Detalhes do Ponto</span>
+                    
+                    {selectedPoi ? (
+                      <div className="bg-white dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/55 rounded-xl p-3 space-y-2.5 text-slate-800 dark:text-zinc-200 animate-in fade-in duration-200">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="text-[11px] font-bold text-slate-800 dark:text-[#f5f5f7] leading-snug truncate w-40" title={selectedPoi.nome}>
+                              {selectedPoi.nome}
+                            </h4>
+                            <button
+                              onClick={() => setSelectedPoi(null)}
+                              className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-xs p-0.5 cursor-pointer leading-none"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedPoi.color }} />
+                            <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">{selectedPoi.categoria}</span>
+                          </div>
+
+                          <p className="text-[10px] text-slate-400 dark:text-zinc-450 leading-normal">
+                            Ponto de interesse integrado via geoprocessamento. Pronto para análise pelo modelo preditivo de IA e intervenção no território.
+                          </p>
+                        </div>
+
+                        <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
+                          <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[9px] text-slate-700 dark:text-zinc-250 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer">
+                            Mais Info
+                          </button>
+                          <button className="flex-1 hover:bg-teal-700 text-[9px] text-white font-bold py-1.5 rounded-md transition-colors bg-teal-600 cursor-pointer">
+                            Simular
                           </button>
                         </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedPoi.color }} />
-                          <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">{selectedPoi.categoria}</span>
-                        </div>
-
-                        <p className="text-[10px] text-slate-400 dark:text-zinc-400 leading-normal">
-                          Ponto de interesse integrado via geoprocessamento. Pronto para análise pelo modelo preditivo de IA e intervenção no território.
-                        </p>
                       </div>
-
-                      <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
-                        <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[9px] text-slate-700 dark:text-zinc-250 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer">
-                          Mais Info
-                        </button>
-                        <button className="flex-1 hover:bg-teal-700 text-[9px] text-white font-bold py-1.5 rounded-md transition-colors bg-teal-600 cursor-pointer">
-                          Simular
-                        </button>
+                    ) : (
+                      <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-450 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
+                        <div className="mb-2 text-slate-350 dark:text-zinc-650 text-lg">📍</div>
+                        <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-400 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
-                      <div className="mb-2 text-slate-350 dark:text-zinc-600 text-lg">📍</div>
-                      <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-          {/* Distribuição Nutricional */}
-          <div className="md:col-span-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300">
+        {/* ── Seção 2: Distribuição e Análise de Aceleração de Risco ── */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          
+          {/* Distribuição Nutricional (Donut Chart) */}
+          <div className="md:col-span-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300 min-h-[300px]">
             <div className="mb-4">
               <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
                 {selectedBairro ? `Distribuição em ${selectedBairro}` : 'Distribuição Nutricional'}
@@ -502,7 +541,7 @@ export default function ExpertView() {
                 {selectedBairro ? `${selectedBairro}` : 'Rio Claro'} · SISVAN {anoSelecionado}
               </p>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-h-[200px]">
               {mounted ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -519,8 +558,7 @@ export default function ExpertView() {
                       dataKey="value"
                       stroke="none"
                       cornerRadius={4}
-                    >
-                    </Pie>
+                    />
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
                       itemStyle={{ fontWeight: 'bold' }}
@@ -538,163 +576,197 @@ export default function ExpertView() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* ── Série Temporal + Ranking ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ minHeight: '280px' }}>
+          {/* Card de Pontos Críticos e Velocidade de Aceleração por Região */}
+          <div className="md:col-span-3 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-[360px]">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide uppercase">
+                    {isEut ? 'Recuperação do Peso Adequado por Região' : 'Pontos Críticos de Aceleração de Risco'}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+                    {isEut ? 'Maior ganho de peso adequado (Delta % anual · SISVAN)' : 'Maior avanço de prevalência do risco (Delta % anual · SISVAN)'}
+                  </p>
+                </div>
+                {isEut ? (
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1 rounded-lg">
+                    ✨ MELHORA ATIVA
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-lg">
+                    ⚠️ ALERTA DE ACELERAÇÃO
+                  </span>
+                )}
+              </div>
 
-          {/* Gráfico temporal */}
-          <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300">
-            <div className="mb-4">
-              <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
-                {selectedBairro ? `Evolução em ${selectedBairro}` : 'Evolução Histórica e Projeção'}
-              </h3>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
-                Destaque para: <span className="text-slate-800 dark:text-zinc-200 font-bold">{mainLabel}</span> &nbsp;·&nbsp;
-                {selectedBairro ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
-                <span className="text-amber-600 dark:text-amber-400">★ 2026–2027</span>
-              </p>
+              {/* Contêiner do Gráfico de Barras Rebrand */}
+              <div className="h-[185px] w-full relative mb-3">
+                {mounted ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dynamicRanking} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                      <XAxis type="number" hide />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }}
+                        width={110}
+                      />
+                      <RechartsTooltip
+                        cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                        contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: darkMode ? '#f5f5f7' : '#0f172a' }}
+                        formatter={(v: any) => [`${v >= 0 ? '+' : ''}${v}%`, 'Variação (Delta)']}
+                      />
+                      <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]} barSize={12}>
+                        {dynamicRanking.map((entry: any, i: number) => {
+                          const isHighlighted = cleanSelectedBairro && entry.name.toLowerCase() === cleanSelectedBairro.toLowerCase();
+                          return (
+                            <Cell 
+                               key={i} 
+                               fill={isHighlighted 
+                                 ? '#0d9488' // Teal
+                                 : isEut
+                                   ? (i < 2 ? '#10b981' : i < 4 ? '#34d399' : darkMode ? '#3a3a3c' : '#cbd5e1') // Green/Emerald tones
+                                   : (i < 2 ? '#ef4444' : i < 4 ? '#f59e0b' : darkMode ? '#3a3a3c' : '#cbd5e1') // Red/Amber risk tones
+                               } 
+                               stroke={isHighlighted ? '#ffffff' : 'none'}
+                               strokeWidth={isHighlighted ? 1 : 0}
+                            />
+                          );
+                        })}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+                )}
+              </div>
             </div>
-            <div className="flex-1">
-              {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                    <defs>
-                      <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#ef4444" floodOpacity="0.45" />
-                      </filter>
-                      <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#f59e0b" floodOpacity="0.45" />
-                      </filter>
-                      <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.45" />
-                      </filter>
-                      <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#10b981" floodOpacity="0.45" />
-                      </filter>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} vertical={false} />
-                    <XAxis dataKey="ano" stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
-                    <YAxis stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
-                    <RechartsTooltip content={<CustomTooltip />} />
-                    <ReferenceLine
-                      x="2025"
-                      stroke={darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
-                      strokeDasharray="4 3"
-                      label={{ value: 'Projeção →', fill: darkMode ? '#a1a1aa' : '#64748b', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
-                    />
-                    <Line
-                      type="monotone"
-                      name="% Obesidade"
-                      dataKey="obesidade"
-                      stroke="#ef4444"
-                      strokeWidth={isObs ? 3 : 1.5}
-                      strokeOpacity={isObs ? 1 : 0.3}
-                      filter={isObs ? "url(#glow-red)" : undefined}
-                      dot={(props: any) => props.payload.isPrevisao
-                        ? <circle cx={props.cx} cy={props.cy} r={isObs ? 5 : 3} fill="none" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isObs ? 1 : 0.3} />
-                        : <circle cx={props.cx} cy={props.cy} r={isObs ? 4 : 2} fill="#ef4444" strokeOpacity={isObs ? 1 : 0.3} />}
-                      activeDot={{ r: 6, fill: '#fff', stroke: '#ef4444', strokeWidth: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      name="% Sobrepeso"
-                      dataKey="sobrepeso"
-                      stroke="#f59e0b"
-                      strokeWidth={isSob ? 3 : 1.5}
-                      strokeOpacity={isSob ? 1 : 0.3}
-                      filter={isSob ? "url(#glow-amber)" : undefined}
-                      dot={(props: any) => props.payload.isPrevisao
-                        ? <circle cx={props.cx} cy={props.cy} r={isSob ? 5 : 3} fill="none" stroke="#f59e0b" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isSob ? 1 : 0.3} />
-                        : <circle cx={props.cx} cy={props.cy} r={isSob ? 4 : 2} fill="#f59e0b" strokeOpacity={isSob ? 1 : 0.3} />}
-                      activeDot={{ r: 6, fill: '#fff', stroke: '#f59e0b', strokeWidth: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      name="% Desnutrição"
-                      dataKey="desnutricao"
-                      stroke="#3b82f6"
-                      strokeWidth={isDes ? 3 : 1.5}
-                      strokeOpacity={isDes ? 1 : 0.3}
-                      filter={isDes ? "url(#glow-blue)" : undefined}
-                      dot={(props: any) => props.payload.isPrevisao
-                        ? <circle cx={props.cx} cy={props.cy} r={isDes ? 5 : 3} fill="none" stroke="#3b82f6" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isDes ? 1 : 0.3} />
-                        : <circle cx={props.cx} cy={props.cy} r={isDes ? 4 : 2} fill="#3b82f6" strokeOpacity={isDes ? 1 : 0.3} />}
-                      activeDot={{ r: 6, fill: '#fff', stroke: '#3b82f6', strokeWidth: 3 }}
-                    />
-                    <Line
-                      type="monotone"
-                      name="% Peso Adequado"
-                      dataKey="eutrofia"
-                      stroke="#10b981"
-                      strokeWidth={isEut ? 3 : 1.5}
-                      strokeOpacity={isEut ? 1 : 0.3}
-                      filter={isEut ? "url(#glow-emerald)" : undefined}
-                      dot={(props: any) => props.payload.isPrevisao
-                        ? <circle cx={props.cx} cy={props.cy} r={isEut ? 5 : 3} fill="none" stroke="#10b981" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isEut ? 1 : 0.3} />
-                        : <circle cx={props.cx} cy={props.cy} r={isEut ? 4 : 2} fill="#10b981" strokeOpacity={isEut ? 1 : 0.3} />}
-                      activeDot={{ r: 6, fill: '#fff', stroke: '#10b981', strokeWidth: 3 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+
+            {/* Banner de Simulação de Impacto */}
+            <div className="pt-3 border-t border-slate-100 dark:border-zinc-900/60 mt-2">
+              <span className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-2.5 block">
+                Simulação de Impacto no Território
+              </span>
+              
+              {activePoiTypes.includes('Alimentação - Restaurante/Fast-food') ? (
+                <div className="p-3 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/60 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-700 dark:text-rose-450 font-semibold leading-relaxed flex items-start gap-2">
+                  <span className="text-sm leading-none select-none">⚠️</span>
+                  <span>
+                    <strong>Cenário Passivo:</strong> O livre provimento de fast-food e mercados sem hortifruti nas periferias projeta elevação de <strong>+12% na taxa de obesidade infantil</strong> para o ciclo preditivo de 2027.
+                  </span>
+                </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+                <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100/60 dark:border-emerald-900/40 rounded-xl text-[10px] text-emerald-700 dark:text-emerald-450 font-semibold leading-relaxed flex items-start gap-2">
+                  <span className="text-sm leading-none select-none">✨</span>
+                  <span>
+                    <strong>Cenário Interventivo Ativo:</strong> A simulação de intervenção regulatória (restrição espacial de estabelecimentos de fast-food) projeta <strong>redução real de -12% na curva de obesidade infantil</strong> projetada para 2027.
+                  </span>
+                </div>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Ranking */}
-          <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300">
-            <div className="mb-4">
-              <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
-                {isEut ? 'Top 5 UBS · Evolução Saudável' : 'Top 5 UBS · Aceleração de Risco'}
-              </h3>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
-                {isEut ? 'Delta percentual ano a ano · Melhora no Peso Adequado' : `Delta percentual ano a ano · ${mainLabel}`}
-              </p>
-            </div>
-            <div className="flex-1">
-              {mounted ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dynamicRanking} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="name"
-                      type="category"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }}
-                      width={110}
-                    />
-                    <RechartsTooltip
-                      cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
-                      contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: darkMode ? '#f5f5f7' : '#0f172a' }}
-                      formatter={(v: any) => [`${v >= 0 ? '+' : ''}${v}%`, 'Delta']}
-                    />
-                    <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
-                      {dynamicRanking.map((entry: any, i: number) => {
-                        const isHighlighted = cleanSelectedBairro && entry.name.toLowerCase() === cleanSelectedBairro.toLowerCase();
-                        return (
-                          <Cell 
-                             key={i} 
-                             fill={isHighlighted 
-                               ? '#0d9488' // Teal
-                               : isEut
-                                 ? (i < 2 ? '#10b981' : i < 4 ? '#34d399' : darkMode ? '#3a3a3c' : '#cbd5e1') // Green/Emerald tones
-                                 : (i < 2 ? '#ef4444' : i < 4 ? '#f59e0b' : darkMode ? '#3a3a3c' : '#cbd5e1') // Red/Amber risk tones
-                             } 
-                             stroke={isHighlighted ? '#ffffff' : 'none'}
-                             strokeWidth={isHighlighted ? 1 : 0}
-                          />
-                        );
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
-              )}
-            </div>
+        {/* ── Seção 3: Evolução Histórica e Projeção Temporal (Largura Total) ── */}
+        <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300 min-h-[340px] w-full">
+          <div className="mb-4">
+            <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
+              {selectedBairro ? `Evolução em ${selectedBairro}` : 'Evolução Histórica e Projeção'}
+            </h3>
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+              Destaque para: <span className="text-slate-800 dark:text-zinc-200 font-bold">{mainLabel}</span> &nbsp;·&nbsp;
+              {selectedBairro ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
+              <span className="text-amber-600 dark:text-amber-400 font-semibold">★ Projeção Preditiva 2026–2027</span>
+            </p>
+          </div>
+          <div className="h-[260px] w-full relative">
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                  <defs>
+                    <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#ef4444" floodOpacity="0.45" />
+                    </filter>
+                    <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#f59e0b" floodOpacity="0.45" />
+                    </filter>
+                    <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.45" />
+                    </filter>
+                    <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#10b981" floodOpacity="0.45" />
+                    </filter>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} vertical={false} />
+                  <XAxis dataKey="ano" stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
+                  <YAxis stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
+                  <RechartsTooltip content={<CustomTooltip />} />
+                  <ReferenceLine
+                    x="2025"
+                    stroke={darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
+                    strokeDasharray="4 3"
+                    label={{ value: 'Projeção Preditiva →', fill: darkMode ? '#a1a1aa' : '#64748b', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="% Obesidade"
+                    dataKey="obesidade"
+                    stroke="#ef4444"
+                    strokeWidth={isObs ? 3 : 1.5}
+                    strokeOpacity={isObs ? 1 : 0.3}
+                    filter={isObs ? "url(#glow-red)" : undefined}
+                    dot={(props: any) => props.payload.isPrevisao
+                      ? <circle cx={props.cx} cy={props.cy} r={isObs ? 5 : 3} fill="none" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isObs ? 1 : 0.3} />
+                      : <circle cx={props.cx} cy={props.cy} r={isObs ? 4 : 2} fill="#ef4444" strokeOpacity={isObs ? 1 : 0.3} />}
+                    activeDot={{ r: 6, fill: '#fff', stroke: '#ef4444', strokeWidth: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="% Sobrepeso"
+                    dataKey="sobrepeso"
+                    stroke="#f59e0b"
+                    strokeWidth={isSob ? 3 : 1.5}
+                    strokeOpacity={isSob ? 1 : 0.3}
+                    filter={isSob ? "url(#glow-amber)" : undefined}
+                    dot={(props: any) => props.payload.isPrevisao
+                      ? <circle cx={props.cx} cy={props.cy} r={isSob ? 5 : 3} fill="none" stroke="#f59e0b" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isSob ? 1 : 0.3} />
+                      : <circle cx={props.cx} cy={props.cy} r={isSob ? 4 : 2} fill="#f59e0b" strokeOpacity={isSob ? 1 : 0.3} />}
+                    activeDot={{ r: 6, fill: '#fff', stroke: '#f59e0b', strokeWidth: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="% Desnutrição"
+                    dataKey="desnutricao"
+                    stroke="#3b82f6"
+                    strokeWidth={isDes ? 3 : 1.5}
+                    strokeOpacity={isDes ? 1 : 0.3}
+                    filter={isDes ? "url(#glow-blue)" : undefined}
+                    dot={(props: any) => props.payload.isPrevisao
+                      ? <circle cx={props.cx} cy={props.cy} r={isDes ? 5 : 3} fill="none" stroke="#3b82f6" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isDes ? 1 : 0.3} />
+                      : <circle cx={props.cx} cy={props.cy} r={isDes ? 4 : 2} fill="#3b82f6" strokeOpacity={isDes ? 1 : 0.3} />}
+                    activeDot={{ r: 6, fill: '#fff', stroke: '#3b82f6', strokeWidth: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="% Peso Adequado"
+                    dataKey="eutrofia"
+                    stroke="#10b981"
+                    strokeWidth={isEut ? 3 : 1.5}
+                    strokeOpacity={isEut ? 1 : 0.3}
+                    filter={isEut ? "url(#glow-emerald)" : undefined}
+                    dot={(props: any) => props.payload.isPrevisao
+                      ? <circle cx={props.cx} cy={props.cy} r={isEut ? 5 : 3} fill="none" stroke="#10b981" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isEut ? 1 : 0.3} />
+                      : <circle cx={props.cx} cy={props.cy} r={isEut ? 4 : 2} fill="#10b981" strokeOpacity={isEut ? 1 : 0.3} />}
+                    activeDot={{ r: 6, fill: '#fff', stroke: '#10b981', strokeWidth: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+            )}
           </div>
         </div>
 

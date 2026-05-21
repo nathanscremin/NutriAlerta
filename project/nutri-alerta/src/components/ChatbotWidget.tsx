@@ -106,7 +106,7 @@ export default function ChatbotWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-[9999]">
       {isOpen ? (
         <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] shadow-2xl rounded-2xl w-80 h-96 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 transition-colors duration-300">
           {/* Header */}
