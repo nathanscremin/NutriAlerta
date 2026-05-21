@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { useAppStore } from '@/store/useAppStore';
+import { MessageSquare, X, Send, Bot, Trash2 } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'bot';
@@ -10,6 +8,11 @@ interface Message {
 }
 
 const SESSION_KEY = 'nutribot_v1_session';
+
+const INITIAL_MESSAGE: Message = {
+  role: 'bot',
+  text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard...'
+};
 
 function getSessionId() {
   if (typeof window === 'undefined') return '';
@@ -21,14 +24,18 @@ function getSessionId() {
   return id;
 }
 
+function resetSessionId() {
+  const newId = 'guia-' + Math.random().toString(36).slice(2, 9);
+  localStorage.setItem(SESSION_KEY, newId);
+  return newId;
+}
+
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { selectedBairro, anoSelecionado, indicador } = useAppStore();
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'bot', text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard...' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,9 +60,6 @@ export default function ChatbotWidget() {
           context: {
             screenData: {
               tipo: 'guia',
-              bairro: selectedBairro ?? null,
-              ano: anoSelecionado,
-              indicador,
             }
           }
         })
@@ -68,6 +72,30 @@ export default function ChatbotWidget() {
     }
 
     setLoading(false);
+  }
+
+  async function clearConversation() {
+    if (clearing || loading) return;
+    setClearing(true);
+
+    const oldSessionId = getSessionId();
+
+    try {
+      // Apaga o histórico no KV
+      await fetch('/api/chat', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: oldSessionId }),
+      });
+    } catch {
+      // Falha silenciosa — mesmo sem KV, resetamos localmente
+    }
+
+    // Gera novo sessionId e limpa as mensagens localmente
+    resetSessionId();
+    setMessages([INITIAL_MESSAGE]);
+    setInput('');
+    setClearing(false);
   }
 
   function handleKey(e: React.KeyboardEvent) {
@@ -92,9 +120,23 @@ export default function ChatbotWidget() {
                 <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* Botão limpar conversa */}
+              <button
+                onClick={clearConversation}
+                disabled={clearing || loading}
+                title="Apagar conversa"
+                className="text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-30 transition-colors cursor-pointer p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors cursor-pointer p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -108,11 +150,7 @@ export default function ChatbotWidget() {
                     : 'bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] text-slate-700 dark:text-zinc-200 self-start rounded-tl-none shadow-sm'
                 }`}
               >
-                {msg.role === 'bot' ? (
-                  <ReactMarkdown>{msg.text}</ReactMarkdown>
-                ) : (
-                  msg.text
-                )}
+                {msg.text}
               </div>
             ))}
             {loading && (
