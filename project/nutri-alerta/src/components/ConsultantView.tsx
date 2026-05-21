@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
 import { SparklesIcon } from './Header';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'bot';
@@ -280,7 +281,7 @@ export default function ConsultantView() {
                   <SparklesIcon className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
                 <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <p className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
+                  <ReactMarkdown className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold">{msg.text}</ReactMarkdown>
                 </div>
               </div>
             ) : (
