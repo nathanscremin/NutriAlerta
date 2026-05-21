@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { useAppStore } from '@/store/useAppStore';
 
 interface Message {
   role: 'user' | 'bot';
@@ -21,6 +23,7 @@ function getSessionId() {
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const { selectedBairro, anoSelecionado, indicador } = useAppStore();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'bot', text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard...' }
   ]);
@@ -50,6 +53,9 @@ export default function ChatbotWidget() {
           context: {
             screenData: {
               tipo: 'guia',
+              bairro: selectedBairro ?? null,
+              ano: anoSelecionado,
+              indicador,
             }
           }
         })
@@ -102,7 +108,11 @@ export default function ChatbotWidget() {
                     : 'bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] text-slate-700 dark:text-zinc-200 self-start rounded-tl-none shadow-sm'
                 }`}
               >
-                {msg.text}
+                {msg.role === 'bot' ? (
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                ) : (
+                  msg.text
+                )}
               </div>
             ))}
             {loading && (
