@@ -151,7 +151,6 @@ export default function ConsultantView() {
               desnutricao: dadosAno.desnutricao,
               sobrepeso: dadosAno.sobrepeso,
               eutrofia: dadosAno.eutrofia,
-              }
             }
           }
         })
