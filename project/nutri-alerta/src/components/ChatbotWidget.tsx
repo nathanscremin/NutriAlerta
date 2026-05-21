@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'bot';
@@ -102,7 +103,11 @@ export default function ChatbotWidget() {
                     : 'bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] text-slate-700 dark:text-zinc-200 self-start rounded-tl-none shadow-sm'
                 }`}
               >
-                {msg.text}
+                {msg.role === 'bot' ? (
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
+                ) : (
+                  msg.text
+                )}
               </div>
             ))}
             {loading && (
