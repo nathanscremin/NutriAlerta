@@ -7,7 +7,7 @@ interface Message {
   text: string;
 }
 
-const SESSION_KEY = 'nutribot_guia_session';
+const SESSION_KEY = 'nutribot_v1_session';
 
 function getSessionId() {
   if (typeof window === 'undefined') return '';
@@ -22,7 +22,7 @@ function getSessionId() {
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'bot', text: 'Olá! Sou o NutriAI Guia. Posso explicar como usar o dashboard, o que cada gráfico significa, e como interpretar os dados. Como posso ajudar?' }
+    { role: 'bot', text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard...' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -82,7 +82,7 @@ export default function ChatbotWidget() {
                 <Bot className="w-5 h-5 text-teal-600 dark:text-teal-500" />
               </div>
               <div>
-                <h3 className="font-bold text-slate-800 dark:text-[#f5f5f7] text-sm">NutriAI Guia</h3>
+                <h3 className="font-bold text-slate-800 dark:text-[#f5f5f7] text-sm">NutriBot Guia</h3>
                 <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
               </div>
             </div>

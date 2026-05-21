@@ -6,52 +6,60 @@ const apiKey = process.env.NutriAlerta_API_Key || process.env.GEMINI_API_KEY || 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 function getSystemInstruction(screenData: any) {
-  let context = '';
+  // Captura a flag que você já configurou no widget
+  const tipo = screenData?.tipo || 'consultor'; 
+  let rules = '';
 
-  if (screenData && screenData.bairro) {
-    context = `
-    [[CONTEXTO DO BAIRRO SELECIONADO]]
-    Bairro: ${screenData.bairro}
-    Ano: ${screenData.ano ?? 'não informado'}
-    Faixa Etária: ${screenData.faixaEtaria ?? 'não informada'}
-    Indicador em foco: ${screenData.indicador ?? 'não informado'}
-    % Obesidade: ${screenData.obesidade ?? 'não informado'}
-    % Desnutrição: ${screenData.desnutricao ?? 'não informado'}
+  if (tipo === 'guia') {
+    rules = `
+    Você é o NutriBot, o assistente virtual guia do dashboard de vigilância nutricional de Rio Claro — SP.
+    Seu usuário é um gestor municipal de saúde pública que quer aprender a usar a plataforma.
+
+    REGRAS:
+    1. Seu objetivo é explicar como navegar no site, como ler os gráficos e como interagir com o mapa.
+    2. Seja extremamente direto e focado na usabilidade da ferramenta.
+    3. Se o usuário perguntar sobre dados específicos de um bairro, explique que ele deve acessar a aba "Consultor IA" após selecionar o bairro no mapa.
+    4. Responda sempre em português brasileiro de forma concisa.
     `;
   } else {
-    context =
-      '[[CONTEXTO]] Nenhum bairro selecionado. Oriente o gestor a clicar em um bairro no mapa.';
+    let context = '';
+
+    if (screenData && screenData.bairro) {
+      context = `
+      [[CONTEXTO DO BAIRRO SELECIONADO]]
+      Bairro: ${screenData.bairro}
+      Ano: ${screenData.ano ?? 'não informado'}
+      Faixa Etária: ${screenData.faixaEtaria ?? 'não informada'}
+      Indicador em foco: ${screenData.indicador ?? 'não informado'}
+      % Obesidade: ${screenData.obesidade ?? 'não informado'}
+      % Desnutrição: ${screenData.desnutricao ?? 'não informado'}
+      `;
+    } else {
+      context = '[[CONTEXTO]] Nenhum bairro selecionado. Oriente o gestor a clicar em um bairro no mapa.';
+    }
+
+    rules = `
+    Você é o NutriBot, assistente de vigilância nutricional do município de Rio Claro — SP.
+    Seu usuário é um gestor municipal de saúde pública.
+
+    ${context}
+
+    REGRAS:
+    1. Responda com base nos dados do contexto acima. Não invente números.
+    2. Use linguagem clara e objetiva — sem jargão técnico desnecessário.
+    3. Se não houver bairro selecionado, peça ao gestor que clique no mapa.
+    4. Responda sempre em português brasileiro.
+    `;
   }
-
-  const rules = `
-  Você é o NutriBot, assistente de vigilância nutricional do município de Rio Claro — SP.
-  Seu usuário é um gestor municipal de saúde pública.
-
-  ${context}
-
-  REGRAS:
-  1. Responda com base nos dados do contexto acima. Não invente números.
-  2. Use linguagem clara e objetiva para gestores públicos — sem jargão técnico desnecessário.
-  3. Se não houver bairro selecionado, peça ao gestor que clique no mapa.
-  4. Quando o risco for Alto, sugira ações concretas (busca ativa, visitas domiciliares, reforço de agentes comunitários).
-  5. Quando o risco for Médio, sugira monitoramento e alertas preventivos.
-  6. Quando o risco for Baixo, parabenize e sugira manutenção das ações.
-  7. Responda sempre em português brasileiro.
-  `;
 
   return [
     { role: 'user', parts: [{ text: `SYSTEM OVERRIDE: ${rules}` }] },
     {
       role: 'model',
-      parts: [
-        {
-          text: 'Entendido. Estou pronto para analisar os dados nutricionais do bairro selecionado e apoiar a tomada de decisão do gestor.',
-        },
-      ],
+      parts: [{ text: 'Entendido. Estou pronto para atuar de acordo com o perfil solicitado.' }],
     },
   ];
 }
-
 function getLocalFallbackResponse(message: string, screenData: any) {
   const msgLower = message.toLowerCase();
   const bairro = screenData?.bairro || 'Rio Claro';
