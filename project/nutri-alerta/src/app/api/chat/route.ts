@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 const apiKey = process.env.NutriAlerta_API_Key || process.env.GEMINI_API_KEY || '';
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-const KNOWLEDGE_BASE_GUIA = `
-Você é o NutriBot, assistente de navegação do dashboard NutriAlerta — Rio Claro, SP.
+function getKnowledgeBaseGuia(screenData: any) {
+   return `Você é o NutriBot, assistente de navegação do dashboard NutriAlerta — Rio Claro, SP.
 Seu objetivo é explicar ao usuário como usar o sistema, onde cada funcionalidade está e o que cada visualização significa.
 Responda sempre em português brasileiro, de forma clara e direta.
 Não invente dados. Se perguntarem sobre análise de dados, oriente o usuário a usar o Consultor IA.
@@ -95,7 +95,10 @@ A aba Especialista é dividida em seções rolando de cima para baixo:
 [CONSULTOR IA]
 Para acessar o Consultor IA, clique na aba "Consultor +" no topo da página.
 O Consultor é um chatbot especialista em dados epidemiológicos de Rio Claro. Para melhor análise, selecione primeiro um bairro no mapa — o Consultor receberá automaticamente o contexto daquele bairro e poderá fazer análises específicas. Se nenhum bairro estiver selecionado, o Consultor usará os dados gerais do município.
+
+${screenData?.bairro ? `[CONTEXTO ATUAL]\nUBS em foco: ${screenData.bairro} · Ano: ${screenData.ano} · Indicador: ${screenData.indicador}` : '[CONTEXTO ATUAL] Nenhuma UBS selecionada.'}
 `;
+}
 
 function getSystemInstruction(screenData: any) {
   // Captura a flag que você já configurou no widget
@@ -103,7 +106,7 @@ function getSystemInstruction(screenData: any) {
   let rules = '';
 
   if (tipo === 'guia') {
-    rules = KNOWLEDGE_BASE_GUIA;
+    rules = getKnowledgeBaseGuia(screenData);
   } else {
     let context = '';
 
