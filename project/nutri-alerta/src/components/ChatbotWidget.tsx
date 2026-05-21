@@ -7,7 +7,7 @@ interface Message {
   text: string;
 }
 
-const SESSION_KEY = 'nutribot_guia_session';
+const SESSION_KEY = 'nutribot_v1_session';
 
 function getSessionId() {
   if (typeof window === 'undefined') return '';
