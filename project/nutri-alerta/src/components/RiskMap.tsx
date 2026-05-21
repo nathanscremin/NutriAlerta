@@ -36,18 +36,30 @@ const Tooltip       = dynamic(() => import('react-leaflet').then(m => m.Tooltip)
 
 const getChoroplethColor = (value: number, indicator: string) => {
   if (indicator === 'desnutricao') {
-    if (value < 2.0) return '#a7f3d0'; // Soft emerald
-    if (value < 3.2) return '#bae6fd'; // Soft sky blue
-    return '#7dd3fc'; // Warning blue
+    if (value < 1.5) return '#dbeafe';
+    if (value < 2.5) return '#93c5fd';
+    if (value < 3.5) return '#3b82f6';
+    if (value < 4.5) return '#1d4ed8';
+    return '#1e3a8a';
+  } else if (indicator === 'eutrofia') {
+    if (value < 55) return '#d1fae5';
+    if (value < 60) return '#6ee7b7';
+    if (value < 65) return '#10b981';
+    if (value < 70) return '#047857';
+    return '#064e3b';
   } else if (indicator === 'sobrepeso') {
-    if (value < 12) return '#a7f3d0'; // Soft emerald
-    if (value < 18) return '#fde68a'; // Soft yellow/amber
-    return '#fed7aa'; // Soft orange
+    if (value < 12) return '#fef3c7';
+    if (value < 15) return '#fcd34d';
+    if (value < 18) return '#f59e0b';
+    if (value < 21) return '#b45309';
+    return '#78350f';
   } else {
     // Obesidade
-    if (value < 8) return '#a7f3d0'; // Soft emerald
-    if (value < 13.5) return '#fde68a'; // Soft yellow/amber
-    return '#fca5a5'; // Soft red/rose
+    if (value < 7) return '#fee2e2';
+    if (value < 10) return '#fca5a5';
+    if (value < 13) return '#ef4444';
+    if (value < 16) return '#b91c1c';
+    return '#7f1d1d';
   }
 };
 
@@ -105,27 +117,54 @@ export default function RiskMap() {
     return { multObs: mObs, multDes: mDes };
   }, [activePoiTypes]);
 
-  const getFeatureStyle = (feature: any) => {
-    const nome = feature.properties?.nome_bairro || 'Desconhecido';
-    
-    // Look up dynamic ML/historical risk value
+  // Recupera métricas para o bairro ajustadas pelos POIs
+  const getBairroMetrics = React.useCallback((nome: string) => {
     const cleanYear = anoSelecionado.replace('★', '').trim();
     const yearData = regionalData && regionalData[cleanYear] ? regionalData[cleanYear] : null;
     const regionRecord = yearData ? yearData[nome] : null;
+
+    const dObs = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
+    const dDes = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
+    const dSob = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
+    const dEut = regionRecord ? (regionRecord.eutrofia || 0) : 61.55;
+
+    const scaleDes = Number((dDes * multDes).toFixed(2));
+    const scaleObs = Number((dObs * multObs).toFixed(2));
+    const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
+    const beforeSum = dDes + dObs + dSob;
+    const afterSum = scaleDes + scaleObs + scaleSob;
+    const eut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+
+    return { des: scaleDes, obs: scaleObs, sob: scaleSob, eut };
+  }, [anoSelecionado, regionalData, multDes, multObs]);
+
+  const getFeatureStyle = (feature: any) => {
+    const nome = feature.properties?.nome_bairro || 'Desconhecido';
+    const { des, obs, sob, eut } = getBairroMetrics(nome);
     
     let riskValue = 0;
-    if (indicador === 'desnutricao') {
-      riskValue = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
-      riskValue = Number((riskValue * multDes).toFixed(2));
-    } else if (indicador === 'sobrepeso') {
-      riskValue = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
-      riskValue = Number((riskValue * multObs).toFixed(2));
+    if (indicador === 'desnutricao') riskValue = des;
+    else if (indicador === 'sobrepeso') riskValue = sob;
+    else if (indicador === 'eutrofia') riskValue = eut;
+    else riskValue = obs;
+
+    let fillColor = '';
+    if (indicador === 'global') {
+      const ratioDes = des / 2.62;
+      const ratioObs = obs / 19.88;
+      const ratioEut = eut / 61.55;
+
+      if (ratioObs > 1.15 && ratioObs >= ratioDes) {
+        fillColor = getChoroplethColor(obs, 'obesidade');
+      } else if (ratioDes > 1.15 && ratioDes > ratioObs) {
+        fillColor = getChoroplethColor(des, 'desnutricao');
+      } else {
+        fillColor = getChoroplethColor(eut, 'eutrofia');
+      }
     } else {
-      riskValue = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
-      riskValue = Number((riskValue * multObs).toFixed(2));
+      fillColor = getChoroplethColor(riskValue, indicador);
     }
 
-    const fillColor = getChoroplethColor(riskValue, indicador);
     const isActive = selectedBairro && nome === selectedBairro;
     
     return {
@@ -139,7 +178,8 @@ export default function RiskMap() {
 
   const onEachFeature = (feature: any, layer: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
-    
+    const { des, obs, sob, eut } = getBairroMetrics(nome);
+
     layer.on({
       mouseover: (e: any) => { 
         if (selectedBairro !== nome) {
@@ -167,8 +207,67 @@ export default function RiskMap() {
       },
     });
     
+    let tooltipContent = '';
+    if (indicador === 'global') {
+      tooltipContent = `
+        <div class="p-1 font-sans space-y-2">
+          <div class="font-extrabold text-[12px] border-b border-slate-200 dark:border-zinc-700/80 pb-1.5 mb-2 flex items-center justify-between gap-4">
+            <span class="text-slate-800 dark:text-[#f5f5f7]">${nome}</span>
+            <span class="text-[8px] uppercase tracking-wider bg-teal-100/50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded font-black border border-teal-200/30">Visão Global</span>
+          </div>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+            <div class="flex items-center justify-between gap-2.5">
+              <span class="text-blue-500 font-bold">Desnutrição:</span>
+              <strong class="text-blue-600 dark:text-blue-400 font-mono font-black">${des.toFixed(2)}%</strong>
+            </div>
+            <div class="flex items-center justify-between gap-2.5">
+              <span class="text-emerald-500 font-bold">Peso Adeq.:</span>
+              <strong class="text-emerald-600 dark:text-emerald-400 font-mono font-black">${eut.toFixed(2)}%</strong>
+            </div>
+            <div class="flex items-center justify-between gap-2.5">
+              <span class="text-amber-500 font-bold">Sobrepeso:</span>
+              <strong class="text-amber-600 dark:text-amber-400 font-mono font-black">${sob.toFixed(2)}%</strong>
+            </div>
+            <div class="flex items-center justify-between gap-2.5">
+              <span class="text-red-500 font-bold">Obesidade:</span>
+              <strong class="text-red-600 dark:text-red-400 font-mono font-black">${obs.toFixed(2)}%</strong>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      let activeVal = 0;
+      let label = '';
+      let colorClass = '';
+      if (indicador === 'desnutricao') {
+        activeVal = des;
+        label = 'Desnutrição';
+        colorClass = 'text-blue-500';
+      } else if (indicador === 'sobrepeso') {
+        activeVal = sob;
+        label = 'Sobrepeso';
+        colorClass = 'text-amber-500';
+      } else if (indicador === 'eutrofia') {
+        activeVal = eut;
+        label = 'Peso Adequado';
+        colorClass = 'text-emerald-500';
+      } else {
+        activeVal = obs;
+        label = 'Obesidade';
+        colorClass = 'text-red-500';
+      }
+      tooltipContent = `
+        <div class="font-sans">
+          <div class="font-extrabold text-xs text-slate-800 dark:text-[#f5f5f7] mb-1">${nome}</div>
+          <div class="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
+            ${label}: <strong class="${colorClass} font-mono font-black">${activeVal.toFixed(2)}%</strong>
+          </div>
+        </div>
+      `;
+    }
+
     layer.bindTooltip(
-      `<div class="font-bold text-xs">${nome}</div>`,
+      tooltipContent,
       { className: 'custom-glass-tooltip', sticky: true, direction: 'auto' }
     );
   };

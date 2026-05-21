@@ -30,23 +30,27 @@ export type PontoTemporal = {
   desnutricao: number;
   /** % médio de obesidade entre as UBS (Obesidade + Obesidade Grave) */
   obesidade: number;
+  /** % médio de sobrepeso entre as UBS */
+  sobrepeso: number;
+  /** % médio de peso adequado (eutrofia) entre as UBS */
+  eutrofia: number;
   /** true = projeção do modelo, false = dado histórico real */
   isPrevisao: boolean;
 };
 
 export const DADOS_TEMPORAIS: PontoTemporal[] = [
   // — HISTÓRICO REAL (SISVAN/CNES) —
-  { ano: '2018', desnutricao: 2.81, obesidade: 8.98,  isPrevisao: false },
-  { ano: '2019', desnutricao: 3.42, obesidade: 10.41, isPrevisao: false },
-  { ano: '2020', desnutricao: 2.74, obesidade: 12.58, isPrevisao: false },
-  { ano: '2021', desnutricao: 2.37, obesidade: 13.27, isPrevisao: false },
-  { ano: '2022', desnutricao: 2.48, obesidade: 13.61, isPrevisao: false },
-  { ano: '2023', desnutricao: 2.65, obesidade: 13.28, isPrevisao: false },
-  { ano: '2024', desnutricao: 2.74, obesidade: 12.94, isPrevisao: false },
-  { ano: '2025', desnutricao: 2.62, obesidade: 12.93, isPrevisao: false },
+  { ano: '2018', desnutricao: 2.81, obesidade: 8.98,  sobrepeso: 15.2, eutrofia: 72.41, isPrevisao: false },
+  { ano: '2019', desnutricao: 3.42, obesidade: 10.41, sobrepeso: 16.5, eutrofia: 68.87, isPrevisao: false },
+  { ano: '2020', desnutricao: 2.74, obesidade: 12.58, sobrepeso: 17.8, eutrofia: 65.78, isPrevisao: false },
+  { ano: '2021', desnutricao: 2.37, obesidade: 13.27, sobrepeso: 18.2, eutrofia: 64.86, isPrevisao: false },
+  { ano: '2022', desnutricao: 2.48, obesidade: 13.61, sobrepeso: 19.5, eutrofia: 62.91, isPrevisao: false },
+  { ano: '2023', desnutricao: 2.65, obesidade: 13.28, sobrepeso: 20.1, eutrofia: 62.37, isPrevisao: false },
+  { ano: '2024', desnutricao: 2.74, obesidade: 12.94, sobrepeso: 20.8, eutrofia: 61.72, isPrevisao: false },
+  { ano: '2025', desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55, isPrevisao: false },
   // — PREVISÃO DO MODELO (2026–2027) —
-  { ano: '2026 ★', desnutricao: 3.14, obesidade: 13.76, isPrevisao: true },
-  { ano: '2027 ★', desnutricao: 3.39, obesidade: 13.57, isPrevisao: true },
+  { ano: '2026 ★', desnutricao: 3.14, obesidade: 13.76, sobrepeso: 21.6, eutrofia: 59.50, isPrevisao: true },
+  { ano: '2027 ★', desnutricao: 3.39, obesidade: 13.57, sobrepeso: 22.1, eutrofia: 58.84, isPrevisao: true },
 ];
 
 /** @deprecated Use DADOS_TEMPORAIS — mantido para compatibilidade com gráficos antigos */
@@ -58,9 +62,8 @@ export const MOCK_TEMPORAL = DADOS_TEMPORAIS
 export const MOCK_DISTRIBUICAO = [
   { name: 'Peso Adequado (Eutrofia)', value: 58, fill: '#10b981' },
   { name: 'Sobrepeso',               value: 21, fill: '#f59e0b' },
-  { name: 'Obesidade (Geral)',        value: 13, fill: '#f43f5e' },
-  { name: 'Magreza / Desnutrição',   value:  4, fill: '#38bdf8' },
-  { name: 'Obesidade Grave',          value:  4, fill: '#7c3aed' },
+  { name: 'Obesidade (Geral)',        value: 17, fill: '#ef4444' },
+  { name: 'Magreza / Desnutrição',   value:  4, fill: '#3b82f6' },
 ];
 
 export const RANKING_ACELERACAO = [...MOCK_ESCOLAS]

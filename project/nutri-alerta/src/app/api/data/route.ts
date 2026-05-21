@@ -157,6 +157,8 @@ export async function GET(req: NextRequest) {
       total_avaliados?: number;
       delta_obesidade?: number;
       delta_desnutricao?: number;
+      delta_sobrepeso?: number;
+      delta_eutrofia?: number;
     }>> = {};
 
     // Helper to initialize map keys
@@ -186,10 +188,12 @@ export async function GET(req: NextRequest) {
       if (!ubsName) return;
 
       const rec = getOrInitRecord(year, ubsName, row);
-      rec.obesidade = typeof row.Tendencia_Obesidade === 'number' ? row.Tendencia_Obesidade : row.Obesidade_Pct;
+      const severeObs = row.Obesidade_Grave_Pct || 0;
+      const baseObs = typeof row.Tendencia_Obesidade === 'number' ? row.Tendencia_Obesidade : (row.Obesidade_Pct || 0);
+      rec.obesidade = Number((baseObs + severeObs).toFixed(2));
       rec.sobrepeso = row.Sobrepeso_Pct || 0;
       rec.eutrofia = row.Eutrofia_Pct || 58;
-      rec.obesidade_grave = row.Obesidade_Grave_Pct || 0;
+      rec.obesidade_grave = 0;
       rec.total_avaliados = row.Total || 0;
       rec.delta_obesidade = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Obesidade;
     });
@@ -208,8 +212,34 @@ export async function GET(req: NextRequest) {
       rec.desnutricao = typeof row.Tendencia_Desnutricao === 'number' ? row.Tendencia_Desnutricao : row.Magreza_Pct;
       rec.delta_desnutricao = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Desnutricao;
       
-      // If we don't have total evaluated from obesity, use desnutrição's total
-      if (!rec.total_avaliados) rec.total_avaliados = row.Total || 0;
+    });
+
+    // Compute delta_sobrepeso and delta_eutrofia dynamically year-over-year for all records
+    const yearsSortedForDelta = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
+    yearsSortedForDelta.forEach((yr, index) => {
+      const ubsNames = Object.keys(rawDataMap[yr]);
+      ubsNames.forEach(name => {
+        const rec = rawDataMap[yr][name] as any;
+        if (index === 0) {
+          rec.delta_sobrepeso = 0;
+          rec.delta_eutrofia = 0;
+        } else {
+          const prevYear = yearsSortedForDelta[index - 1];
+          const prevRec = rawDataMap[prevYear]?.[name];
+          
+          if (prevRec && prevRec.sobrepeso !== undefined && rec.sobrepeso !== undefined) {
+            rec.delta_sobrepeso = Number((rec.sobrepeso - prevRec.sobrepeso).toFixed(2));
+          } else {
+            rec.delta_sobrepeso = 0;
+          }
+
+          if (prevRec && prevRec.eutrofia !== undefined && rec.eutrofia !== undefined) {
+            rec.delta_eutrofia = Number((rec.eutrofia - prevRec.eutrofia).toFixed(2));
+          } else {
+            rec.delta_eutrofia = 0;
+          }
+        }
+      });
     });
 
     // Compute annual averages (DADOS_TEMPORAIS) dynamically
@@ -220,6 +250,10 @@ export async function GET(req: NextRequest) {
       let countObs = 0;
       let totalDes = 0;
       let countDes = 0;
+      let totalSob = 0;
+      let countSob = 0;
+      let totalEut = 0;
+      let countEut = 0;
 
       ubsRecords.forEach(rec => {
         if (rec.obesidade !== undefined && rec.obesidade !== null) {
@@ -230,16 +264,28 @@ export async function GET(req: NextRequest) {
           totalDes += rec.desnutricao;
           countDes++;
         }
+        if (rec.sobrepeso !== undefined && rec.sobrepeso !== null) {
+          totalSob += rec.sobrepeso;
+          countSob++;
+        }
+        if (rec.eutrofia !== undefined && rec.eutrofia !== null) {
+          totalEut += rec.eutrofia;
+          countEut++;
+        }
       });
 
       const avgObs = countObs > 0 ? Number((totalObs / countObs).toFixed(2)) : 0;
       const avgDes = countDes > 0 ? Number((totalDes / countDes).toFixed(2)) : 0;
+      const avgSob = countSob > 0 ? Number((totalSob / countSob).toFixed(2)) : 0;
+      const avgEut = countEut > 0 ? Number((totalEut / countEut).toFixed(2)) : 61.5;
 
       const isPrevisao = Number(yr) >= 2026;
       return {
         ano: yr + (isPrevisao ? ' ★' : ''),
         desnutricao: avgDes,
         obesidade: avgObs,
+        sobrepeso: avgSob,
+        eutrofia: avgEut,
         isPrevisao
       };
     });

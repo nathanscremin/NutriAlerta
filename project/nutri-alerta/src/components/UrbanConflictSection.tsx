@@ -30,6 +30,11 @@ const proporcaoLocal = [
 
 export default function UrbanConflictSection() {
   const { darkMode } = useAppStore();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div className="space-y-4 mt-6">
@@ -116,35 +121,39 @@ export default function UrbanConflictSection() {
             Saudável (Mercados + Esportes) vs. Risco (Fast Food + Conv.)
           </p>
           <div className="flex-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={proporcaoLocal}
-                  innerRadius="55%"
-                  outerRadius="78%"
-                  paddingAngle={4}
-                  dataKey="value"
-                  startAngle={90}
-                  endAngle={-270}
-                  stroke="none"
-                  cornerRadius={4}
-                >
-                  {proporcaoLocal.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <RechartsTooltip
-                  contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '11px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
-                  itemStyle={{ fontWeight: 'bold' }}
-                  formatter={(value: number, name: string) => [`${value} locais`, name]}
-                />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: '10px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '8px', fontWeight: 'bold' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {mounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={proporcaoLocal}
+                    innerRadius="55%"
+                    outerRadius="78%"
+                    paddingAngle={4}
+                    dataKey="value"
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                    cornerRadius={4}
+                  >
+                    {proporcaoLocal.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip
+                    contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '11px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                    formatter={(value: number, name: string) => [`${value} locais`, name]}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: '10px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '8px', fontWeight: 'bold' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+            )}
           </div>
 
           {/* Insight dinâmico */}

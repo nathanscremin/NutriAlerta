@@ -9,6 +9,8 @@ import {
 import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
+import DemographicsSection from '@/components/DemographicsSection';
+import UbsComparisonSection from '@/components/UbsComparisonSection';
 import { useAppStore } from '@/store/useAppStore';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
@@ -31,18 +33,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 // ── KPI Card com suporte a tema escuro e fix de tooltip cortado ─────────────────────────
 function KpiCard({
-  label, value, sub, trend, trendLabel, accentColor, bgColor, borderColor, tooltip
+  label, value, sub, trend, trendLabel, accentColor, bgColor, borderColor, tooltip, invertTrendColor
 }: {
   label: string; value: string; sub: string;
   trend?: 'up' | 'down' | 'neutral'; trendLabel?: string;
   accentColor: string; bgColor: string; borderColor: string;
-  tooltip?: string;
+  tooltip?: string; invertTrendColor?: boolean;
 }) {
   const TrendIcon = trend === 'up' ? ArrowUpRight : trend === 'down' ? ArrowDownRight : Minus;
+  
+  const isUpPositive = invertTrendColor;
   const trendColor = trend === 'up' 
-    ? 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20' 
+    ? (isUpPositive
+      ? 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20'
+      : 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20')
     : trend === 'down' 
-      ? 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20' 
+      ? (isUpPositive
+        ? 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20'
+        : 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20')
       : 'text-slate-500 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800';
 
   return (
@@ -84,6 +92,11 @@ export default function ExpertView() {
     darkMode, sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
 
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
   const { multObs, multDes } = React.useMemo(() => {
     let mObs = 1.0;
@@ -110,40 +123,84 @@ export default function ExpertView() {
     const baseSource = selectedBairro ? yearsList.map(yr => {
       const cleanYr = yr.replace('★', '').trim();
       const yrRecord = regionalData[cleanYr]?.[selectedBairro];
-      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0 };
+      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 58 };
       
       return {
         ano: yr,
         desnutricao: yrRecord && yrRecord.desnutricao ? yrRecord.desnutricao : globalRec.desnutricao,
         obesidade: yrRecord && yrRecord.obesidade ? yrRecord.obesidade : globalRec.obesidade,
+        sobrepeso: yrRecord && yrRecord.sobrepeso ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 0,
+        eutrofia: yrRecord && yrRecord.eutrofia ? yrRecord.eutrofia : (globalRec as any).eutrofia || 58,
         isPrevisao: Number(cleanYr) >= 2026
       };
     }) : temporalData;
 
-    return baseSource.map(d => ({
-      ...d,
-      desnutricao: Number((d.desnutricao * multDes).toFixed(2)),
-      obesidade: Number((d.obesidade * multObs).toFixed(2))
-    }));
+    return baseSource.map(d => {
+      const scaleDes = Number((d.desnutricao * multDes).toFixed(2));
+      const scaleObs = Number((d.obesidade * multObs).toFixed(2));
+      const scaleSob = Number(((d.sobrepeso || 0) * ((multObs + 1) / 2)).toFixed(2));
+      const beforeSum = (d.desnutricao || 0) + (d.obesidade || 0) + (d.sobrepeso || 0);
+      const afterSum = scaleDes + scaleObs + scaleSob;
+      const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
+      const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
+      return {
+        ...d,
+        desnutricao: scaleDes,
+        obesidade: scaleObs,
+        sobrepeso: scaleSob,
+        eutrofia: scaleEut
+      };
+    });
   }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
 
   // Encontra os dados do ano selecionado
-  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0 };
+  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   // Pega a projeção de 2027
-  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0 };
+  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
 
   // Configuração baseada no indicador selecionado
   const isObs = indicador === 'obesidade';
-  const mainValue = Number((isObs ? dadosAno.obesidade : dadosAno.desnutricao).toFixed(2));
-  const mainProj = Number((isObs ? dadosProj.obesidade : dadosProj.desnutricao).toFixed(2));
-  const secondaryValue = Number((isObs ? dadosAno.desnutricao : dadosAno.obesidade).toFixed(2));
+  const isDes = indicador === 'desnutricao';
+  const isSob = indicador === 'sobrepeso';
+  const isEut = indicador === 'eutrofia';
+
+  const mainValue = Number((isObs ? dadosAno.obesidade : isDes ? dadosAno.desnutricao : isSob ? dadosAno.sobrepeso || 0 : dadosAno.eutrofia || 0).toFixed(2));
+  const mainProj = Number((isObs ? dadosProj.obesidade : isDes ? dadosProj.desnutricao : isSob ? dadosProj.sobrepeso || 0 : dadosProj.eutrofia || 0).toFixed(2));
+  const secondaryValue = Number((isDes ? dadosAno.obesidade : dadosAno.desnutricao).toFixed(2));
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
 
-  const mainColor = indicador === 'desnutricao' ? 'text-blue-600 dark:text-blue-400' : indicador === 'sobrepeso' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
-  const mainBg = indicador === 'desnutricao' ? 'bg-blue-50/50 dark:bg-blue-950/20' : indicador === 'sobrepeso' ? 'bg-amber-50/50 dark:bg-amber-950/20' : 'bg-red-50/50 dark:bg-red-950/20';
-  const mainBorder = indicador === 'desnutricao' ? 'border-blue-100' : indicador === 'sobrepeso' ? 'border-amber-100' : 'border-red-100';
-  const mainLabel = indicador === 'desnutricao' ? 'Desnutrição' : indicador === 'sobrepeso' ? 'Sobrepeso' : 'Obesidade';
+  const mainColor = isEut
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : indicador === 'desnutricao' 
+      ? 'text-blue-600 dark:text-blue-400' 
+      : indicador === 'sobrepeso' 
+        ? 'text-amber-600 dark:text-amber-400' 
+        : 'text-red-600 dark:text-red-400';
+        
+  const mainBg = isEut
+    ? 'bg-emerald-50/50 dark:bg-emerald-950/20'
+    : indicador === 'desnutricao' 
+      ? 'bg-blue-50/50 dark:bg-blue-950/20' 
+      : indicador === 'sobrepeso' 
+        ? 'bg-amber-50/50 dark:bg-amber-950/20' 
+        : 'bg-red-50/50 dark:bg-red-950/20';
+        
+  const mainBorder = isEut
+    ? 'border-emerald-100'
+    : indicador === 'desnutricao' 
+      ? 'border-blue-100' 
+      : indicador === 'sobrepeso' 
+        ? 'border-amber-100' 
+        : 'border-red-100';
+        
+  const mainLabel = isEut
+    ? 'Peso Adequado'
+    : indicador === 'desnutricao' 
+      ? 'Desnutrição' 
+      : indicador === 'sobrepeso' 
+        ? 'Sobrepeso' 
+        : 'Obesidade';
 
   const cleanYear = anoSelecionado.replace('★', '').trim();
   // Compute dynamic ranking from loaded regional data
@@ -154,9 +211,13 @@ export default function ExpertView() {
   const dynamicRanking = currentYearRegions.length > 0
     ? currentYearRegions
         .map((reg: any) => {
-          const deltaVal = indicador === 'obesidade' 
+          const deltaVal = isObs 
             ? reg.delta_obesidade 
-            : reg.delta_desnutricao;
+            : isDes
+              ? reg.delta_desnutricao
+              : isSob
+                ? reg.delta_sobrepeso || 0
+                : reg.delta_eutrofia || 0;
           return {
             name: reg.nome.replace('UBS ', '').replace('USF ', ''),
             delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
@@ -190,46 +251,40 @@ export default function ExpertView() {
   let sobrepesoAvg = 16.3;
   let obesidadeAvg = isObs ? mainValue : (dadosAno.obesidade || 12.93);
   let desnutricaoAvg = !isObs ? mainValue : (dadosAno.desnutricao || 2.62);
-  let graveAvg = 6.95;
 
   if (selectedBairro && currentBairroRecord) {
     eutrofiaAvg = typeof currentBairroRecord.eutrofia === 'number' && currentBairroRecord.eutrofia > 0 ? Number(currentBairroRecord.eutrofia.toFixed(1)) : eutrofiaAvg;
     sobrepesoAvg = typeof currentBairroRecord.sobrepeso === 'number' && currentBairroRecord.sobrepeso > 0 ? Number(currentBairroRecord.sobrepeso.toFixed(1)) : sobrepesoAvg;
     obesidadeAvg = typeof currentBairroRecord.obesidade === 'number' && currentBairroRecord.obesidade > 0 ? Number(currentBairroRecord.obesidade.toFixed(1)) : obesidadeAvg;
     desnutricaoAvg = typeof currentBairroRecord.desnutricao === 'number' && currentBairroRecord.desnutricao > 0 ? Number(currentBairroRecord.desnutricao.toFixed(1)) : desnutricaoAvg;
-    graveAvg = typeof currentBairroRecord.obesidade_grave === 'number' && currentBairroRecord.obesidade_grave > 0 ? Number(currentBairroRecord.obesidade_grave.toFixed(1)) : graveAvg;
   } else if (currentYearRegions.length > 0) {
-    let sumEutrofia = 0, sumSobrepeso = 0, sumGrave = 0, count = 0;
+    let sumEutrofia = 0, sumSobrepeso = 0, count = 0;
     currentYearRegions.forEach((reg: any) => {
       if (typeof reg.eutrofia === 'number') {
         sumEutrofia += reg.eutrofia;
         sumSobrepeso += reg.sobrepeso || 0;
-        sumGrave += reg.obesidade_grave || 0;
         count++;
       }
     });
     if (count > 0) {
       eutrofiaAvg = Number((sumEutrofia / count).toFixed(2));
       sobrepesoAvg = Number((sumSobrepeso / count).toFixed(2));
-      graveAvg = Number((sumGrave / count).toFixed(2));
       obesidadeAvg = Number((dadosAno.obesidade).toFixed(2));
       desnutricaoAvg = Number((dadosAno.desnutricao).toFixed(2));
     }
   }
 
-  // Aplicamos os multiplicadores dos POIs na desnutrição, obesidade e obesidade grave
+  // Aplicamos os multiplicadores dos POIs na desnutrição e obesidade
   obesidadeAvg = Number((obesidadeAvg * multObs).toFixed(2));
   desnutricaoAvg = Number((desnutricaoAvg * multDes).toFixed(2));
-  graveAvg = Number((graveAvg * multObs).toFixed(2));
 
   // Normalização para a soma ser exatamente 100%
-  const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg + graveAvg;
+  const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg;
   if (totalSum > 0) {
     eutrofiaAvg = Number((eutrofiaAvg / totalSum * 100).toFixed(1));
     sobrepesoAvg = Number((sobrepesoAvg / totalSum * 100).toFixed(1));
     obesidadeAvg = Number((obesidadeAvg / totalSum * 100).toFixed(1));
     desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
-    graveAvg = Number((graveAvg / totalSum * 100).toFixed(1));
   }
 
   const cleanSelectedBairro = selectedBairro
@@ -293,18 +348,20 @@ export default function ExpertView() {
             accentColor={mainColor}
             bgColor={mainBg}
             borderColor={mainBorder}
-            tooltip="Percentual de prevalência registrado para este indicador nutricional em relação ao total avaliado."
+            tooltip="Percentual de prevalência registrado para este indicador nutricional em relação total avaliado."
+            invertTrendColor={isEut}
           />
           <KpiCard
             label={`Projeção ${mainLabel} · 2027`}
             value={`${mainProj}%`}
             sub="★ Modelo preditivo de Machine Learning"
             trend={isAlta ? "up" : "down"}
-            trendLabel={isAlta ? "alta gradual" : "queda leve"}
-            accentColor="text-amber-600 dark:text-amber-400"
-            bgColor="bg-amber-50/20 dark:bg-amber-950/20"
-            borderColor="border-amber-200/60 dark:border-amber-900/40"
+            trendLabel={isAlta ? (isEut ? "melhora gradual" : "alta gradual") : (isEut ? "recuo leve" : "queda leve")}
+            accentColor={isEut ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}
+            bgColor={isEut ? "bg-emerald-50/20 dark:bg-emerald-950/20" : "bg-amber-50/20 dark:bg-amber-950/20"}
+            borderColor={isEut ? "border-emerald-200/60 dark:border-emerald-900/40" : "border-amber-200/60 dark:border-amber-900/40"}
             tooltip="Previsão calculada por inteligência artificial para o ano de 2027 com base no histórico."
+            invertTrendColor={isEut}
           />
           <KpiCard
             label={`${isObs ? 'Desnutrição' : 'Obesidade'} · ${anoSelecionado}`}
@@ -373,36 +430,39 @@ export default function ExpertView() {
               </p>
             </div>
             <div className="flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#10b981' },
-                      { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#f59e0b' },
-                      { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' },
-                      { name: 'Magreza', value: desnutricaoAvg, fill: '#3b82f6' },
-                      { name: 'Obesidade Grave', value: graveAvg, fill: '#8b5cf6' }
-                    ]}
-                    innerRadius="58%"
-                    outerRadius="80%"
-                    paddingAngle={4}
-                    dataKey="value"
-                    stroke="none"
-                    cornerRadius={4}
-                  >
-                  </Pie>
-                  <RechartsTooltip
-                    contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
-                    itemStyle={{ fontWeight: 'bold' }}
-                    formatter={(v: any, n: any) => [`${v}%`, n]}
-                  />
-                  <Legend
-                    iconType="circle"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '10px', fontWeight: 'bold' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#10b981' },
+                        { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#f59e0b' },
+                        { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' },
+                        { name: 'Magreza', value: desnutricaoAvg, fill: '#3b82f6' }
+                      ]}
+                      innerRadius="58%"
+                      outerRadius="80%"
+                      paddingAngle={4}
+                      dataKey="value"
+                      stroke="none"
+                      cornerRadius={4}
+                    >
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
+                      itemStyle={{ fontWeight: 'bold' }}
+                      formatter={(v: any, n: any) => [`${v}%`, n]}
+                    />
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: '11px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '10px', fontWeight: 'bold' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+              )}
             </div>
           </div>
         </div>
@@ -423,91 +483,153 @@ export default function ExpertView() {
               </p>
             </div>
             <div className="flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} vertical={false} />
-                  <XAxis dataKey="ano" stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
-                  <YAxis stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
-                  <RechartsTooltip content={<CustomTooltip />} />
-                  <ReferenceLine
-                    x="2025"
-                    stroke={darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
-                    strokeDasharray="4 3"
-                    label={{ value: 'Projeção →', fill: darkMode ? '#a1a1aa' : '#64748b', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
-                  />
-                  <Line
-                    type="monotone"
-                    name="% Obesidade"
-                    dataKey="obesidade"
-                    stroke="#ef4444"
-                    strokeWidth={isObs ? 3 : 1.5}
-                    strokeOpacity={isObs ? 1 : 0.3}
-                    dot={(props: any) => props.payload.isPrevisao
-                      ? <circle cx={props.cx} cy={props.cy} r={isObs ? 5 : 3} fill="none" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isObs ? 1 : 0.3} />
-                      : <circle cx={props.cx} cy={props.cy} r={isObs ? 4 : 2} fill="#ef4444" strokeOpacity={isObs ? 1 : 0.3} />}
-                    activeDot={{ r: 6, fill: '#fff', stroke: '#ef4444', strokeWidth: 3 }}
-                  />
-                  <Line
-                    type="monotone"
-                    name="% Desnutrição"
-                    dataKey="desnutricao"
-                    stroke="#3b82f6"
-                    strokeWidth={!isObs ? 3 : 1.5}
-                    strokeOpacity={!isObs ? 1 : 0.3}
-                    dot={(props: any) => props.payload.isPrevisao
-                      ? <circle cx={props.cx} cy={props.cy} r={!isObs ? 5 : 3} fill="none" stroke="#3b82f6" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={!isObs ? 1 : 0.3} />
-                      : <circle cx={props.cx} cy={props.cy} r={!isObs ? 4 : 2} fill="#3b82f6" strokeOpacity={!isObs ? 1 : 0.3} />}
-                    activeDot={{ r: 6, fill: '#fff', stroke: '#3b82f6', strokeWidth: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={activeTemporalData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+                    <defs>
+                      <filter id="glow-red" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#ef4444" floodOpacity="0.45" />
+                      </filter>
+                      <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#f59e0b" floodOpacity="0.45" />
+                      </filter>
+                      <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.45" />
+                      </filter>
+                      <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#10b981" floodOpacity="0.45" />
+                      </filter>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} vertical={false} />
+                    <XAxis dataKey="ano" stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
+                    <YAxis stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
+                    <RechartsTooltip content={<CustomTooltip />} />
+                    <ReferenceLine
+                      x="2025"
+                      stroke={darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
+                      strokeDasharray="4 3"
+                      label={{ value: 'Projeção →', fill: darkMode ? '#a1a1aa' : '#64748b', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
+                    />
+                    <Line
+                      type="monotone"
+                      name="% Obesidade"
+                      dataKey="obesidade"
+                      stroke="#ef4444"
+                      strokeWidth={isObs ? 3 : 1.5}
+                      strokeOpacity={isObs ? 1 : 0.3}
+                      filter={isObs ? "url(#glow-red)" : undefined}
+                      dot={(props: any) => props.payload.isPrevisao
+                        ? <circle cx={props.cx} cy={props.cy} r={isObs ? 5 : 3} fill="none" stroke="#ef4444" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isObs ? 1 : 0.3} />
+                        : <circle cx={props.cx} cy={props.cy} r={isObs ? 4 : 2} fill="#ef4444" strokeOpacity={isObs ? 1 : 0.3} />}
+                      activeDot={{ r: 6, fill: '#fff', stroke: '#ef4444', strokeWidth: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      name="% Sobrepeso"
+                      dataKey="sobrepeso"
+                      stroke="#f59e0b"
+                      strokeWidth={isSob ? 3 : 1.5}
+                      strokeOpacity={isSob ? 1 : 0.3}
+                      filter={isSob ? "url(#glow-amber)" : undefined}
+                      dot={(props: any) => props.payload.isPrevisao
+                        ? <circle cx={props.cx} cy={props.cy} r={isSob ? 5 : 3} fill="none" stroke="#f59e0b" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isSob ? 1 : 0.3} />
+                        : <circle cx={props.cx} cy={props.cy} r={isSob ? 4 : 2} fill="#f59e0b" strokeOpacity={isSob ? 1 : 0.3} />}
+                      activeDot={{ r: 6, fill: '#fff', stroke: '#f59e0b', strokeWidth: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      name="% Desnutrição"
+                      dataKey="desnutricao"
+                      stroke="#3b82f6"
+                      strokeWidth={isDes ? 3 : 1.5}
+                      strokeOpacity={isDes ? 1 : 0.3}
+                      filter={isDes ? "url(#glow-blue)" : undefined}
+                      dot={(props: any) => props.payload.isPrevisao
+                        ? <circle cx={props.cx} cy={props.cy} r={isDes ? 5 : 3} fill="none" stroke="#3b82f6" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isDes ? 1 : 0.3} />
+                        : <circle cx={props.cx} cy={props.cy} r={isDes ? 4 : 2} fill="#3b82f6" strokeOpacity={isDes ? 1 : 0.3} />}
+                      activeDot={{ r: 6, fill: '#fff', stroke: '#3b82f6', strokeWidth: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      name="% Peso Adequado"
+                      dataKey="eutrofia"
+                      stroke="#10b981"
+                      strokeWidth={isEut ? 3 : 1.5}
+                      strokeOpacity={isEut ? 1 : 0.3}
+                      filter={isEut ? "url(#glow-emerald)" : undefined}
+                      dot={(props: any) => props.payload.isPrevisao
+                        ? <circle cx={props.cx} cy={props.cy} r={isEut ? 5 : 3} fill="none" stroke="#10b981" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isEut ? 1 : 0.3} />
+                        : <circle cx={props.cx} cy={props.cy} r={isEut ? 4 : 2} fill="#10b981" strokeOpacity={isEut ? 1 : 0.3} />}
+                      activeDot={{ r: 6, fill: '#fff', stroke: '#10b981', strokeWidth: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+              )}
             </div>
           </div>
 
           {/* Ranking */}
           <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300">
             <div className="mb-4">
-              <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">Top 5 UBS · Aceleração de Risco</h3>
-              <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">Delta percentual ano a ano · {mainLabel}</p>
+              <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
+                {isEut ? 'Top 5 UBS · Evolução Saudável' : 'Top 5 UBS · Aceleração de Risco'}
+              </h3>
+              <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
+                {isEut ? 'Delta percentual ano a ano · Melhora no Peso Adequado' : `Delta percentual ano a ano · ${mainLabel}`}
+              </p>
             </div>
             <div className="flex-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dynamicRanking} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }}
-                    width={110}
-                  />
-                  <RechartsTooltip
-                    cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
-                    contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: darkMode ? '#f5f5f7' : '#0f172a' }}
-                    formatter={(v: any) => [`+${v}%`, 'Delta']}
-                  />
-                  <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
-                    {dynamicRanking.map((entry: any, i: number) => {
-                      const isHighlighted = cleanSelectedBairro && entry.name.toLowerCase() === cleanSelectedBairro.toLowerCase();
-                      return (
-                        <Cell 
-                           key={i} 
-                           fill={isHighlighted 
-                             ? '#0d9488' // Teal
-                             : (i < 2 ? '#ef4444' : i < 4 ? '#f59e0b' : darkMode ? '#3a3a3c' : '#cbd5e1') // Red, Amber, Grey
-                           } 
-                           stroke={isHighlighted ? '#ffffff' : 'none'}
-                           strokeWidth={isHighlighted ? 1 : 0}
-                        />
-                      );
-                    })}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dynamicRanking} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }}
+                      width={110}
+                    />
+                    <RechartsTooltip
+                      cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}
+                      contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: darkMode ? '#f5f5f7' : '#0f172a' }}
+                      formatter={(v: any) => [`${v >= 0 ? '+' : ''}${v}%`, 'Delta']}
+                    />
+                    <Bar dataKey="delta" name="Delta (%)" radius={[0, 6, 6, 0]}>
+                      {dynamicRanking.map((entry: any, i: number) => {
+                        const isHighlighted = cleanSelectedBairro && entry.name.toLowerCase() === cleanSelectedBairro.toLowerCase();
+                        return (
+                          <Cell 
+                             key={i} 
+                             fill={isHighlighted 
+                               ? '#0d9488' // Teal
+                               : isEut
+                                 ? (i < 2 ? '#10b981' : i < 4 ? '#34d399' : darkMode ? '#3a3a3c' : '#cbd5e1') // Green/Emerald tones
+                                 : (i < 2 ? '#ef4444' : i < 4 ? '#f59e0b' : darkMode ? '#3a3a3c' : '#cbd5e1') // Red/Amber risk tones
+                             } 
+                             stroke={isHighlighted ? '#ffffff' : 'none'}
+                             strokeWidth={isHighlighted ? 1 : 0}
+                          />
+                        );
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+              )}
             </div>
           </div>
         </div>
+
+        {/* ── Painel Demográfico Escolar (Idade e Gênero) ── */}
+        <DemographicsSection />
+
+        {/* ── Painel Comparador Territorial de UBSs ── */}
+        <UbsComparisonSection />
 
         {/* ── Seção: Conflito Urbano ── */}
         <UrbanConflictSection />

@@ -24,7 +24,11 @@ function getSessionId() {
 }
 
 function getRiskBadge(value: number, indicator: string) {
-  if (indicator === 'desnutricao') {
+  if (indicator === 'eutrofia') {
+    if (value >= 68.0) return { label: 'Peso Saudável', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
+    if (value >= 60.0) return { label: 'Atenção Leve', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
+    return { label: 'Alerta / Baixo', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
+  } else if (indicator === 'desnutricao') {
     if (value < 2.0) return { label: 'Risco Baixo', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
     if (value < 3.2) return { label: 'Risco Médio', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
     return { label: 'Risco Alto', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
@@ -73,27 +77,40 @@ export default function ConsultantView() {
     const baseSource = selectedBairro ? yearsList.map(yr => {
       const cleanYr = yr.replace('★', '').trim();
       const yrRecord = regionalData[cleanYr]?.[selectedBairro];
-      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0 };
+      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 58 };
       
       return {
         ano: yr,
         desnutricao: yrRecord && yrRecord.desnutricao ? yrRecord.desnutricao : globalRec.desnutricao,
         obesidade: yrRecord && yrRecord.obesidade ? yrRecord.obesidade : globalRec.obesidade,
+        sobrepeso: yrRecord && yrRecord.sobrepeso ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 0,
+        eutrofia: yrRecord && yrRecord.eutrofia ? yrRecord.eutrofia : (globalRec as any).eutrofia || 58,
         isPrevisao: Number(cleanYr) >= 2026
       };
     }) : temporalData;
 
-    return baseSource.map(d => ({
-      ...d,
-      desnutricao: Number((d.desnutricao * multDes).toFixed(2)),
-      obesidade: Number((d.obesidade * multObs).toFixed(2))
-    }));
+    return baseSource.map(d => {
+      const scaleDes = Number((d.desnutricao * multDes).toFixed(2));
+      const scaleObs = Number((d.obesidade * multObs).toFixed(2));
+      const scaleSob = Number(((d.sobrepeso || 0) * ((multObs + 1) / 2)).toFixed(2));
+      const beforeSum = (d.desnutricao || 0) + (d.obesidade || 0) + (d.sobrepeso || 0);
+      const afterSum = scaleDes + scaleObs + scaleSob;
+      const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
+      const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
+      return {
+        ...d,
+        desnutricao: scaleDes,
+        obesidade: scaleObs,
+        sobrepeso: scaleSob,
+        eutrofia: scaleEut
+      };
+    });
   }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
 
-  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0 };
+  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
 
   const cleanYear = anoSelecionado.replace('★', '').trim();
-  const mainLabel = indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
+  const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -166,6 +183,8 @@ export default function ConsultantView() {
   let geralVal = 0;
   if (indicador === 'desnutricao') {
     geralVal = dadosAno.desnutricao;
+  } else if (indicador === 'eutrofia') {
+    geralVal = dadosAno.eutrofia || 58;
   } else if (indicador === 'sobrepeso') {
     const currentYearRegions = regionalData && regionalData[cleanYear] 
       ? Object.values(regionalData[cleanYear]) 
@@ -232,9 +251,10 @@ export default function ConsultantView() {
           {/* Indicator Toggle */}
           <div className="flex items-center bg-slate-100 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl p-0.5 gap-0.5 shadow-inner md:ml-auto">
             {[
-              { id: 'obesidade', label: 'Obesidade' },
               { id: 'desnutricao', label: 'Desnutrição' },
+              { id: 'eutrofia', label: 'Peso Adequado' },
               { id: 'sobrepeso', label: 'Sobrepeso' },
+              { id: 'obesidade', label: 'Obesidade' },
             ].map(({ id, label }) => (
               <button
                 key={id}
@@ -381,11 +401,28 @@ export default function ConsultantView() {
               val = ubsData ? ubsData.desnutricao : 2.62;
             } else if (indicador === 'sobrepeso') {
               val = ubsData ? ubsData.sobrepeso : 16.3;
+            } else if (indicador === 'eutrofia') {
+              val = ubsData ? ubsData.eutrofia : 61.2;
             } else {
               val = ubsData ? ubsData.obesidade : 12.93;
             }
-            const multiplier = indicador === 'desnutricao' ? multDes : multObs;
-            const finalVal = Number((val * multiplier).toFixed(2));
+
+            let finalVal = 0;
+            if (indicador === 'eutrofia') {
+              const dObs = ubsData ? ubsData.obesidade : 12.93;
+              const dDes = ubsData ? ubsData.desnutricao : 2.62;
+              const dSob = ubsData ? ubsData.sobrepeso : 16.3;
+              const dEut = ubsData ? ubsData.eutrofia : 61.2;
+              const scaleDes = Number((dDes * multDes).toFixed(2));
+              const scaleObs = Number((dObs * multObs).toFixed(2));
+              const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
+              const beforeSum = dDes + dObs + dSob;
+              const afterSum = scaleDes + scaleObs + scaleSob;
+              finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+            } else {
+              const multiplier = indicador === 'desnutricao' ? multDes : multObs;
+              finalVal = Number((val * multiplier).toFixed(2));
+            }
             const badge = getRiskBadge(finalVal, indicador);
             const totalAvaliados = ubsData ? (ubsData.total_avaliados ?? 'N/D') : 'N/D';
 

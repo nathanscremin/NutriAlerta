@@ -30,6 +30,8 @@ interface AppState {
     ano: string;
     desnutricao: number;
     obesidade: number;
+    sobrepeso: number;
+    eutrofia: number;
     isPrevisao: boolean;
   }>;
   regionalData: Record<string, Record<string, any>>;
