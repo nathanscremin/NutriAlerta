@@ -6,7 +6,7 @@ const apiKey = process.env.NutriAlerta_API_Key || process.env.GEMINI_API_KEY || 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 const KNOWLEDGE_BASE_GUIA = `
-Você é o NutriAI Guia, assistente de navegação do dashboard NutriAlerta — Rio Claro, SP.
+Você é o NutriBot, assistente de navegação do dashboard NutriAlerta — Rio Claro, SP.
 Seu objetivo é explicar ao usuário como usar o sistema, onde cada funcionalidade está e o que cada visualização significa.
 Responda sempre em português brasileiro, de forma clara e direta.
 Não invente dados. Se perguntarem sobre análise de dados, oriente o usuário a usar o Consultor IA.
@@ -16,7 +16,7 @@ O dashboard tem duas abas principais no topo da página:
 - "Especialista" (aba ativa por padrão): painel completo com mapa, gráficos e análises detalhadas.
 - "Consultor IA" (aba ao lado): chatbot especialista em dados epidemiológicos. Clique no "+" ao lado para acessar.
 
-No canto inferior direito da tela há um botão verde flutuante (ícone de chat): é o NutriAI Guia — você está conversando com ele agora.
+No canto inferior direito da tela há um botão verde flutuante (ícone de chat): é o NutriBot — você está conversando com ele agora.
 
 [BARRA LATERAL ESQUERDA]
 A barra lateral esquerda contém todos os filtros e controles do painel. Pode ser recolhida clicando na seta "<" no topo.
@@ -164,7 +164,7 @@ function getLocalFallbackResponse(message: string, screenData: any) {
   const riskLabel = isHighRisk ? 'Alto' : 'Moderado';
 
   if (msgLower.includes('olá') || msgLower.includes('oi') || msgLower.includes('bom') || msgLower.includes('boa')) {
-    return `Olá! Sou o NutrIA, seu assistente de vigilância nutricional em Rio Claro.
+    return `Olá! Sou o NutriBot, seu assistente de vigilância nutricional em Rio Claro.
     
 Atualmente estamos analisando os dados de **${bairro}** para o ano **${ano}**. 
 A taxa de **${indicador}** nesta região está em **${valor}%** (Risco ${riskLabel}). 
