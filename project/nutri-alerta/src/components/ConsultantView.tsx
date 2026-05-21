@@ -149,6 +149,9 @@ export default function ConsultantView() {
               indicador,
               obesidade: dadosAno.obesidade,
               desnutricao: dadosAno.desnutricao,
+              sobrepeso: dadosAno.sobrepeso,
+              eutrofia: dadosAno.eutrofia,
+              }
             }
           }
         })
