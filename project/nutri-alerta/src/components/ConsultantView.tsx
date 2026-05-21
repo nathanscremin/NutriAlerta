@@ -1,10 +1,9 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe } from 'lucide-react';
+import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
-import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'bot';
@@ -21,6 +20,12 @@ function getSessionId() {
     localStorage.setItem(SESSION_KEY, id);
   }
   return id;
+}
+
+function resetSessionId() {
+  const newId = 'esp-' + Math.random().toString(36).slice(2, 9);
+  localStorage.setItem(SESSION_KEY, newId);
+  return newId;
 }
 
 function getRiskBadge(value: number, indicator: string) {
@@ -112,14 +117,15 @@ export default function ConsultantView() {
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'bot',
-      text: 'Olá! Sou o NutriBot. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
-    }
-  ]);
+  const INITIAL_MESSAGE: Message = {
+    role: 'bot',
+    text: 'Olá! Sou o NutriBot. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
+  };
+
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -148,8 +154,6 @@ export default function ConsultantView() {
               indicador,
               obesidade: dadosAno.obesidade,
               desnutricao: dadosAno.desnutricao,
-              sobrepeso: dadosAno.sobrepeso,
-              eutrofia: dadosAno.eutrofia,
             }
           }
         })
@@ -169,6 +173,28 @@ export default function ConsultantView() {
       e.preventDefault();
       sendMessage();
     }
+  }
+
+  async function clearConversation() {
+    if (clearing || loading) return;
+    setClearing(true);
+
+    const oldSessionId = getSessionId();
+
+    try {
+      await fetch('/api/chat', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: oldSessionId }),
+      });
+    } catch {
+      // Falha silenciosa — resetamos localmente mesmo assim
+    }
+
+    resetSessionId();
+    setMessages([INITIAL_MESSAGE]);
+    setInput('');
+    setClearing(false);
   }
 
   // Filtrar UBS da lista de saúde e ordenar em ordem alfabética pelo nome limpo (sem prefixos)
@@ -223,12 +249,12 @@ export default function ConsultantView() {
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="flex items-center gap-3">
             <div className="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shadow-sm">
-              <Sparkles className="w-6 h-6 text-teal-600 dark:text-teal-500" />
+              <SparklesIcon className="w-6 h-6 text-teal-600 dark:text-teal-500" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
+              <h2 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
                 NutriBot
-                <Sparkles className="w-5 h-5 text-amber-500" />
+                <SparklesIcon className="w-5 h-5 text-amber-500" />
               </h2>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">IA de Apoio à Decisão Epidemiológica · Rio Claro</p>
             </div>
@@ -236,7 +262,7 @@ export default function ConsultantView() {
           
           {/* Signal / Active Context Pill */}
           <div className="flex flex-wrap items-center gap-2 md:ml-auto">
-            <div className={`text-[10px] font-bold uppercase px-3 py-1.5 rounded-full border flex items-center gap-1 ${
+            <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border flex items-center gap-1 ${
               selectedBairro 
                 ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-100 dark:border-teal-900/60 font-bold' 
                 : 'text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-[#2c2c2e] font-semibold'
@@ -248,6 +274,15 @@ export default function ConsultantView() {
               <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
               Online
             </div>
+            {/* Botão limpar conversa */}
+            <button
+              onClick={clearConversation}
+              disabled={clearing || loading}
+              title="Apagar conversa"
+              className="text-slate-400 dark:text-zinc-500 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-30 transition-colors cursor-pointer p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Indicator Toggle */}
@@ -279,19 +314,19 @@ export default function ConsultantView() {
             msg.role === 'bot' ? (
               <div key={i} className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                  <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
+                  <SparklesIcon className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
                 <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <ReactMarkdown className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold">{msg.text}</ReactMarkdown>
+                  <p className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ) : (
               <div key={i} className="flex gap-4 flex-row-reverse">
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] flex items-center justify-center shrink-0 mt-1">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-450">EU</span>
+                  <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400">EU</span>
                 </div>
                 <div className="bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 p-5 rounded-2xl rounded-tr-sm max-w-[80%]">
-                  <p className="text-sm text-teal-800 dark:text-teal-300 leading-relaxed font-semibold">{msg.text}</p>
+                  <p className="text-sm text-teal-800 dark:text-teal-300 leading-relaxed font-bold">{msg.text}</p>
                 </div>
               </div>
             )
@@ -342,8 +377,8 @@ export default function ConsultantView() {
         
         {/* List Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
-          <h3 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] tracking-wide uppercase">Unidades de Saúde (UBS/USF)</h3>
-          <p className="text-[10px] font-medium text-slate-500 dark:text-zinc-400 mt-1">
+          <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide uppercase">Unidades de Saúde (UBS/USF)</h3>
+          <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">
             Selecione uma UBS para cruzar os dados no chatbot (Ano: {cleanYear})
           </p>
 
@@ -382,7 +417,7 @@ export default function ConsultantView() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
-                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
+                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
                   {geralBadge.label}
                 </span>
               </div>
@@ -445,7 +480,7 @@ export default function ConsultantView() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
-                    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
                       {badge.label}
                     </span>
                   </div>
