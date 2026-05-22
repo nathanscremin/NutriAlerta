@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
       const dynamicInstruction = getSystemInstruction(context.screenData);
       const historyForAPI = [...dynamicInstruction, ...historyFromDB];
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
       const chat = model.startChat({ history: historyForAPI });
 
       const result = await chat.sendMessage(message);
