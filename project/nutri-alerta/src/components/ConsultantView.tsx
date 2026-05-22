@@ -12,6 +12,7 @@ interface Message {
 }
 
 const SESSION_KEY = 'nutribot_especialista_session';
+const MESSAGES_KEY = 'nutribot_especialista_messages';
 
 function getSessionId() {
   if (typeof window === 'undefined') return '';
@@ -27,6 +28,26 @@ function resetSessionId() {
   const newId = 'esp-' + Math.random().toString(36).slice(2, 9);
   localStorage.setItem(SESSION_KEY, newId);
   return newId;
+}
+
+const INITIAL_MESSAGE_CONSULTANT: Message = {
+  role: 'bot',
+  text: 'Olá! Sou o NutriBot. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
+};
+
+function loadMessages(): Message[] {
+  if (typeof window === 'undefined') return [INITIAL_MESSAGE_CONSULTANT];
+  try {
+    const saved = localStorage.getItem(MESSAGES_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return [INITIAL_MESSAGE_CONSULTANT];
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
+  } catch {}
 }
 
 function getRiskBadge(value: number, indicator: string) {
@@ -98,12 +119,9 @@ export default function ConsultantView() {
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
-  const INITIAL_MESSAGE: Message = {
-    role: 'bot',
-    text: 'Olá! Sou o NutriBot. Selecione uma UBS na lista lateral para ajustar o contexto dinamicamente, e me faça qualquer pergunta sobre a vigilância nutricional da região.'
-  };
+  const INITIAL_MESSAGE: Message = INITIAL_MESSAGE_CONSULTANT;
 
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -112,6 +130,10 @@ export default function ConsultantView() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   async function sendMessage() {
     const text = input.trim();
@@ -174,6 +196,7 @@ export default function ConsultantView() {
     }
 
     resetSessionId();
+    localStorage.removeItem(MESSAGES_KEY);
     setMessages([INITIAL_MESSAGE]);
     setInput('');
     setClearing(false);
