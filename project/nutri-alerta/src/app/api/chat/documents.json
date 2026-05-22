@@ -1,0 +1,12 @@
+[
+  {
+    "id": "van_definicao",
+    "titulo": "Definição de Vigilância Alimentar e Nutricional (VAN)",
+    "texto": "A Vigilância Alimentar e Nutricional (VAN) é parte da vigilância em saúde e foi instituída no âmbito do SUS pela Lei nº 8.080 de 1990. Ela possibilita a descrição contínua e a predição de tendências da alimentação e nutrição da população e seus fatores determinantes, auxiliando na garantia do cuidado integral à saúde."
+  },
+  {
+    "id": "periodicidade_registro",
+    "titulo": "Periodicidade de Registro no SISVAN",
+    "texto": "Conforme o calendário mínimo de consultas do Ministério da Saúde, o registro da avaliação do estado nutricional e consumo alimentar deve seguir a seguinte periodicidade: Crianças até 2 anos devem ser registradas aos 15 dias de vida, 1 mês, 2, 4, 6, 9, 12, 18 e 24 meses. Para indivíduos a partir de 2 anos de idade, deve haver no mínimo 1 registro por ano."
+  }
+]
