@@ -402,11 +402,14 @@ export default function ConsultantView() {
 
   // Dynamic total evaluated students across all UBSs for the selected year
   const totalAvaliados = React.useMemo(() => {
-    if (!regionalData || !regionalData[cleanYear]) return 0;
-    return Object.values(regionalData[cleanYear]).reduce((sum: number, reg: any) => {
-      return sum + (reg.total_avaliados ?? 0);
-    }, 0);
-  }, [regionalData, cleanYear]);
+    let totalSchoolAvaliados = 0;
+    Object.values(schoolMetrics || {}).forEach((sch: any) => {
+      if (sch.anos?.[cleanYear]?.total_avaliados) {
+        totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
+      }
+    });
+    return totalSchoolAvaliados;
+  }, [schoolMetrics, cleanYear]);
 
   const totalAvaliadosStr = React.useMemo(() => {
     if (!totalAvaliados) return 'N/D';

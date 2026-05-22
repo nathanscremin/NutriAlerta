@@ -326,14 +326,28 @@ export default function ExpertView() {
         { name: 'Mãe Preta', delta: 0.9 }
       ];
 
-  const sumAvaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
+  const sumAvaliados = React.useMemo(() => {
+    let totalSchoolAvaliados = 0;
+    Object.values(schoolMetrics).forEach((sch: any) => {
+      if (sch.anos?.[cleanYear]?.total_avaliados) {
+        totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
+      }
+    });
+    return totalSchoolAvaliados;
+  }, [schoolMetrics, cleanYear]);
   
   let avaliadosVal = sumAvaliados > 0 ? sumAvaliados : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500);
   let avaliadosSub = "Total acumulado nas 18 UBS de Rio Claro";
 
   if (analysisLevel === 'ubs') {
     const record = selectedUbs ? regionalData[cleanYear]?.[selectedUbs] : null;
-    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 2200;
+    let ubsTotal = 0;
+    Object.values(schoolMetrics).forEach((sch: any) => {
+      if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
+        ubsTotal += sch.anos[cleanYear].total_avaliados;
+      }
+    });
+    avaliadosVal = ubsTotal || (record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 2200);
     avaliadosSub = `Total de indivíduos avaliados na UBS ${selectedUbs?.replace('UBS ', '').replace('USF ', '')}`;
   } else if (analysisLevel === 'bairro') {
     const record = selectedBairroName ? bairroMetrics[selectedBairroName]?.anos[cleanYear] : null;

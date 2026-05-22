@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Menu, Map, Users, Stethoscope, Bot, LogOut } from 'lucide-react';
+import { UserCircle, Menu, Map, Users, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -28,7 +28,7 @@ const navItems = [
 ];
 
 export default function Header() {
-  const { viewMode, setViewMode, sidebarCollapsed, setSidebarCollapsed } = useAppStore();
+  const { viewMode, setViewMode, sidebarCollapsed, setSidebarCollapsed, darkMode, setDarkMode } = useAppStore();
   const router = useRouter();
   const [userEmail, setUserEmail] = React.useState<string>('Carregando...');
 
@@ -118,6 +118,19 @@ export default function Header() {
 
       {/* User & Logout */}
       <div className="flex items-center gap-4">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-[#a1a1aa] dark:hover:text-[#f5f5f7] hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 transition-all cursor-pointer flex items-center justify-center mr-1"
+          title={darkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+        >
+          {darkMode ? (
+            <Sun className="w-4 h-4 text-amber-500" />
+          ) : (
+            <Moon className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+          )}
+        </button>
+
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7]">{userEmail}</p>

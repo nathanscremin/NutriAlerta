@@ -170,8 +170,14 @@ export default function Sidebar() {
         des = data.desnutricao || 0;
         sob = data.sobrepeso || 0;
         eut = data.eutrofia || 0;
-        avaliados = data.total_avaliados || 0;
       }
+      let ubsTotal = 0;
+      Object.values(schoolMetrics).forEach((sch: any) => {
+        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
+          ubsTotal += sch.anos[cleanYear].total_avaliados;
+        }
+      });
+      avaliados = ubsTotal || (data?.total_avaliados || 0);
       const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
       subUnitLabel = "Escolas na região";
       subUnitValue = String(schoolCount);
@@ -184,11 +190,13 @@ export default function Sidebar() {
         sob = data.sobrepeso;
         eut = data.eutrofia;
       }
-      const currentYearRegions = regionalData && regionalData[cleanYear]
-        ? Object.values(regionalData[cleanYear])
-        : [];
-      avaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
-      
+      let totalSchoolAvaliados = 0;
+      Object.values(schoolMetrics).forEach((sch: any) => {
+        if (sch.anos?.[cleanYear]?.total_avaliados) {
+          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
+        }
+      });
+      avaliados = totalSchoolAvaliados;
       if (avaliados === 0) {
         avaliados = anoSelecionado.includes('2025') ? 45200 : anoSelecionado.includes('2024') ? 41100 : 38500;
       }
@@ -567,26 +575,6 @@ export default function Sidebar() {
 
         {/* Separador Fixo */}
         <div className="border-t border-slate-100 dark:border-zinc-900/60" />
-
-        {/* Dark Mode Switch */}
-        <div className="flex items-center justify-between px-3.5 py-3 bg-slate-50 dark:bg-zinc-900/40 rounded-xl border border-slate-200/50 dark:border-zinc-800/80 transition-colors">
-          <div className="flex items-center gap-2">
-            {darkMode ? <Moon className="w-3.5 h-3.5 text-teal-500" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
-            <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Modo Escuro</span>
-          </div>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 focus:outline-none cursor-pointer ${
-              darkMode ? 'bg-teal-600' : 'bg-slate-350 dark:bg-zinc-800'
-            }`}
-          >
-            <div
-              className={`bg-white w-4 h-4 rounded-full shadow transform transition-transform duration-300 ${
-                darkMode ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </button>
-        </div>
 
         {/* Fonte de dados */}
         <div className="pt-2">
