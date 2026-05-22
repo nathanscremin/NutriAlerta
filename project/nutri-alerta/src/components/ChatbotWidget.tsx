@@ -10,6 +10,7 @@ interface Message {
 }
 
 const SESSION_KEY = 'nutribot_v1_session';
+const MESSAGES_KEY = 'nutribot_v1_messages';
 
 const INITIAL_MESSAGE: Message = {
   role: 'bot',
@@ -32,9 +33,24 @@ function resetSessionId() {
   return newId;
 }
 
+function loadMessages(): Message[] {
+  if (typeof window === 'undefined') return [INITIAL_MESSAGE];
+  try {
+    const saved = localStorage.getItem(MESSAGES_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return [INITIAL_MESSAGE];
+}
+
+function saveMessages(msgs: Message[]) {
+  try {
+    localStorage.setItem(MESSAGES_KEY, JSON.stringify(msgs));
+  } catch {}
+}
+
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -44,6 +60,10 @@ export default function ChatbotWidget() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   async function sendMessage() {
     const text = input.trim();
@@ -97,6 +117,7 @@ export default function ChatbotWidget() {
     }
 
     resetSessionId();
+    localStorage.removeItem(MESSAGES_KEY);
     setMessages([INITIAL_MESSAGE]);
     setInput('');
     setClearing(false);
