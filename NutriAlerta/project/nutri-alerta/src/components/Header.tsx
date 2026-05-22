@@ -30,6 +30,31 @@ const navItems = [
 export default function Header() {
   const { viewMode, setViewMode, sidebarCollapsed, setSidebarCollapsed } = useAppStore();
   const router = useRouter();
+  const [userEmail, setUserEmail] = React.useState<string>('Carregando...');
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      } else {
+        setUserEmail('FATEC User');
+      }
+    };
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
+      } else {
+        setUserEmail('FATEC User');
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -95,7 +120,7 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
-            <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7]">FATEC Rio Claro</p>
+            <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7]">{userEmail}</p>
             <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">Administrador</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 flex items-center justify-center">

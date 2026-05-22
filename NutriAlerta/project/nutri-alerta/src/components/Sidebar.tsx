@@ -18,6 +18,8 @@ export default function Sidebar() {
     yearsList,
     temporalData,
     regionalData,
+    schoolMetrics,
+    bairroMetrics,
     darkMode, setDarkMode,
     sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
@@ -112,23 +114,109 @@ export default function Sidebar() {
     );
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const selectedYearData = temporalData.find(d => d.ano === anoSelecionado);
-  const avgObs = selectedYearData ? `${selectedYearData.obesidade.toFixed(2)}%` : '...';
-  const avgDes = selectedYearData ? `${selectedYearData.desnutricao.toFixed(2)}%` : '...';
-  const avgSob = selectedYearData && typeof selectedYearData.sobrepeso === 'number' ? `${selectedYearData.sobrepeso.toFixed(2)}%` : '...';
-  const avgEut = selectedYearData && typeof selectedYearData.eutrofia === 'number' ? `${selectedYearData.eutrofia.toFixed(2)}%` : '...';
-
-  const cleanYear = anoSelecionado.replace(' ★', '');
-  const currentYearRegions = regionalData && regionalData[cleanYear]
-    ? Object.values(regionalData[cleanYear])
-    : [];
-  const sumAvaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
+  const cleanYear = anoSelecionado.replace(' ★', '').trim();
   const isPrevisao = anoSelecionado.includes('★');
-  const evaluatedStr = isPrevisao 
-    ? 'Projetado' 
-    : (sumAvaliados > 0 
-        ? (sumAvaliados >= 1000 ? `${(sumAvaliados / 1000).toFixed(1)}K` : String(sumAvaliados))
-        : (anoSelecionado === '2025' ? '45.2K' : anoSelecionado === '2024' ? '41.1K' : '38.5K'));
+
+  const activeLabel = React.useMemo(() => {
+    if (analysisLevel === 'escola' && selectedSchoolName) {
+      return selectedSchoolName.replace('E.M.E.F. ', '').replace('E.E. ', '').replace('E.M. ', '').split(' “')[0];
+    }
+    if (analysisLevel === 'bairro' && selectedBairroName) {
+      return selectedBairroName;
+    }
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      return selectedUbs.replace('UBS ', '').replace('USF ', '').split(' “')[0];
+    }
+    return 'Rio Claro';
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs]);
+
+  const hudMetrics = React.useMemo(() => {
+    let obs = 0;
+    let des = 0;
+    let sob = 0;
+    let eut = 0;
+    let avaliados = 0;
+    let subUnitLabel = "UBS monitoradas";
+    let subUnitValue = String(ubsList.length);
+
+    if (analysisLevel === 'escola' && selectedSchoolName) {
+      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
+      if (data) {
+        obs = data.obesidade;
+        des = data.desnutricao;
+        sob = data.sobrepeso;
+        eut = data.eutrofia;
+        avaliados = data.total_avaliados;
+      }
+      subUnitLabel = "Tipo de Escola";
+      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
+      subUnitValue = schoolInfo?.categoria || "Educação";
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
+      if (data) {
+        obs = data.obesidade;
+        des = data.desnutricao;
+        sob = data.sobrepeso;
+        eut = data.eutrofia;
+        avaliados = data.total_avaliados;
+      }
+      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
+      subUnitLabel = "Escolas no bairro";
+      subUnitValue = String(schoolCount);
+    } else if (analysisLevel === 'ubs' && selectedUbs) {
+      const data = regionalData[cleanYear]?.[selectedUbs];
+      if (data) {
+        obs = data.obesidade || 0;
+        des = data.desnutricao || 0;
+        sob = data.sobrepeso || 0;
+        eut = data.eutrofia || 0;
+        avaliados = data.total_avaliados || 0;
+      }
+      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
+      subUnitLabel = "Escolas na região";
+      subUnitValue = String(schoolCount);
+    } else {
+      // municipio
+      const data = temporalData.find(d => d.ano === anoSelecionado);
+      if (data) {
+        obs = data.obesidade;
+        des = data.desnutricao;
+        sob = data.sobrepeso;
+        eut = data.eutrofia;
+      }
+      const currentYearRegions = regionalData && regionalData[cleanYear]
+        ? Object.values(regionalData[cleanYear])
+        : [];
+      avaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
+      
+      if (avaliados === 0) {
+        avaliados = anoSelecionado.includes('2025') ? 45200 : anoSelecionado.includes('2024') ? 41100 : 38500;
+      }
+      subUnitLabel = "UBS monitoradas";
+      subUnitValue = String(ubsList.length);
+    }
+
+    const formatPct = (val: number) => {
+      if (val === undefined || val === null || isNaN(val)) return 'N/D';
+      return `${val.toFixed(2)}%`;
+    };
+
+    const formatAval = (val: number) => {
+      if (isPrevisao) return 'Projetado';
+      if (!val) return 'N/D';
+      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
+    };
+
+    return {
+      avgObs: formatPct(obs),
+      avgDes: formatPct(des),
+      avgSob: formatPct(sob),
+      avgEut: formatPct(eut),
+      evaluatedStr: formatAval(avaliados),
+      subUnitLabel,
+      subUnitValue
+    };
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics, ubsList, schoolsList, isPrevisao]);
 
   // Ocultar completamente o menu lateral caso esteja recolhido
   if (sidebarCollapsed) return null;
@@ -462,16 +550,16 @@ export default function Sidebar() {
 
             {/* Resumo Métricas Rápidas */}
             <div>
-              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-3 block leading-none">
-                Resumo · Rio Claro {anoSelecionado}
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-3 block leading-none truncate max-w-full">
+                Resumo · {activeLabel} {anoSelecionado}
               </label>
               <div className="space-y-2">
-                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado médio" value={avgEut} color="text-emerald-600 dark:text-emerald-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade média" value={avgObs} color="text-red-600 dark:text-red-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso médio" value={avgSob} color="text-amber-600 dark:text-amber-400" />
-                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição média" value={avgDes}  color="text-blue-600 dark:text-blue-400" />
-                <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />}    label="Avaliados" value={evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
-                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-600" />} label="UBS monitoradas" value="18" color="text-teal-600 dark:text-teal-400" />
+                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado médio" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade média" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso médio" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
+                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição média" value={hudMetrics.avgDes}  color="text-blue-600 dark:text-blue-400" />
+                <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />}    label="Avaliados" value={hudMetrics.evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
+                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-650" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-600 dark:text-teal-400" />
               </div>
             </div>
           </div>

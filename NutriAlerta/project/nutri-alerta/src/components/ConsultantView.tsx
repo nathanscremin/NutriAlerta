@@ -400,6 +400,20 @@ export default function ConsultantView() {
   }
   const geralBadge = getRiskBadge(geralVal, indicador);
 
+  // Dynamic total evaluated students across all UBSs for the selected year
+  const totalAvaliados = React.useMemo(() => {
+    if (!regionalData || !regionalData[cleanYear]) return 0;
+    return Object.values(regionalData[cleanYear]).reduce((sum: number, reg: any) => {
+      return sum + (reg.total_avaliados ?? 0);
+    }, 0);
+  }, [regionalData, cleanYear]);
+
+  const totalAvaliadosStr = React.useMemo(() => {
+    if (!totalAvaliados) return 'N/D';
+    return totalAvaliados >= 1000 ? `${(totalAvaliados / 1000).toFixed(1)}K` : String(totalAvaliados);
+  }, [totalAvaliados]);
+
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -633,7 +647,7 @@ export default function ConsultantView() {
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
                   <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{geralVal}%</strong></span>
-                  <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">45.2K</strong></span>
+                  <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">{totalAvaliadosStr}</strong></span>
                 </div>
               </div>
             </div>
