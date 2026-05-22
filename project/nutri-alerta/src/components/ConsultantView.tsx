@@ -4,7 +4,6 @@ import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2 } from
 import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
-import { SparklesIcon } from './Header';
 import ReactMarkdown from 'react-markdown';
 
 interface Message {
@@ -269,12 +268,12 @@ export default function ConsultantView() {
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="flex items-center gap-3">
             <div className="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shadow-sm">
-              <SparklesIcon className="w-6 h-6 text-teal-600 dark:text-teal-500" />
+              <Sparkles className="w-6 h-6 text-teal-600 dark:text-teal-500" />
             </div>
             <div>
               <h2 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
                 NutriBot
-                <SparklesIcon className="w-5 h-5 text-amber-500" />
+                <Sparkles className="w-5 h-5 text-amber-500" />
               </h2>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">NutriBot de Apoio à Decisão Epidemiológica · Rio Claro</p>
             </div>
@@ -333,7 +332,7 @@ export default function ConsultantView() {
             msg.role === 'bot' ? (
               <div key={i} className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                  <SparklesIcon className="w-4 h-4 text-teal-600 dark:text-teal-500" />
+                  <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
                 <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
                   <div className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">
@@ -391,7 +390,7 @@ export default function ConsultantView() {
           </div>
           <p className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 mt-3 text-center uppercase">IA baseada nos dados reais SISVAN/CNES de Rio Claro</p>
         </div>
-      </div>
+          </div>
 
       {/* Right: UBS / USF List */}
       <div className="w-[40%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
