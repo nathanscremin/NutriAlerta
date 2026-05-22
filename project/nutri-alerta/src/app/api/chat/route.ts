@@ -118,7 +118,7 @@ Permite a auditoria visual cruzada entre duas regiões diferentes.
 [CONSULTOR IA]
 Interface de chat de tela cheia acessada pelo botão "+ Consultor IA". Possui um painel lateral direito listando todas as UBSs em ordem alfabética para o gestor ajustar o contexto do chat com apenas um clique. Exibe tags de status "Sinal: Ativo" e "Online" com botões para apagar o histórico da conversa.
 
-${screenData?.bairro ? \`[CONTEXTO DO GESTOR NO CHAT FLUTUANTE]\\nBairro focado no mapa: \${screenData.bairro} · Ano: \${screenData.ano} · Indicador ativo na barra lateral: \${screenData.indicador}\` : '[CONTEXTO DO GESTOR no CHAT FLUTUANTE] Nenhuma UBS ou bairro foi selecionado no mapa pelo gestor ainda.'}
+${screenData?.bairro ? `[CONTEXTO ATUAL]\nUBS em foco: ${screenData.bairro} · Ano: ${screenData.ano} · Indicador: ${screenData.indicador}` : '[CONTEXTO ATUAL] Nenhuma UBS selecionada.'}
 `;
 }
 
