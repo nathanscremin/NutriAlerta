@@ -202,6 +202,8 @@ Recomendo focar no fortalecimento da atenção primária e na busca ativa de cas
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, message, context } = await req.json();
+    console.log('📥 screenData recebido:', JSON.stringify(context?.screenData, null, 2));
+    console.log('🤖 genAI configurado:', !!genAI);
 
     if (!sessionId || !message || !context) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
