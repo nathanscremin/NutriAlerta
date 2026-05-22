@@ -1,7 +1,9 @@
 import React from 'react';
-import { UserCircle, Menu, Map, Users, Stethoscope, Bot } from 'lucide-react';
+import { UserCircle, Menu, Map, Users, Stethoscope, Bot, LogOut } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 // Simple, elegant, bold "N" logo inspired by Apple (SF Pro Rounded style)
 export function NutriAlertaLogo({ className = "w-6 h-6 text-white" }: { className?: string }) {
@@ -27,6 +29,12 @@ const navItems = [
 
 export default function Header() {
   const { viewMode, setViewMode, sidebarCollapsed, setSidebarCollapsed } = useAppStore();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
 
   return (
     <header className="h-16 bg-white/95 dark:bg-[#121316]/95 backdrop-blur-2xl border-b border-slate-200 dark:border-[#1f2229] px-6 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300">
@@ -83,14 +91,26 @@ export default function Header() {
         })}
       </div>
 
-      {/* User */}
-      <div className="flex items-center gap-3 cursor-pointer group">
-        <div className="text-right hidden sm:block">
-          <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] group-hover:text-teal-600 transition-colors">FATEC Rio Claro</p>
+      {/* User & Logout */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7]">FATEC Rio Claro</p>
+            <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">Administrador</p>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 flex items-center justify-center">
+            <UserCircle className="w-5 h-5 text-slate-400 dark:text-zinc-500" />
+          </div>
         </div>
-        <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-850 border border-slate-200 dark:border-zinc-800 flex items-center justify-center group-hover:border-teal-500/50 transition-all">
-          <UserCircle className="w-5 h-5 text-slate-400 dark:text-zinc-500 group-hover:text-teal-600 transition-colors" />
-        </div>
+        
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded-xl text-slate-500 hover:text-red-600 dark:text-[#a1a1aa] dark:hover:text-red-400 hover:bg-slate-100/80 dark:hover:bg-zinc-800/80 transition-all cursor-pointer flex items-center justify-center"
+          title="Sair do Sistema"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </header>
   );
