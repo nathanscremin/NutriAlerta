@@ -26,6 +26,7 @@ interface AppState {
   setParentUbs: (ubs: string | null) => void;
   setSelectedBairroName: (bairro: string | null) => void;
   setSelectedSchoolName: (school: string | null) => void;
+  setSelection: (level: AnalysisLevel, ubs: string | null, bairro: string | null, school: string | null) => void;
 
   anoSelecionado: string;
   setAnoSelecionado: (ano: string) => void;
@@ -52,6 +53,8 @@ interface AppState {
     isPrevisao: boolean;
   }>;
   regionalData: Record<string, Record<string, any>>;
+  schoolMetrics: Record<string, any>;
+  bairroMetrics: Record<string, any>;
   yearsList: string[];
   loading: boolean;
   error: string | null;
@@ -173,6 +176,14 @@ export const useAppStore = create<AppState>()(
         };
       }),
 
+      setSelection: (level, ubs, bairro, school) => set({
+        analysisLevel: level,
+        selectedUbs: ubs,
+        selectedBairroName: bairro,
+        selectedSchoolName: school,
+        selectedBairro: school || bairro || ubs || null
+      }),
+
       anoSelecionado: '2025',
       setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
       indicador: 'obesidade',
@@ -191,6 +202,8 @@ export const useAppStore = create<AppState>()(
       // Initial State Hydration with Database (no mock fallback)
       temporalData: [],
       regionalData: {},
+      schoolMetrics: {},
+      bairroMetrics: {},
       yearsList: [],
       loading: false,
       error: null,
@@ -204,6 +217,8 @@ export const useAppStore = create<AppState>()(
             set({
               temporalData: data.temporalData,
               regionalData: data.regionalData,
+              schoolMetrics: data.schoolMetrics,
+              bairroMetrics: data.bairroMetrics,
               yearsList: data.temporalData.map((d: any) => d.ano),
               loading: false
             });

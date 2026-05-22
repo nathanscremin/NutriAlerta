@@ -76,7 +76,8 @@ export default function ConsultantView() {
     anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
     temporalData, regionalData, yearsList, activePoiTypes,
     analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName,
-    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName
+    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName, setSelection,
+    schoolMetrics, bairroMetrics
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,21 +94,21 @@ export default function ConsultantView() {
     const setNames = new Set<string>();
     const list: Array<{ nome: string; parentUbs: string }> = [];
     bairrosGeoJSON.features.forEach((feat: any) => {
-      const name = feat.properties?.nome_real_bairro;
-      const ubs = feat.properties?.nome_bairro;
-      if (name && !setNames.has(name)) {
-        setNames.add(name);
-        list.push({ nome: name, parentUbs: ubs || '' });
+      const p = feat.properties;
+      if (p && p.nome_real_bairro && !setNames.has(p.nome_real_bairro)) {
+        setNames.add(p.nome_real_bairro);
+        list.push({ nome: p.nome_real_bairro, parentUbs: p.nome_bairro || '' });
       }
     });
     return list.sort((a, b) => a.nome.localeCompare(b.nome));
   }, []);
 
-  // Lista de 88 Escolas Analisadas
+  // Lista de Escolas
   const schoolsList = React.useMemo(() => {
     return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
   }, []);
 
+  // Lista de UBSs
   const ubsList = React.useMemo(() => {
     return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
       const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
@@ -145,22 +146,41 @@ export default function ConsultantView() {
     );
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
-    const { multObs, multDes } = React.useMemo(() => {
-    let mObs = 1.0;
-    let mDes = 1.0;
-    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
-      mObs *= 0.88;
+  // Filtra as sugestões da barra de busca do assistente
+  const filteredSearchSuggestions = React.useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    
+    // Filtro por Escolas
+    let list = schoolsList.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Se estivermos em um bairro, mostra apenas escolas desse bairro
+    if (selectedBairroName) {
+      list = list.filter(s => s.bairro === selectedBairroName);
     }
-    if (!activePoiTypes.includes('Esporte e Lazer')) {
-      mObs *= 1.10;
+    
+    return list.slice(0, 5);
+  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
+
+  // Multadores dinâmicos baseados nas camadas ativas de POIs
+  const { multObs, multDes } = React.useMemo(() => {
+    let mObs = 1;
+    let mDes = 1;
+
+    const hasSupermarket = activePoiTypes.includes('Alimentação - Mercado');
+    const hasFastFood = activePoiTypes.includes('Alimentação - Restaurante/Fast-food');
+    const hasSport = activePoiTypes.includes('Esporte e Lazer');
+
+    if (hasSupermarket && !hasFastFood) {
+      mObs *= 0.90;
+      mDes *= 0.95;
     }
-    if (!activePoiTypes.includes('Alimentação - Mercado')) {
-      mDes *= 1.15;
-      mObs *= 1.08;
+    if (hasFastFood && !hasSupermarket) {
+      mObs *= 1.15;
     }
-    if (!activePoiTypes.includes('Educação')) {
-      mDes *= 1.05;
+    if (hasSport) {
+      mObs *= 0.92;
+    }
+    if (activePoiTypes.length === 0) {
       mObs *= 1.05;
     }
     return { multObs: mObs, multDes: mDes };
@@ -168,26 +188,6 @@ export default function ConsultantView() {
 
   // Dado temporal reativo com suporte a análise hierárquica multinível e efeitos das camadas de POIs
   const activeTemporalData = React.useMemo(() => {
-    // Helper to get parent UBS for a neighborhood
-    const getParentUbsForBairroName = (bName: string | null): string | null => {
-      if (!bName) return null;
-      const bairrosGeoJSON = getVoronoiGeoJSON();
-      if (!bairrosGeoJSON || !bairrosGeoJSON.features) return null;
-      const feat = bairrosGeoJSON.features.find((f: any) => f.properties?.nome_real_bairro === bName);
-      return feat?.properties?.nome_bairro || null;
-    };
-
-    // Helper for stable neighborhood perturbation
-    const getBairroPerturbedValue = (bName: string, val: number, seed: string) => {
-      let hash = 0;
-      const key = `${bName}-${seed}`;
-      for (let i = 0; i < key.length; i++) {
-        hash = key.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const factor = 1 + (((Math.abs(hash) % 101) - 50) / 1000); // stable scale factor between 0.95 and 1.05
-      return val * factor;
-    };
-
     let baseSource: Array<{
       ano: string;
       desnutricao: number;
@@ -222,87 +222,36 @@ export default function ConsultantView() {
         };
       });
     } else if (analysisLevel === 'bairro') {
-      const parentUbs = getParentUbsForBairroName(selectedBairroName) || selectedUbs;
+      const bName = selectedBairroName;
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
-        const ubsRecord = parentUbs ? regionalData[cleanYr]?.[parentUbs] : null;
+        const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
+        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-
-        const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
-        const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
-        const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2;
-        const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 58;
-
-        const bName = selectedBairroName || 'Bairro';
-        let pDes = getBairroPerturbedValue(bName, baseDes, 'desnutricao');
-        let pObs = getBairroPerturbedValue(bName, baseObs, 'obesidade');
-        let pSob = getBairroPerturbedValue(bName, baseSob, 'sobrepeso');
-        let pEut = getBairroPerturbedValue(bName, baseEut, 'eutrofia');
-
-        // Normalização a 100%
-        const sum = pDes + pObs + pSob + pEut;
-        if (sum > 0) {
-          pDes = (pDes / sum) * 100;
-          pObs = (pObs / sum) * 100;
-          pSob = (pSob / sum) * 100;
-          pEut = (pEut / sum) * 100;
-        }
-
+        
         return {
           ano: yr,
-          desnutricao: Number(pDes.toFixed(2)),
-          obesidade: Number(pObs.toFixed(2)),
-          sobrepeso: Number(pSob.toFixed(2)),
-          eutrofia: Number(pEut.toFixed(2)),
+          desnutricao: bairroRecord && typeof bairroRecord.desnutricao === 'number' ? bairroRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
+          obesidade: bairroRecord && typeof bairroRecord.obesidade === 'number' ? bairroRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
+          sobrepeso: bairroRecord && typeof bairroRecord.sobrepeso === 'number' ? bairroRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 15.2),
+          eutrofia: bairroRecord && typeof bairroRecord.eutrofia === 'number' ? bairroRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 58),
           isPrevisao: Number(cleanYr) >= 2026
         };
       });
     } else if (analysisLevel === 'escola') {
-      const school = ALL_POIS.find(p => p.categoria === 'Educação' && p.nome === selectedSchoolName);
-      const parentUbs = school?.regiao_ubs || getParentUbsForBairroName(school?.bairro || null) || selectedUbs;
-      
-      const parentUbs2025 = parentUbs ? regionalData['2025']?.[parentUbs] : null;
-      const global2025 = temporalData.find(t => t.ano.replace('★', '').trim() === '2025') || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55 };
-      const refDes = parentUbs2025?.desnutricao ?? global2025.desnutricao;
-      const refObs = parentUbs2025?.obesidade ?? global2025.obesidade;
-      const refSob = parentUbs2025?.sobrepeso ?? (global2025 as any).sobrepeso ?? 21.0;
-      const refEut = parentUbs2025?.eutrofia ?? (global2025 as any).eutrofia ?? 61.55;
-
-      const ratioDes = school && typeof school.desnutricao === 'number' && refDes > 0 ? school.desnutricao / refDes : 1;
-      const ratioObs = school && typeof school.obesidade === 'number' && refObs > 0 ? school.obesidade / refObs : 1;
-      const ratioSob = school && typeof school.sobrepeso === 'number' && refSob > 0 ? school.sobrepeso / refSob : 1;
-      const ratioEut = school && typeof school.eutrofia === 'number' && refEut > 0 ? school.eutrofia / refEut : 1;
-
+      const schoolName = selectedSchoolName;
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
-        const ubsRecord = parentUbs ? regionalData[cleanYr]?.[parentUbs] : null;
+        const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
+        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-
-        const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
-        const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
-        const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2;
-        const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 58;
-
-        let pDes = baseDes * ratioDes;
-        let pObs = baseObs * ratioObs;
-        let pSob = baseSob * ratioSob;
-        let pEut = baseEut * ratioEut;
-
-        // Normalização a 100%
-        const sum = pDes + pObs + pSob + pEut;
-        if (sum > 0) {
-          pDes = (pDes / sum) * 100;
-          pObs = (pObs / sum) * 100;
-          pSob = (pSob / sum) * 100;
-          pEut = (pEut / sum) * 100;
-        }
 
         return {
           ano: yr,
-          desnutricao: Number(pDes.toFixed(2)),
-          obesidade: Number(pObs.toFixed(2)),
-          sobrepeso: Number(pSob.toFixed(2)),
-          eutrofia: Number(pEut.toFixed(2)),
+          desnutricao: schoolRecord && typeof schoolRecord.desnutricao === 'number' ? schoolRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
+          obesidade: schoolRecord && typeof schoolRecord.obesidade === 'number' ? schoolRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
+          sobrepeso: schoolRecord && typeof schoolRecord.sobrepeso === 'number' ? schoolRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 15.2),
+          eutrofia: schoolRecord && typeof schoolRecord.eutrofia === 'number' ? schoolRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 58),
           isPrevisao: Number(cleanYr) >= 2026
         };
       });
@@ -318,7 +267,7 @@ export default function ConsultantView() {
       const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
       return { ...d, desnutricao: scaleDes, obesidade: scaleObs, sobrepeso: scaleSob, eutrofia: scaleEut };
     });
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, multDes, multObs]);
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
 
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   const cleanYear = anoSelecionado.replace('★', '').trim();
@@ -708,22 +657,33 @@ export default function ConsultantView() {
                   const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
                   const beforeSum = dDes + dObs + dSob;
                   const afterSum = scaleDes + scaleObs + scaleSob;
-                  finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+              finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
                 } else {
                   const multiplier = indicador === 'desnutricao' ? multDes : multObs;
                   finalVal = Number((val * multiplier).toFixed(2));
                 }
                 const badge = getRiskBadge(finalVal, indicador);
-                const totalAvaliados = ubsData ? (ubsData.total_avaliados ?? 'N/D') : 'N/D';
+                
+                // Sum the total evaluated students of all schools in this UBS region for this year
+                let ubsTotalEvaluated = 0;
+                Object.values(schoolMetrics || {}).forEach((sch: any) => {
+                  if (sch.regiao_ubs === ubs.nome && sch.anos?.[cleanYear]?.total_avaliados) {
+                    ubsTotalEvaluated += sch.anos[cleanYear].total_avaliados;
+                  }
+                });
+
+                const totalAvaliados = ubsTotalEvaluated > 0 
+                  ? ubsTotalEvaluated 
+                  : (ubsData?.total_avaliados || 1200);
 
                 return (
                   <div
                     key={ubs.nome}
                     onClick={() => {
                       if (isSelected) {
-                        setSelectedUbs(null);
+                        setSelection('municipio', null, null, null);
                       } else {
-                        setSelectedUbs(ubs.nome);
+                        setSelection('ubs', ubs.nome, null, null);
                       }
                     }}
                     className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
@@ -772,28 +732,13 @@ export default function ConsultantView() {
                 const baseSob = ubsData && typeof ubsData.sobrepeso === 'number' ? ubsData.sobrepeso : (globalRec as any).sobrepeso || 16.3;
                 const baseEut = ubsData && typeof ubsData.eutrofia === 'number' ? ubsData.eutrofia : (globalRec as any).eutrofia || 61.2;
                 
-                const getBairroPerturbedValue = (bName: string, value: number, seed: string) => {
-                  let hash = 0;
-                  const key = `${bName}-${seed}`;
-                  for (let i = 0; i < key.length; i++) {
-                    hash = key.charCodeAt(i) + ((hash << 5) - hash);
-                  }
-                  const factor = 1 + (((Math.abs(hash) % 101) - 50) / 1000);
-                  return value * factor;
-                };
+                const bMetric = bairroMetrics[b.nome];
+                const bYearData = bMetric?.anos?.[cleanYear];
                 
-                let pDes = getBairroPerturbedValue(b.nome, baseDes, 'desnutricao');
-                let pObs = getBairroPerturbedValue(b.nome, baseObs, 'obesidade');
-                let pSob = getBairroPerturbedValue(b.nome, baseSob, 'sobrepeso');
-                let pEut = getBairroPerturbedValue(b.nome, baseEut, 'eutrofia');
-                
-                const sum = pDes + pObs + pSob + pEut;
-                if (sum > 0) {
-                  pDes = (pDes / sum) * 100;
-                  pObs = (pObs / sum) * 100;
-                  pSob = (pSob / sum) * 100;
-                  pEut = (pEut / sum) * 100;
-                }
+                let pDes = bYearData ? bYearData.desnutricao : baseDes;
+                let pObs = bYearData ? bYearData.obesidade : baseObs;
+                let pSob = bYearData ? bYearData.sobrepeso : baseSob;
+                let pEut = bYearData ? bYearData.eutrofia : baseEut;
                 
                 const scaleDes = Number((pDes * multDes).toFixed(2));
                 const scaleObs = Number((pObs * multObs).toFixed(2));
@@ -815,10 +760,9 @@ export default function ConsultantView() {
                     key={b.nome}
                     onClick={() => {
                       if (isSelected) {
-                        setSelectedBairroName(null);
+                        setSelection('ubs', b.parentUbs || null, null, null);
                       } else {
-                        setSelectedUbs(b.parentUbs || '');
-                        setSelectedBairroName(b.nome);
+                        setSelection('bairro', b.parentUbs || null, b.nome, null);
                       }
                     }}
                     className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
@@ -859,19 +803,6 @@ export default function ConsultantView() {
                 const isSelected = selectedSchoolName === s.nome;
                 
                 const parentUbs = s.regiao_ubs || '';
-                
-                const parentUbs2025 = parentUbs ? regionalData['2025']?.[parentUbs] : null;
-                const global2025 = temporalData.find(t => t.ano.replace('★', '').trim() === '2025') || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.55 };
-                const refDes = parentUbs2025?.desnutricao ?? global2025.desnutricao;
-                const refObs = parentUbs2025?.obesidade ?? global2025.obesidade;
-                const refSob = parentUbs2025?.sobrepeso ?? (global2025 as any).sobrepeso ?? 16.3;
-                const refEut = parentUbs2025?.eutrofia ?? (global2025 as any).eutrofia ?? 61.55;
-                
-                const ratioDes = s && typeof s.desnutricao === 'number' && refDes > 0 ? s.desnutricao / refDes : 1;
-                const ratioObs = s && typeof s.obesidade === 'number' && refObs > 0 ? s.obesidade / refObs : 1;
-                const ratioSob = s && typeof s.sobrepeso === 'number' && refSob > 0 ? s.sobrepeso / refSob : 1;
-                const ratioEut = s && typeof s.eutrofia === 'number' && refEut > 0 ? s.eutrofia / refEut : 1;
-                
                 const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
                 const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
                 
@@ -880,10 +811,13 @@ export default function ConsultantView() {
                 const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3;
                 const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 61.2;
                 
-                let pDes = baseDes * ratioDes;
-                let pObs = baseObs * ratioObs;
-                let pSob = baseSob * ratioSob;
-                let pEut = baseEut * ratioEut;
+                const sMetric = schoolMetrics[s.nome];
+                const sYearData = sMetric?.anos?.[cleanYear];
+                
+                let pDes = sYearData ? sYearData.desnutricao : baseDes;
+                let pObs = sYearData ? sYearData.obesidade : baseObs;
+                let pSob = sYearData ? sYearData.sobrepeso : baseSob;
+                let pEut = sYearData ? sYearData.eutrofia : baseEut;
                 
                 const sum = pDes + pObs + pSob + pEut;
                 if (sum > 0) {
@@ -913,11 +847,9 @@ export default function ConsultantView() {
                     key={s.nome}
                     onClick={() => {
                       if (isSelected) {
-                        setSelectedSchoolName(null);
+                        setSelection('bairro', parentUbs || null, s.bairro || null, null);
                       } else {
-                        setSelectedUbs(parentUbs || null);
-                        setSelectedBairroName(s.bairro || null);
-                        setSelectedSchoolName(s.nome);
+                        setSelection('escola', parentUbs || null, s.bairro || null, s.nome);
                       }
                     }}
                     className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${

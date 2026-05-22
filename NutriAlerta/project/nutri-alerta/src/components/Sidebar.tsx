@@ -14,6 +14,7 @@ export default function Sidebar() {
     selectedUbs, setSelectedUbs,
     selectedBairroName, setSelectedBairroName,
     selectedSchoolName, setSelectedSchoolName,
+    setSelection,
     yearsList,
     temporalData,
     regionalData,
@@ -89,7 +90,7 @@ export default function Sidebar() {
 
   const filteredBairros = React.useMemo(() => {
     let list = uniqueBairrosList;
-    if (selectedUbs) {
+    if (searchQuery.trim() === '' && selectedUbs) {
       list = list.filter(b => b.parentUbs === selectedUbs);
     }
     return list.filter(b =>
@@ -99,10 +100,12 @@ export default function Sidebar() {
 
   const filteredSchools = React.useMemo(() => {
     let list = schoolsList;
-    if (selectedBairroName) {
-      list = list.filter(s => s.bairro === selectedBairroName);
-    } else if (selectedUbs) {
-      list = list.filter(s => s.regiao_ubs === selectedUbs);
+    if (searchQuery.trim() === '') {
+      if (selectedBairroName) {
+        list = list.filter(s => s.bairro === selectedBairroName);
+      } else if (selectedUbs) {
+        list = list.filter(s => s.regiao_ubs === selectedUbs);
+      }
     }
     return list.filter(s =>
       s.nome.toLowerCase().includes(searchQuery.toLowerCase())
@@ -208,153 +211,193 @@ export default function Sidebar() {
                   );
                 })}
               </div>
-
-              {/* Seletor do Input baseado no nível ativo */}
+                 {/* Seletor do Input baseado no nível ativo */}
               <div className="relative">
-                {analysisLevel === 'municipio' ? (
-                  <input
-                    type="text"
-                    disabled
-                    value="Rio Claro (Geral)"
-                    className="w-full bg-slate-100/50 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-850 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-80"
-                  />
-                ) : (
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={e => {
-                      setSearchQuery(e.target.value);
-                      setIsDropdownOpen(true);
-                      if (e.target.value === '') {
-                        if (analysisLevel === 'ubs') setSelectedUbs(null);
-                        else if (analysisLevel === 'bairro') setSelectedBairroName(null);
-                        else if (analysisLevel === 'escola') setSelectedSchoolName(null);
-                      }
-                    }}
-                    onFocus={() => setIsDropdownOpen(true)}
-                    placeholder={
-                      analysisLevel === 'ubs' 
-                        ? "Pesquisar UBS..." 
-                        : analysisLevel === 'bairro' 
-                          ? "Pesquisar Bairro..." 
-                          : "Pesquisar Escola..."
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => {
+                    setSearchQuery(e.target.value);
+                    setIsDropdownOpen(true);
+                    if (e.target.value === '') {
+                      setSelection('municipio', null, null, null);
                     }
-                    className="w-full bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-900"
-                  />
-                )}
+                  }}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  placeholder="Pesquisar UBS, Bairro ou Escola..."
+                  className="w-full bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-900"
+                />
 
-                {analysisLevel !== 'municipio' && (
-                  (analysisLevel === 'ubs' && selectedUbs) || 
-                  (analysisLevel === 'bairro' && selectedBairroName) || 
-                  (analysisLevel === 'escola' && selectedSchoolName)
-                ) ? (
+                {searchQuery ? (
                   <button
                     onClick={() => {
                       setSearchQuery('');
                       setIsDropdownOpen(false);
-                      if (analysisLevel === 'ubs') setSelectedUbs(null);
-                      else if (analysisLevel === 'bairro') setSelectedBairroName(null);
-                      else if (analysisLevel === 'escola') setSelectedSchoolName(null);
+                      setSelection('municipio', null, null, null);
                     }}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 ) : (
-                  analysisLevel !== 'municipio' && (
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />
-                    </div>
-                  )
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />
+                  </div>
                 )}
               </div>
               
               {/* Dropdown Suggestions */}
-              {isDropdownOpen && analysisLevel !== 'municipio' && (
-                <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto bg-white dark:bg-[#0c0d10] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg z-[500] scrollbar-thin">
-                  {analysisLevel === 'ubs' && (
-                    filteredUbs.length > 0 ? (
-                      filteredUbs.map(u => (
-                        <button
-                          key={u.nome}
-                          onClick={() => {
-                            setSelectedUbs(u.nome);
-                            setSearchQuery(u.nome);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
-                            selectedUbs === u.nome
-                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
-                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                          }`}
-                        >
-                          {u.nome}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
-                        Nenhuma UBS encontrada
-                      </div>
-                    )
-                  )}
+              {isDropdownOpen && (
+                <div className="absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white dark:bg-[#0c0d10] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg z-[500] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60">
+                  {searchQuery.trim() === '' ? (
+                    // sugestões por nível
+                    <>
+                      {analysisLevel === 'municipio' && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Selecione uma UBS</div>
+                          {ubsList.map(u => (
+                            <button
+                              key={u.nome}
+                              onClick={() => {
+                                setSelection('ubs', u.nome, null, null);
+                                setSearchQuery(u.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3.5 py-2.5 text-[11px] font-semibold text-slate-650 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7] transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0"
+                            >
+                              {u.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                  {analysisLevel === 'bairro' && (
-                    filteredBairros.length > 0 ? (
-                      filteredBairros.map(b => (
-                        <button
-                          key={b.nome}
-                          onClick={() => {
-                            setSelectedUbs(b.parentUbs);
-                            setSelectedBairroName(b.nome);
-                            setSearchQuery(b.nome);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
-                            selectedBairroName === b.nome
-                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
-                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                          }`}
-                        >
-                                                    <span className="block font-bold truncate">{b.nome}</span>
-                          <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-0.5">UBS: {b.parentUbs.replace('UBS ', '').replace('USF ', '')}</span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
-                        Nenhum bairro encontrado
-                      </div>
-                    )
-                  )}
+                      {analysisLevel === 'ubs' && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Bairros na Região ({selectedUbs?.replace('UBS ', '').replace('USF ', '')})</div>
+                          {uniqueBairrosList.filter(b => b.parentUbs === selectedUbs).map(b => (
+                            <button
+                              key={b.nome}
+                              onClick={() => {
+                                setSelection('bairro', selectedUbs, b.nome, null);
+                                setSearchQuery(b.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="w-full text-left px-3.5 py-2.5 text-[11px] font-semibold text-slate-650 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7] transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0"
+                            >
+                              {b.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                  {analysisLevel === 'escola' && (
-                    filteredSchools.length > 0 ? (
-                      filteredSchools.map(s => (
-                        <button
-                          key={s.nome}
-                          onClick={() => {
-                            setSelectedUbs(s.regiao_ubs || null);
-                            setSelectedBairroName(s.bairro || null);
-                            setSelectedSchoolName(s.nome);
-                            setSearchQuery(s.nome);
-                            setIsDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
-                            selectedSchoolName === s.nome
-                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
-                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                          }`}
-                        >
-                          <span className="block font-bold text-slate-850 dark:text-zinc-200 leading-tight">{s.nome}</span>
-                          <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-1">
-                            {s.bairro ? `${s.bairro} · ` : ''}UBS: {(s.regiao_ubs || '').replace('UBS ', '').replace('USF ', '')}
-                          </span>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
-                        Nenhuma escola encontrada
-                      </div>
-                    )
+                      {(analysisLevel === 'bairro' || analysisLevel === 'escola') && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Escolas no Bairro ({selectedBairroName})</div>
+                          {schoolsList.filter(s => s.bairro === selectedBairroName).map(s => (
+                            <button
+                              key={s.nome}
+                              onClick={() => {
+                                setSelection('escola', selectedUbs, selectedBairroName, s.nome);
+                                setSearchQuery(s.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                                selectedSchoolName === s.nome
+                                  ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                                  : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                              }`}
+                            >
+                              {s.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // busca global por categorias
+                    <>
+                      {/* Categoria: UBS */}
+                      {filteredUbs.length > 0 && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Unidades de Saúde</div>
+                          {filteredUbs.map(u => (
+                            <button
+                              key={u.nome}
+                              onClick={() => {
+                                setSelection('ubs', u.nome, null, null);
+                                setSearchQuery(u.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                                selectedUbs === u.nome && analysisLevel === 'ubs'
+                                  ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                                  : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                              }`}
+                            >
+                              {u.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Categoria: Bairros */}
+                      {filteredBairros.length > 0 && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Bairros</div>
+                          {filteredBairros.map(b => (
+                            <button
+                              key={b.nome}
+                              onClick={() => {
+                                setSelection('bairro', b.parentUbs || null, b.nome, null);
+                                setSearchQuery(b.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                                selectedBairroName === b.nome
+                                  ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                                  : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                              }`}
+                            >
+                              <span className="block font-bold truncate text-slate-850 dark:text-zinc-200 leading-tight">{b.nome}</span>
+                              <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-0.5">UBS: {b.parentUbs.replace('UBS ', '').replace('USF ', '')}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Categoria: Escolas */}
+                      {filteredSchools.length > 0 && (
+                        <div>
+                          <div className="px-3.5 py-1.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20">Escolas</div>
+                          {filteredSchools.map(s => (
+                            <button
+                              key={s.nome}
+                              onClick={() => {
+                                setSelection('escola', s.regiao_ubs || null, s.bairro || null, s.nome);
+                                setSearchQuery(s.nome);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                                selectedSchoolName === s.nome
+                                  ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                                  : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                              }`}
+                            >
+                              <span className="block font-bold text-slate-850 dark:text-zinc-200 leading-tight">{s.nome}</span>
+                              <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-1">
+                                {s.bairro ? `${s.bairro} · ` : ''}UBS: {(s.regiao_ubs || '').replace('UBS ', '').replace('USF ', '')}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {filteredUbs.length === 0 && filteredBairros.length === 0 && filteredSchools.length === 0 && (
+                        <div className="px-3.5 py-4 text-center text-slate-400 dark:text-zinc-550 text-[11px] italic">
+                          Nenhum resultado encontrado para "{searchQuery}"
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}

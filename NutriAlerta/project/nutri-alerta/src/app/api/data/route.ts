@@ -109,12 +109,10 @@ export async function GET(req: NextRequest) {
     const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
 
     if (!obesityPath || !desnutricaoPath) {
-      console.warn("CSV Files not found! Falling back to static mock data structures.");
+      console.warn("CSV Files not found!");
       return NextResponse.json({
         success: false,
-        error: "CSV files not found. Please upload them to project/csv/",
-        obesityPathFound: !!obesityPath,
-        desnutricaoPathFound: !!desnutricaoPath
+        error: "CSV files not found. Please upload them to project/csv/"
       });
     }
 
@@ -151,10 +149,10 @@ export async function GET(req: NextRequest) {
         rawDataMap[yearStr][ubsName] = {
           nome: ubsName,
           cnes: row.CNES || row.cnes,
-          lat: row.lat_ubs,
-          lon: row.lon_ubs,
+          lat: Number(row.lat_ubs),
+          lon: Number(row.lon_ubs),
           ano: Number(yearStr),
-          status: row.Status || 'DADO HISTÓRICO'
+          status: row.Status || (Number(yearStr) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO')
         };
       }
       return rawDataMap[yearStr][ubsName];
@@ -194,10 +192,9 @@ export async function GET(req: NextRequest) {
       const rec = getOrInitRecord(year, ubsName, row);
       rec.desnutricao = typeof row.Tendencia_Desnutricao === 'number' ? row.Tendencia_Desnutricao : row.Magreza_Pct;
       rec.delta_desnutricao = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Desnutricao;
-      
     });
 
-    // Compute delta_sobrepeso and delta_eutrofia dynamically year-over-year for all records
+    // Compute delta_sobrepeso and delta_eutrofia dynamically year-over-year
     const yearsSortedForDelta = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
     yearsSortedForDelta.forEach((yr, index) => {
       const ubsNames = Object.keys(rawDataMap[yr]);
@@ -225,7 +222,7 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    // Compute annual averages (DADOS_TEMPORAIS) dynamically
+    // Compute annual averages (temporalData) dynamically
     const years = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
     const temporalData = years.map(yr => {
       const ubsRecords = Object.values(rawDataMap[yr]);
@@ -273,10 +270,246 @@ export async function GET(req: NextRequest) {
       };
     });
 
+    // LOAD SUPABASE DYNAMIC SCHOOL DATA
+    const cwd = process.cwd();
+    const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
+    const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
+    const dbConsolidated = JSON.parse(dbConsolidatedContent);
+
+    // Deep clone schoolMetrics to avoid mutating cache
+    const schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics));
+    const schoolList = Object.values(schoolMetrics) as any[];
+
+    // PROJECT SCHOOL METRICS FOR 2026 and 2027 BY APPLYING PARENT UBS MODEL TREND DELTAS
+    schoolList.forEach(school => {
+      const ubsName = school.regiao_ubs || findNearestUbsName(school.lat, school.lon) || UNIDADES_SAUDE[0].nome;
+      
+      // We will project 2026 and 2027
+      const targetYears = ['2026', '2027'];
+      targetYears.forEach(targetYr => {
+        // Find parent UBS records for 2025 and the target year
+        const ubs2025 = rawDataMap['2025']?.[ubsName] || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55 };
+        const ubsTarget = rawDataMap[targetYr]?.[ubsName];
+
+        if (!ubsTarget) return;
+
+        // Compute deltas from parent UBS
+        const deltaDes = (ubsTarget.desnutricao || 0) - (ubs2025.desnutricao || 0);
+        const deltaObs = (ubsTarget.obesidade || 0) - (ubs2025.obesidade || 0);
+        const deltaSob = (ubsTarget.sobrepeso || 0) - (ubs2025.sobrepeso || 0);
+        const deltaEut = (ubsTarget.eutrofia || 0) - (ubs2025.eutrofia || 0);
+
+        // Find school baseline year (latest available year <= 2025)
+        const schoolYears = Object.keys(school.anos).map(Number).filter(y => y <= 2025).sort((a, b) => b - a);
+        const baselineYear = schoolYears[0] ? String(schoolYears[0]) : null;
+        const baseline = baselineYear ? school.anos[baselineYear] : { desnutricao: 3.0, obesidade: 10.0, sobrepeso: 15.0, eutrofia: 72.0, total_avaliados: 100 };
+
+        // Apply deltas to baseline school rates
+        let des = Math.max(0, Math.min(100, (baseline.desnutricao || 0) + deltaDes));
+        let obs = Math.max(0, Math.min(100, (baseline.obesidade || 0) + deltaObs));
+        let sob = Math.max(0, Math.min(100, (baseline.sobrepeso || 0) + deltaSob));
+        let eut = Math.max(0, Math.min(100, (baseline.eutrofia || 0) + deltaEut));
+
+        // Normalize sum to 100%
+        const sum = des + obs + sob + eut;
+        if (sum > 0) {
+          des = Number(((des / sum) * 100).toFixed(2));
+          obs = Number(((obs / sum) * 100).toFixed(2));
+          sob = Number(((sob / sum) * 100).toFixed(2));
+          eut = Number(((eut / sum) * 100).toFixed(2));
+        }
+
+        school.anos[targetYr] = {
+          desnutricao: des,
+          obesidade: obs,
+          sobrepeso: sob,
+          eutrofia: eut,
+          total_avaliados: baseline.total_avaliados || 100
+        };
+      });
+    });
+
+    // LOAD RIO CLARO BAIRROS FOR CENTROID CALCULATION
+    const bairrosPath = path.join(cwd, 'src', 'lib', 'rio_claro_bairros.json');
+    const bairrosContent = await fs.readFile(bairrosPath, 'utf-8');
+    const bairrosGeoJSON = JSON.parse(bairrosContent);
+
+    // Calculate neighborhood centroids and group features
+    const bairroCentroids: Record<string, { sumLon: number; sumLat: number; count: number; parentUbs: string }> = {};
+
+    bairrosGeoJSON.features.forEach((feat: any) => {
+      const props = feat.properties || {};
+      const name = props.nome_real_bairro;
+      if (!name) return;
+
+      const geom = feat.geometry;
+      if (!geom) return;
+
+      let coords: number[][] = [];
+      if (geom.type === 'Polygon') {
+        coords = geom.coordinates[0];
+      } else if (geom.type === 'MultiPolygon') {
+        geom.coordinates.forEach((poly: any) => {
+          coords = coords.concat(poly[0]);
+        });
+      }
+
+      let sumLon = 0, sumLat = 0, count = 0;
+      coords.forEach(pt => {
+        if (Array.isArray(pt) && pt.length >= 2) {
+          sumLon += pt[0];
+          sumLat += pt[1];
+          count++;
+        }
+      });
+
+      if (count > 0) {
+        if (!bairroCentroids[name]) {
+          bairroCentroids[name] = { sumLon: 0, sumLat: 0, count: 0, parentUbs: props.nome_bairro };
+        }
+        bairroCentroids[name].sumLon += sumLon;
+        bairroCentroids[name].sumLat += sumLat;
+        bairroCentroids[name].count += count;
+      }
+    });
+
+    const uniqueBairros: Record<string, { nome: string; lat: number; lon: number; parentUbs: string }> = {};
+    Object.keys(bairroCentroids).forEach(name => {
+      const data = bairroCentroids[name];
+      uniqueBairros[name] = {
+        nome: name,
+        lat: data.sumLat / data.count,
+        lon: data.sumLon / data.count,
+        parentUbs: data.parentUbs
+      };
+    });
+
+    // Map each neighborhood to school(s) (with closest school fallback)
+    const bairroMetrics: Record<string, {
+      nome: string;
+      lat: number;
+      lon: number;
+      regiao_ubs: string;
+      anos: Record<string, {
+        desnutricao: number;
+        obesidade: number;
+        sobrepeso: number;
+        eutrofia: number;
+        total_avaliados: number;
+      }>;
+    }> = {};
+
+    const yearsListCombined = [...years, '2026', '2027'];
+
+    Object.keys(uniqueBairros).forEach(bName => {
+      const bInfo = uniqueBairros[bName];
+      
+      // Filter schools directly inside this neighborhood
+      let associatedSchools = schoolList.filter(s => s.bairro && s.bairro.trim().toLowerCase() === bName.trim().toLowerCase());
+
+      // Geographical nearest-neighbor fallback if no schools are directly inside
+      if (associatedSchools.length === 0) {
+        let closestSchool = null;
+        let minDistance = Infinity;
+
+        schoolList.forEach(school => {
+          if (typeof school.lat !== 'number' || typeof school.lon !== 'number') return;
+          const dist = getDistance(bInfo.lat, bInfo.lon, school.lat, school.lon);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestSchool = school;
+          }
+        });
+
+        if (closestSchool) {
+          associatedSchools = [closestSchool];
+        }
+      }
+
+      // Aggregate metrics across associated schools for all years
+      const anos: Record<string, any> = {};
+
+      yearsListCombined.forEach(yr => {
+        let sumAvaliados = 0;
+        let weightedDes = 0;
+        let weightedObs = 0;
+        let weightedSob = 0;
+        let weightedEut = 0;
+
+        associatedSchools.forEach(sch => {
+          const yrData = sch.anos[yr];
+          if (!yrData) return;
+
+          const aval = yrData.total_avaliados || 0;
+          sumAvaliados += aval;
+          weightedDes += (yrData.desnutricao || 0) * aval;
+          weightedObs += (yrData.obesidade || 0) * aval;
+          weightedSob += (yrData.sobrepeso || 0) * aval;
+          weightedEut += (yrData.eutrofia || 0) * aval;
+        });
+
+        if (sumAvaliados > 0) {
+          let des = Number((weightedDes / sumAvaliados).toFixed(2));
+          let obs = Number((weightedObs / sumAvaliados).toFixed(2));
+          let sob = Number((weightedSob / sumAvaliados).toFixed(2));
+          let eut = Number((weightedEut / sumAvaliados).toFixed(2));
+
+          // Normalização a 100%
+          const sum = des + obs + sob + eut;
+          if (sum > 0) {
+            des = Number(((des / sum) * 100).toFixed(2));
+            obs = Number(((obs / sum) * 100).toFixed(2));
+            sob = Number(((sob / sum) * 100).toFixed(2));
+            eut = Number(((eut / sum) * 100).toFixed(2));
+          }
+
+          anos[yr] = {
+            desnutricao: des,
+            obesidade: obs,
+            sobrepeso: sob,
+            eutrofia: eut,
+            total_avaliados: sumAvaliados
+          };
+        } else {
+          // If no school has data for this year, fallback to parent UBS metrics for that year
+          const parentUbs = bInfo.parentUbs;
+          const ubsData = rawDataMap[yr]?.[parentUbs] || rawDataMap[yr]?.[Object.keys(rawDataMap[yr])[0]];
+          
+          if (ubsData) {
+            anos[yr] = {
+              desnutricao: ubsData.desnutricao || 0,
+              obesidade: ubsData.obesidade || 0,
+              sobrepeso: ubsData.sobrepeso || 0,
+              eutrofia: ubsData.eutrofia || 100,
+              total_avaliados: 100
+            };
+          } else {
+            anos[yr] = {
+              desnutricao: 3.0,
+              obesidade: 12.0,
+              sobrepeso: 15.0,
+              eutrofia: 70.0,
+              total_avaliados: 100
+            };
+          }
+        }
+      });
+
+      bairroMetrics[bName] = {
+        nome: bName,
+        lat: bInfo.lat,
+        lon: bInfo.lon,
+        regiao_ubs: bInfo.parentUbs,
+        anos
+      };
+    });
+
     return NextResponse.json({
       success: true,
       temporalData,
       regionalData: rawDataMap,
+      schoolMetrics,
+      bairroMetrics,
       yearsList: years
     });
   } catch (error: any) {

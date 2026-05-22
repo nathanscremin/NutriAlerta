@@ -106,7 +106,8 @@ export default function RiskMap() {
   const { 
     activePoiTypes, setSelectedPoi, indicador, anoSelecionado, regionalData, darkMode,
     analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, selectedBairro,
-    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName
+    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName, setSelection,
+    schoolMetrics, bairroMetrics
   } = useAppStore();
 
   useEffect(() => {
@@ -138,15 +139,29 @@ export default function RiskMap() {
   }, [activePoiTypes]);
 
   // Recupera métricas para o bairro ajustadas pelos POIs
-  const getBairroMetrics = React.useCallback((nome: string) => {
+  const getBairroMetrics = React.useCallback((nomeReal: string, nome: string) => {
     const cleanYear = anoSelecionado.replace('★', '').trim();
-    const yearData = regionalData && regionalData[cleanYear] ? regionalData[cleanYear] : null;
-    const regionRecord = yearData ? yearData[nome] : null;
+    const bMetric = bairroMetrics?.[nomeReal];
+    const bYearData = bMetric?.anos?.[cleanYear];
 
-    const dObs = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
-    const dDes = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
-    const dSob = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
-    const dEut = regionRecord ? (regionRecord.eutrofia || 0) : 61.55;
+    let dObs = 12.93;
+    let dDes = 2.62;
+    let dSob = 16.3;
+    let dEut = 61.55;
+
+    if (bYearData) {
+      dDes = bYearData.desnutricao;
+      dObs = bYearData.obesidade;
+      dSob = bYearData.sobrepeso;
+      dEut = bYearData.eutrofia;
+    } else {
+      const yearData = regionalData && regionalData[cleanYear] ? regionalData[cleanYear] : null;
+      const regionRecord = yearData ? yearData[nome] : null;
+      dObs = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
+      dDes = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
+      dSob = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
+      dEut = regionRecord ? (regionRecord.eutrofia || 0) : 61.55;
+    }
 
     const scaleDes = Number((dDes * multDes).toFixed(2));
     const scaleObs = Number((dObs * multObs).toFixed(2));
@@ -156,11 +171,12 @@ export default function RiskMap() {
     const eut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
 
     return { des: scaleDes, obs: scaleObs, sob: scaleSob, eut };
-  }, [anoSelecionado, regionalData, multDes, multObs]);
+  }, [anoSelecionado, regionalData, bairroMetrics, multDes, multObs]);
 
   const getFeatureStyle = (feature: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
-    const { des, obs, sob, eut } = getBairroMetrics(nome);
+    const nomeReal = feature.properties?.nome_real_bairro || nome;
+    const { des, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
     
     let riskValue = 0;
     if (indicador === 'desnutricao') riskValue = des;
@@ -185,7 +201,6 @@ export default function RiskMap() {
       fillColor = getChoroplethColor(riskValue, indicador);
     }
 
-    const nomeReal = feature.properties?.nome_real_bairro || nome;
     let isActive = false;
     if (analysisLevel === 'bairro') {
       isActive = !!(selectedBairroName && nomeReal === selectedBairroName);
@@ -208,7 +223,7 @@ export default function RiskMap() {
   const onEachFeature = (feature: any, layer: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
     const nomeReal = feature.properties?.nome_real_bairro || nome;
-    const { des, obs, sob, eut } = getBairroMetrics(nome);
+    const { des, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
 
     layer.on({
       mouseover: (e: any) => { 
@@ -232,11 +247,33 @@ export default function RiskMap() {
         }
       },
       click: () => { 
-        if (analysisLevel === 'bairro' && selectedBairroName === nomeReal) {
-          setSelectedBairroName(null);
-        } else {
-          setSelectedUbs(nome || '');
-          setSelectedBairroName(nomeReal);
+        const ubsName = feature.properties?.nome_bairro || '';
+        const bairroName = feature.properties?.nome_real_bairro || ubsName;
+
+        if (analysisLevel === 'municipio') {
+          setSelection('ubs', ubsName, null, null);
+        } else if (analysisLevel === 'ubs') {
+          if (ubsName === selectedUbs) {
+            setSelection('bairro', selectedUbs, bairroName, null);
+          } else {
+            setSelection('ubs', ubsName, null, null);
+          }
+        } else if (analysisLevel === 'bairro') {
+          if (bairroName === selectedBairroName) {
+            setSelection('ubs', selectedUbs, null, null);
+          } else if (ubsName === selectedUbs) {
+            setSelection('bairro', selectedUbs, bairroName, null);
+          } else {
+            setSelection('ubs', ubsName, null, null);
+          }
+        } else if (analysisLevel === 'escola') {
+          if (bairroName === selectedBairroName) {
+            setSelection('bairro', selectedUbs, selectedBairroName, null);
+          } else if (ubsName === selectedUbs) {
+            setSelection('bairro', selectedUbs, bairroName, null);
+          } else {
+            setSelection('ubs', ubsName, null, null);
+          }
         }
       },
     });
@@ -392,20 +429,22 @@ export default function RiskMap() {
             const pRegiao = poi.regiao_ubs || findNearestUbsName(poi.lat, poi.lon) || '';
             
             // Busca as métricas epidemiológicas baseadas na região de UBS
-            const metrics = pRegiao ? getBairroMetrics(pRegiao) : null;
+            const metrics = pRegiao ? getBairroMetrics(pRegiao, pRegiao) : null;
             
-            // Função auxiliar de fallback robusto para métricas individuais por escola
-            const getValidMetric = (val: any, fallbackVal: number): number => {
-              if (val === undefined || val === null || isNaN(Number(val))) {
-                return fallbackVal;
-              }
-              return Number(val);
-            };
+            const cleanYear = anoSelecionado.replace('★', '').trim();
+            const schoolRecord = isSchool ? schoolMetrics[poi.nome]?.anos[cleanYear] : null;
 
-            const schoolDes = isSchool ? getValidMetric(poi.desnutricao, metrics?.des ?? 2.62) : (metrics?.des ?? 2.62);
-            const schoolObs = isSchool ? getValidMetric(poi.obesidade, metrics?.obs ?? 12.93) : (metrics?.obs ?? 12.93);
-            const schoolSob = isSchool ? getValidMetric(poi.sobrepeso, metrics?.sob ?? 16.3) : (metrics?.sob ?? 16.3);
-            const schoolEut = isSchool ? getValidMetric(poi.eutrofia, metrics?.eut ?? Math.max(0, 100 - schoolDes - schoolObs - schoolSob)) : (metrics?.eut ?? 61.55);
+            const dDes = schoolRecord ? schoolRecord.desnutricao : (metrics?.des ?? 2.62);
+            const dObs = schoolRecord ? schoolRecord.obesidade : (metrics?.obs ?? 12.93);
+            const dSob = schoolRecord ? schoolRecord.sobrepeso : (metrics?.sob ?? 16.3);
+            const dEut = schoolRecord ? schoolRecord.eutrofia : (metrics?.eut ?? 61.55);
+
+            const schoolDes = Number((dDes * multDes).toFixed(2));
+            const schoolObs = Number((dObs * multObs).toFixed(2));
+            const schoolSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
+            const beforeSum = dDes + dObs + dSob;
+            const afterSum = schoolDes + schoolObs + schoolSob;
+            const schoolEut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
 
             // Determina a prevalência do indicador ativo para destacar no tooltip
             let activeVal = 0;
@@ -445,24 +484,22 @@ export default function RiskMap() {
                     setSelectedPoi(poi);
                     if (isSchool) {
                       if (analysisLevel === 'escola' && selectedSchoolName === poi.nome) {
-                        setSelectedSchoolName(null);
+                        setSelection('bairro', pRegiao || null, pBairro || null, null);
                       } else {
-                        setSelectedUbs(pRegiao || null);
-                        setSelectedBairroName(pBairro || null);
-                        setSelectedSchoolName(poi.nome);
+                        setSelection('escola', pRegiao || null, pBairro || null, poi.nome);
                       }
                     } else if (poi.categoria === 'UBS') {
                       if (analysisLevel === 'ubs' && selectedUbs === poi.nome) {
-                        setSelectedUbs(null);
+                        setSelection('municipio', null, null, null);
                       } else {
-                        setSelectedUbs(poi.nome);
+                        setSelection('ubs', poi.nome, null, null);
                       }
                     } else if (isGov) {
                       if (pRegiao) {
                         if (analysisLevel === 'ubs' && selectedUbs === pRegiao) {
-                          setSelectedUbs(null);
+                          setSelection('municipio', null, null, null);
                         } else {
-                          setSelectedUbs(pRegiao);
+                          setSelection('ubs', pRegiao, null, null);
                         }
                       }
                     }
