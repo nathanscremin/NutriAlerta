@@ -149,11 +149,15 @@ export default function ConsultantView() {
           message: text,
           context: {
             screenData: {
-              bairro: selectedBairro ?? 'Não selecionado',
-              ano: anoSelecionado,
-              indicador,
-              obesidade: dadosAno.obesidade,
-              desnutricao: dadosAno.desnutricao,
+              screenData: {
+                bairro: selectedBairro ?? 'Não selecionado',
+                ano: anoSelecionado,
+                indicador,
+                obesidade: dadosAno.obesidade,
+                desnutricao: dadosAno.desnutricao,
+                sobrepeso: dadosAno.sobrepeso,
+                eutrofia: dadosAno.eutrofia,
+              }
             }
           }
         })
