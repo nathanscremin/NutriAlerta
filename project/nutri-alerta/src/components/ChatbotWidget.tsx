@@ -14,7 +14,7 @@ const MESSAGES_KEY = 'nutribot_v1_messages';
 
 const INITIAL_MESSAGE: Message = {
   role: 'bot',
-  text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard...'
+  text: 'Olá! Sou o NutriBot Guia. Posso explicar como usar o dashboard, o que cada gráfico significa, e como interpretar os dados. Como posso ajudar?'
 };
 
 function getSessionId() {
