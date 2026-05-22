@@ -4,6 +4,7 @@ import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2 } from
 import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'bot';
@@ -56,34 +57,21 @@ export default function ConsultantView() {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
   const { multObs, multDes } = React.useMemo(() => {
     let mObs = 1.0;
     let mDes = 1.0;
-    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
-      mObs *= 0.88;
-    }
-    if (!activePoiTypes.includes('Esporte e Lazer')) {
-      mObs *= 1.10;
-    }
-    if (!activePoiTypes.includes('Alimentação - Mercado')) {
-      mDes *= 1.15;
-      mObs *= 1.08;
-    }
-    if (!activePoiTypes.includes('Educação')) {
-      mDes *= 1.05;
-      mObs *= 1.05;
-    }
+    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) mObs *= 0.88;
+    if (!activePoiTypes.includes('Esporte e Lazer')) mObs *= 1.10;
+    if (!activePoiTypes.includes('Alimentação - Mercado')) { mDes *= 1.15; mObs *= 1.08; }
+    if (!activePoiTypes.includes('Educação')) { mDes *= 1.05; mObs *= 1.05; }
     return { multObs: mObs, multDes: mDes };
   }, [activePoiTypes]);
 
-  // Dado temporal reativo com fallback para métricas gerais e efeito dos POIs
   const activeTemporalData = React.useMemo(() => {
     const baseSource = selectedBairro ? yearsList.map(yr => {
       const cleanYr = yr.replace('★', '').trim();
       const yrRecord = regionalData[cleanYr]?.[selectedBairro];
       const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 58 };
-      
       return {
         ano: yr,
         desnutricao: yrRecord && yrRecord.desnutricao ? yrRecord.desnutricao : globalRec.desnutricao,
@@ -102,18 +90,11 @@ export default function ConsultantView() {
       const afterSum = scaleDes + scaleObs + scaleSob;
       const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
       const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-      return {
-        ...d,
-        desnutricao: scaleDes,
-        obesidade: scaleObs,
-        sobrepeso: scaleSob,
-        eutrofia: scaleEut
-      };
+      return { ...d, desnutricao: scaleDes, obesidade: scaleObs, sobrepeso: scaleSob, eutrofia: scaleEut };
     });
   }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
 
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
-
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
@@ -149,15 +130,13 @@ export default function ConsultantView() {
           message: text,
           context: {
             screenData: {
-              screenData: {
-                bairro: selectedBairro ?? 'Não selecionado',
-                ano: anoSelecionado,
-                indicador,
-                obesidade: dadosAno.obesidade,
-                desnutricao: dadosAno.desnutricao,
-                sobrepeso: dadosAno.sobrepeso,
-                eutrofia: dadosAno.eutrofia,
-              }
+              bairro: selectedBairro ?? 'Não selecionado',
+              ano: anoSelecionado,
+              indicador,
+              obesidade: dadosAno.obesidade,
+              desnutricao: dadosAno.desnutricao,
+              sobrepeso: dadosAno.sobrepeso,
+              eutrofia: dadosAno.eutrofia,
             }
           }
         })
@@ -184,7 +163,6 @@ export default function ConsultantView() {
     setClearing(true);
 
     const oldSessionId = getSessionId();
-
     try {
       await fetch('/api/chat', {
         method: 'DELETE',
@@ -201,7 +179,6 @@ export default function ConsultantView() {
     setClearing(false);
   }
 
-  // Filtrar UBS da lista de saúde e ordenar em ordem alfabética pelo nome limpo (sem prefixos)
   const ubsList = UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
     const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
     const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
@@ -211,7 +188,6 @@ export default function ConsultantView() {
     u.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Métrica consolidada para a opção Geral
   let geralVal = 0;
   if (indicador === 'desnutricao') {
     geralVal = dadosAno.desnutricao;
@@ -224,10 +200,7 @@ export default function ConsultantView() {
     if (currentYearRegions.length > 0) {
       let sumSobrepeso = 0, count = 0;
       currentYearRegions.forEach((reg: any) => {
-        if (typeof reg.sobrepeso === 'number') {
-          sumSobrepeso += reg.sobrepeso;
-          count++;
-        }
+        if (typeof reg.sobrepeso === 'number') { sumSobrepeso += reg.sobrepeso; count++; }
       });
       geralVal = count > 0 ? Number((sumSobrepeso / count).toFixed(2)) : 16.3;
     } else {
@@ -278,7 +251,6 @@ export default function ConsultantView() {
               <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
               Online
             </div>
-            {/* Botão limpar conversa */}
             <button
               onClick={clearConversation}
               disabled={clearing || loading}
@@ -321,7 +293,17 @@ export default function ConsultantView() {
                   <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
                 <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <p className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">{msg.text}</p>
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => <p className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold mb-2 last:mb-0">{children}</p>,
+                      strong: ({ children }) => <strong className="font-black">{children}</strong>,
+                      ul: ({ children }) => <ul className="my-2 space-y-1">{children}</ul>,
+                      ol: ({ children }) => <ol className="my-2 space-y-1 list-decimal ml-4">{children}</ol>,
+                      li: ({ children }) => <li className="ml-4 list-disc text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold">{children}</li>,
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
                 </div>
               </div>
             ) : (
@@ -385,8 +367,6 @@ export default function ConsultantView() {
           <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">
             Selecione uma UBS para cruzar os dados no chatbot (Ano: {cleanYear})
           </p>
-
-          {/* Search bar inside list */}
           <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-500" />
             <input
@@ -402,12 +382,8 @@ export default function ConsultantView() {
         {/* List content */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800 scrollbar-thin">
           
-          {/* Opção GERAL (Todo o Município) */}
           <div
-            onClick={() => {
-              setSelectedBairro(null);
-              setSearchQuery('');
-            }}
+            onClick={() => { setSelectedBairro(null); setSearchQuery(''); }}
             className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
               selectedBairro === null 
                 ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
@@ -417,7 +393,6 @@ export default function ConsultantView() {
             <div className={`p-2 rounded-xl border shrink-0 ${selectedBairro === null ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'}`}>
               <Globe className="w-4 h-4" />
             </div>
-            
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
@@ -425,7 +400,6 @@ export default function ConsultantView() {
                   {geralBadge.label}
                 </span>
               </div>
-              
               <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
                 <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{geralVal}%</strong></span>
                 <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">45.2K</strong></span>
@@ -433,20 +407,14 @@ export default function ConsultantView() {
             </div>
           </div>
 
-          {/* Lista Filtrada de UBSs */}
           {filteredUbs.map(ubs => {
             const isSelected = selectedBairro === ubs.nome;
             const ubsData = regionalData[cleanYear]?.[ubs.nome];
             let val = 0;
-            if (indicador === 'desnutricao') {
-              val = ubsData ? ubsData.desnutricao : 2.62;
-            } else if (indicador === 'sobrepeso') {
-              val = ubsData ? ubsData.sobrepeso : 16.3;
-            } else if (indicador === 'eutrofia') {
-              val = ubsData ? ubsData.eutrofia : 61.2;
-            } else {
-              val = ubsData ? ubsData.obesidade : 12.93;
-            }
+            if (indicador === 'desnutricao') val = ubsData ? ubsData.desnutricao : 2.62;
+            else if (indicador === 'sobrepeso') val = ubsData ? ubsData.sobrepeso : 16.3;
+            else if (indicador === 'eutrofia') val = ubsData ? ubsData.eutrofia : 61.2;
+            else val = ubsData ? ubsData.obesidade : 12.93;
 
             let finalVal = 0;
             if (indicador === 'eutrofia') {
@@ -480,7 +448,6 @@ export default function ConsultantView() {
                 <div className={`p-2 rounded-xl border shrink-0 ${isSelected ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-500'}`}>
                   <MapPin className="w-4 h-4" />
                 </div>
-                
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
@@ -488,7 +455,6 @@ export default function ConsultantView() {
                       {badge.label}
                     </span>
                   </div>
-                  
                   <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
                     <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{finalVal}%</strong></span>
                     <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">{totalAvaliados}</strong></span>
