@@ -1,5 +1,21 @@
+# Next.js build and dependencies
+**/node_modules/
+**/.next/
+**/out/
+
+# Environments
+**/.env*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other temp files
 temp_setores/
 temp_bairros/
 *.zip
 *.pdf
-
+*.rar
+*.7z
+*.tar.gz
+*.log

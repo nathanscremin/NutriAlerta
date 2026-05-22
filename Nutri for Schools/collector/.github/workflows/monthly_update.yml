@@ -1,0 +1,82 @@
+name: Atualização Mensal — SISVAN Estado Nutricional
+
+# Disparo automático: todo dia 01 de cada mês às 00:00 UTC
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+
+  # Permite disparar manualmente pelo painel do GitHub Actions
+  workflow_dispatch:
+
+jobs:
+  atualizar-dados:
+    name: Executar Pipeline ETL SISVAN
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Faz checkout do repositório
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      # 2. Configura o Python
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # 3. Instala as dependências
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      # 4. Cria o arquivo .env com as configurações (sem credenciais pois é acesso anônimo)
+      - name: Criar arquivo .env
+        run: |
+          cat > .env << EOF
+          API_BASE_URL=https://apidadosabertos.saude.gov.br
+          UF_FILTRO=SP
+          CODIGO_MUNICIPIO=354390
+          IDADE_MINIMA=0
+          IDADE_MAXIMA=18
+          LIMIT_POR_PAGINA=100
+          ANOS_POR_FAIXA=2
+          PAUSA_ENTRE_REQUISICOES=0.5
+          EOF
+
+      # 5. Restaura os dados processados do cache do GitHub Actions
+      #    para manter o state.json e o Parquet entre execuções mensais
+      - name: Restaurar dados processados do cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/processed/
+            data/state.json
+          key: sisvan-pipeline-data
+          restore-keys: |
+            sisvan-pipeline-data
+
+      # 6. Executa o pipeline
+      - name: Executar pipeline ETL
+        run: python main.py
+
+      # 7. Salva os dados atualizados de volta ao cache
+      - name: Salvar dados atualizados no cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            data/processed/
+            data/state.json
+          key: sisvan-pipeline-data
+
+      # 8. Publica o Parquet e o state.json como artifact do workflow
+      #    para download manual a qualquer momento
+      - name: Publicar dados como artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sisvan-dados-${{ github.run_number }}
+          path: |
+            data/processed/dados_finais.parquet
+            data/state.json
+          retention-days: 90
