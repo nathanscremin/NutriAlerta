@@ -1,9 +1,51 @@
 import { kv } from '@vercel/kv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
+// 1. Importa a base de dados local de chunks (crie este arquivo na mesma pasta ou em @/lib)
+import documentos from './documents.json';
 
 const apiKey = process.env.NutriAlerta_API_Key || process.env.GEMINI_API_KEY || '';
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// 2. Motor de busca in-memory baseado em relevância de termos (RAG Leve)
+function buscarChuncksRelevantes(query: string, limite = 2): string {
+  const palavrasQuery = query
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+    .replace(/[^a-zA-Z0-9\s]/g, "") // Remove caracteres especiais
+    .split(/\s+/)
+    .filter(p => p.length > 2); // Descarta palavras muito curtas
+
+  if (palavrasQuery.length === 0) return "";
+
+  const documentosPontuados = documentos.map(doc => {
+    const textoAlvo = `${doc.titulo} ${doc.texto}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let score = 0;
+
+    palavrasQuery.forEach(palavra => {
+      if (textoAlvo.includes(palavra)) {
+        score += 1;
+        if (doc.titulo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(palavra)) {
+          score += 1; // Bônus se a palavra chave estiver no título
+        }
+      }
+    });
+
+    return { ...doc, score };
+  });
+
+  const resultados = documentosPontuados
+    .filter(d => d.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limite);
+
+  if (resultados.length === 0) return "";
+
+  return resultados
+    .map(r => `[Documento Técnico Oficial: ${r.titulo}]\n${r.texto}`)
+    .join("\n\n");
+}
 
 function getKnowledgeBaseGuia(screenData: any) {
    return `Você é o NutriBot, assistente de navegação do dashboard NutriAlerta — Rio Claro, SP.
@@ -85,7 +127,7 @@ A aba Especialista é dividida em seções rolando de cima para baixo:
    Permite comparar duas UBSs lado a lado. Selecione a "Unidade A" e a "Unidade B" nos dropdowns. Escolha o indicador (Desnutrição, Peso Adequado, Sobrepeso, Obesidade) nos botões à direita. Exibe barras comparativas, idades médias por indicador, gênero predominante e um gráfico de evolução temporal comparativa entre as duas unidades.
 
 7. ANÁLISE DE CONFLITO URBANO — INFRAESTRUTURA ALIMENTAR:
-   Mapa com os POIs alimentares da cidade. Cards no topo mostram:
+   Mapa com os POIs alimentares da cidade. Cards no topo show:
    - Restaurantes e padarias: 30
    - Esporte e Lazer: 33
    - Fast Food: 18
@@ -100,17 +142,19 @@ ${screenData?.bairro ? `[CONTEXTO ATUAL]\nUBS em foco: ${screenData.bairro} · A
 `;
 }
 
-function getSystemInstruction(screenData: any) {
+// 3. Ajustado a assinatura da instrução técnica do sistema para receber (context, contextoRAG)
+function getSystemInstruction(context: any, contextoRAG: string) {
+  const screenData = context?.screenData;
   const tipo = screenData?.tipo || 'consultor'; 
   let rules = '';
 
   if (tipo === 'guia') {
     rules = getKnowledgeBaseGuia(screenData);
   } else {
-    let context = '';
+    let contextStr = '';
 
-    if (screenData && screenData.bairro) {
-      context = `
+    if (screenData && screenData.bairro && screenData.bairro !== 'Não selecionado') {
+      contextStr = `
       [[CONTEXTO DO BAIRRO SELECIONADO]]
       Bairro: ${screenData.bairro}
       Ano: ${screenData.ano ?? 'não informado'}
@@ -122,20 +166,23 @@ function getSystemInstruction(screenData: any) {
       % Peso Adequado (Eutrofia): ${screenData.eutrofia ?? 'não informado'}
       `;
     } else {
-      context = '[[CONTEXTO]] Nenhum bairro selecionado. Oriente o gestor a clicar em um bairro no mapa.';
+      contextStr = '[[CONTEXTO]] Nenhum bairro selecionado no painel. Use as médias agregadas gerais de Rio Claro descritas acima.';
     }
 
     rules = `
-    Você é o NutriBot, assistente de vigilância nutricional do município de Rio Claro — SP.
+    Você é o NutriBot, assistente analítico e epidemiológico de vigilância nutricional do município de Rio Claro — SP.
     Seu usuário é um gestor municipal de saúde pública.
 
-    ${context}
+    ${contextStr}
 
-    REGRAS:
-    1. Responda com base nos dados do contexto acima. Não invente números.
-    2. Use linguagem clara e objetiva — sem jargão técnico desnecessário.
-    3. Se não houver bairro selecionado, peça ao gestor que clique no mapa.
-    4. Responda sempre em português brasileiro.
+    [[DOCUMENTAÇÃO TÉCNICA DE REFERÊNCIA (MINISTÉRIO DA SAÚDE / SISVAN)]]
+    ${contextoRAG ? contextoRAG : "Nenhum trecho de documento oficial indexado para esta pergunta específica. Use as diretrizes básicas do SISVAN."}
+
+    REGRAS DA IA:
+    1. Responda combinando os dados do contexto geográfico acima com as diretrizes oficiais do Ministério da Saúde recuperadas. Não invente números, parâmetros ou prazos de pesagem.
+    2. Use linguagem clara, objetiva e executiva para gestores públicos.
+    3. Se não houver bairro selecionado e a pergunta exigir dados locais específicos, lembre amigavelmente o gestor de selecionar uma unidade ou bairro na lista lateral.
+    4. Responda sempre em português brasileiro de forma pragmática e direta.
     `;
   }
 
@@ -143,7 +190,7 @@ function getSystemInstruction(screenData: any) {
     { role: 'user', parts: [{ text: `SYSTEM OVERRIDE: ${rules}` }] },
     {
       role: 'model',
-      parts: [{ text: 'Entendido. Estou pronto para atuar de acordo com o perfil solicitado.' }],
+      parts: [{ text: 'Entendido. Estou pronto para atuar cruzando dados do território com os marcos referenciais oficiais.' }],
     },
   ];
 }
@@ -231,10 +278,12 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const dynamicInstruction = getSystemInstruction(context.screenData);
+      // 4. Implementação do RAG dinâmica: intercepta a busca e altera os parâmetros enviados à instrução
+      const contextoRAG = buscarChuncksRelevantes(message, 2);
+      const dynamicInstruction = getSystemInstruction(context, contextoRAG);
       const historyForAPI = [...dynamicInstruction, ...historyFromDB];
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const chat = model.startChat({ history: historyForAPI });
 
       const result = await chat.sendMessage(message);
@@ -262,7 +311,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── Apaga o histórico da sessão no KV ──
 export async function DELETE(req: NextRequest) {
   try {
     const { sessionId } = await req.json();
