@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { DADOS_TEMPORAIS } from '@/lib/mockData';
 
 type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant';
@@ -41,51 +42,69 @@ interface AppState {
   initializeData: () => Promise<void>;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  viewMode: 'map',
-  setViewMode: (mode) => set({ viewMode: mode }),
-  selectedBairro: null,
-  setSelectedBairro: (bairro) => set({ selectedBairro: bairro }),
-  anoSelecionado: '2025',
-  setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
-  indicador: 'obesidade',
-  setIndicador: (ind) => set({ indicador: ind }),
-  activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante/Fast-food', 'Alimentação - Mercado'],
-  setActivePoiTypes: (types) => set({ activePoiTypes: types }),
-  selectedPoi: null,
-  setSelectedPoi: (poi) => set({ selectedPoi: poi }),
+export const useAppStore = create<AppState>()(
+  persist(
+    (set) => ({
+      viewMode: 'map',
+      setViewMode: (mode) => set({ viewMode: mode }),
+      selectedBairro: null,
+      setSelectedBairro: (bairro) => set({ selectedBairro: bairro }),
+      anoSelecionado: '2025',
+      setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
+      indicador: 'obesidade',
+      setIndicador: (ind) => set({ indicador: ind }),
+      activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante/Fast-food', 'Alimentação - Mercado'],
+      setActivePoiTypes: (types) => set({ activePoiTypes: types }),
+      selectedPoi: null,
+      setSelectedPoi: (poi) => set({ selectedPoi: poi }),
 
-  // Theme & Layout toggles
-  darkMode: false,
-  setDarkMode: (val) => set({ darkMode: val }),
-  sidebarCollapsed: false,
-  setSidebarCollapsed: (val) => set({ sidebarCollapsed: val }),
+      // Theme & Layout toggles
+      darkMode: false,
+      setDarkMode: (val) => set({ darkMode: val }),
+      sidebarCollapsed: false,
+      setSidebarCollapsed: (val) => set({ sidebarCollapsed: val }),
 
-  // Initial State Hydration with Mock Data Fallback
-  temporalData: DADOS_TEMPORAIS,
-  regionalData: {},
-  yearsList: ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026 ★', '2027 ★'],
-  loading: false,
-  error: null,
+      // Initial State Hydration with Mock Data Fallback
+      temporalData: DADOS_TEMPORAIS,
+      regionalData: {},
+      yearsList: ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026 ★', '2027 ★'],
+      loading: false,
+      error: null,
 
-  initializeData: async () => {
-    set({ loading: true, error: null });
-    try {
-      const res = await fetch('/api/data');
-      const data = await res.json();
-      if (data.success) {
-        set({
-          temporalData: data.temporalData,
-          regionalData: data.regionalData,
-          yearsList: data.temporalData.map((d: any) => d.ano),
-          loading: false
-        });
-      } else {
-        set({ error: data.error || 'Failed to load CSV model data', loading: false });
+      initializeData: async () => {
+        set({ loading: true, error: null });
+        try {
+          const res = await fetch('/api/data');
+          const data = await res.json();
+          if (data.success) {
+            set({
+              temporalData: data.temporalData,
+              regionalData: data.regionalData,
+              yearsList: data.temporalData.map((d: any) => d.ano),
+              loading: false
+            });
+          } else {
+            set({ error: data.error || 'Failed to load CSV model data', loading: false });
+          }
+        } catch (err: any) {
+          console.error("Zustand Hydration Error:", err);
+          set({ error: err.message || 'Connection to API failed', loading: false });
+        }
       }
-    } catch (err: any) {
-      console.error("Zustand Hydration Error:", err);
-      set({ error: err.message || 'Connection to API failed', loading: false });
+    }),
+    {
+      name: 'nutrialerta-ui-state', // chave no localStorage
+      storage: createJSONStorage(() => localStorage),
+      // Persiste só o que faz sentido — dados de API são sempre buscados frescos
+      partialize: (state) => ({
+        viewMode: state.viewMode,
+        darkMode: state.darkMode,
+        sidebarCollapsed: state.sidebarCollapsed,
+        selectedBairro: state.selectedBairro,
+        anoSelecionado: state.anoSelecionado,
+        indicador: state.indicador,
+        activePoiTypes: state.activePoiTypes,
+      }),
     }
-  }
-}));
+  )
+);
