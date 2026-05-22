@@ -5,10 +5,11 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
   LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine, BarChart, Bar
 } from 'recharts';
-import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers } from 'lucide-react';
+import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
+import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -94,7 +95,9 @@ export default function ExpertView() {
   const { 
     anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi,
     temporalData, regionalData, yearsList, activePoiTypes, setActivePoiTypes,
-    darkMode, sidebarCollapsed, setSidebarCollapsed
+    darkMode, sidebarCollapsed, setSidebarCollapsed,
+    analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName,
+    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName
   } = useAppStore();
 
   const [isLayersOpen, setIsLayersOpen] = React.useState(false);
@@ -139,22 +142,147 @@ export default function ExpertView() {
     return { multObs: mObs, multDes: mDes };
   }, [activePoiTypes]);
 
-  // Dado temporal reativo com fallback para métricas gerais e efeito dos POIs
+  // Dado temporal reativo com suporte a análise hierárquica multinível e efeitos das camadas de POIs
   const activeTemporalData = React.useMemo(() => {
-    const baseSource = selectedBairro ? yearsList.map(yr => {
-      const cleanYr = yr.replace('★', '').trim();
-      const yrRecord = regionalData[cleanYr]?.[selectedBairro];
-      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 58 };
+    // Helper to get parent UBS for a neighborhood
+    const getParentUbsForBairroName = (bName: string | null): string | null => {
+      if (!bName) return null;
+      const bairrosGeoJSON = getVoronoiGeoJSON();
+      if (!bairrosGeoJSON || !bairrosGeoJSON.features) return null;
+      const feat = bairrosGeoJSON.features.find((f: any) => f.properties?.nome_real_bairro === bName);
+      return feat?.properties?.nome_bairro || null;
+    };
+
+    // Helper for stable neighborhood perturbation
+    const getBairroPerturbedValue = (bairro: string, val: number, seed: string) => {
+      let hash = 0;
+      const key = `${bairro}-${seed}`;
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const factor = 1 + (((Math.abs(hash) % 101) - 50) / 1000); // stable scale factor between 0.95 and 1.05
+      return val * factor;
+    };
+
+    let baseSource: Array<{
+      ano: string;
+      desnutricao: number;
+      obesidade: number;
+      sobrepeso: number;
+      eutrofia: number;
+      isPrevisao: boolean;
+    }> = [];
+
+    if (analysisLevel === 'municipio') {
+      baseSource = temporalData.map(d => ({
+        ano: d.ano,
+        desnutricao: d.desnutricao,
+        obesidade: d.obesidade,
+        sobrepeso: (d as any).sobrepeso || 15.2,
+        eutrofia: d.eutrofia || 58,
+        isPrevisao: d.isPrevisao
+      }));
+    } else if (analysisLevel === 'ubs') {
+      const ubsName = selectedUbs;
+      baseSource = yearsList.map(yr => {
+        const cleanYr = yr.replace('★', '').trim();
+        const yrRecord = ubsName ? regionalData[cleanYr]?.[ubsName] : null;
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
+        return {
+          ano: yr,
+          desnutricao: yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalRec.desnutricao,
+          obesidade: yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalRec.obesidade,
+          sobrepeso: yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2,
+          eutrofia: yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : (globalRec as any).eutrofia || 58,
+          isPrevisao: Number(cleanYr) >= 2026
+        };
+      });
+    } else if (analysisLevel === 'bairro') {
+      const parentUbs = getParentUbsForBairroName(selectedBairroName) || selectedUbs;
+      baseSource = yearsList.map(yr => {
+        const cleanYr = yr.replace('★', '').trim();
+        const ubsRecord = parentUbs ? regionalData[cleanYr]?.[parentUbs] : null;
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
+
+        const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
+        const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
+        const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2;
+        const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 58;
+
+        const bName = selectedBairroName || 'Bairro';
+        let pDes = getBairroPerturbedValue(bName, baseDes, 'desnutricao');
+        let pObs = getBairroPerturbedValue(bName, baseObs, 'obesidade');
+        let pSob = getBairroPerturbedValue(bName, baseSob, 'sobrepeso');
+        let pEut = getBairroPerturbedValue(bName, baseEut, 'eutrofia');
+
+        // Normalização a 100%
+        const sum = pDes + pObs + pSob + pEut;
+        if (sum > 0) {
+          pDes = (pDes / sum) * 100;
+          pObs = (pObs / sum) * 100;
+          pSob = (pSob / sum) * 100;
+          pEut = (pEut / sum) * 100;
+        }
+
+        return {
+          ano: yr,
+          desnutricao: Number(pDes.toFixed(2)),
+          obesidade: Number(pObs.toFixed(2)),
+          sobrepeso: Number(pSob.toFixed(2)),
+          eutrofia: Number(pEut.toFixed(2)),
+          isPrevisao: Number(cleanYr) >= 2026
+        };
+      });
+    } else if (analysisLevel === 'escola') {
+      const school = ALL_POIS.find(p => p.categoria === 'Educação' && p.nome === selectedSchoolName);
+      const parentUbs = school?.regiao_ubs || getParentUbsForBairroName(school?.bairro || null) || selectedUbs;
       
-      return {
-        ano: yr,
-        desnutricao: yrRecord && yrRecord.desnutricao ? yrRecord.desnutricao : globalRec.desnutricao,
-        obesidade: yrRecord && yrRecord.obesidade ? yrRecord.obesidade : globalRec.obesidade,
-        sobrepeso: yrRecord && yrRecord.sobrepeso ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 0,
-        eutrofia: yrRecord && yrRecord.eutrofia ? yrRecord.eutrofia : (globalRec as any).eutrofia || 58,
-        isPrevisao: Number(cleanYr) >= 2026
-      };
-    }) : temporalData;
+      const parentUbs2025 = parentUbs ? regionalData['2025']?.[parentUbs] : null;
+      const global2025 = temporalData.find(t => t.ano.replace('★', '').trim() === '2025') || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55 };
+      const refDes = parentUbs2025?.desnutricao ?? global2025.desnutricao;
+      const refObs = parentUbs2025?.obesidade ?? global2025.obesidade;
+      const refSob = parentUbs2025?.sobrepeso ?? (global2025 as any).sobrepeso ?? 21.0;
+      const refEut = parentUbs2025?.eutrofia ?? (global2025 as any).eutrofia ?? 61.55;
+
+      const ratioDes = school && typeof school.desnutricao === 'number' && refDes > 0 ? school.desnutricao / refDes : 1;
+      const ratioObs = school && typeof school.obesidade === 'number' && refObs > 0 ? school.obesidade / refObs : 1;
+      const ratioSob = school && typeof school.sobrepeso === 'number' && refSob > 0 ? school.sobrepeso / refSob : 1;
+      const ratioEut = school && typeof school.eutrofia === 'number' && refEut > 0 ? school.eutrofia / refEut : 1;
+
+      baseSource = yearsList.map(yr => {
+        const cleanYr = yr.replace('★', '').trim();
+        const ubsRecord = parentUbs ? regionalData[cleanYr]?.[parentUbs] : null;
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
+
+        const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
+        const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
+        const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2;
+        const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 58;
+
+        let pDes = baseDes * ratioDes;
+        let pObs = baseObs * ratioObs;
+        let pSob = baseSob * ratioSob;
+        let pEut = baseEut * ratioEut;
+
+        // Normalização a 100%
+        const sum = pDes + pObs + pSob + pEut;
+        if (sum > 0) {
+          pDes = (pDes / sum) * 100;
+          pObs = (pObs / sum) * 100;
+          pSob = (pSob / sum) * 100;
+          pEut = (pEut / sum) * 100;
+        }
+
+        return {
+          ano: yr,
+          desnutricao: Number(pDes.toFixed(2)),
+          obesidade: Number(pObs.toFixed(2)),
+          sobrepeso: Number(pSob.toFixed(2)),
+          eutrofia: Number(pEut.toFixed(2)),
+          isPrevisao: Number(cleanYr) >= 2026
+        };
+      });
+    }
 
     return baseSource.map(d => {
       const scaleDes = Number((d.desnutricao * multDes).toFixed(2));
@@ -172,7 +300,7 @@ export default function ExpertView() {
         eutrofia: scaleEut
       };
     });
-  }, [selectedBairro, temporalData, yearsList, regionalData, multDes, multObs]);
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, multDes, multObs]);
 
   // Encontra os dados do ano selecionado
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
@@ -254,50 +382,56 @@ export default function ExpertView() {
         { name: 'Mãe Preta', delta: 0.9 }
       ];
 
-  const currentBairroRecord = selectedBairro && regionalData[cleanYear]?.[selectedBairro];
+  // Helper to get parent UBS for a neighborhood
+  const getParentUbsForBairroName = (bName: string | null): string | null => {
+    if (!bName) return null;
+    const bairrosGeoJSON = getVoronoiGeoJSON();
+    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return null;
+    const feat = bairrosGeoJSON.features.find((f: any) => f.properties?.nome_real_bairro === bName);
+    return feat?.properties?.nome_bairro || null;
+  };
+
+  // Helper for stable neighborhood perturbation
+  const getBairroPerturbedValue = (bairro: string, val: number, seed: string) => {
+    let hash = 0;
+    const key = `${bairro}-${seed}`;
+    for (let i = 0; i < key.length; i++) {
+      hash = key.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const factor = 1 + (((Math.abs(hash) % 101) - 50) / 1000); // stable scale factor between 0.95 and 1.05
+    return val * factor;
+  };
+
   const sumAvaliados = currentYearRegions.reduce((sum: number, reg: any) => sum + (reg.total_avaliados ?? 0), 0);
-  const avaliadosVal = selectedBairro 
-    ? (currentBairroRecord ? (currentBairroRecord.total_avaliados ?? 0) : 0)
-    : (sumAvaliados > 0 ? sumAvaliados : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500));
+  
+  let avaliadosVal = sumAvaliados > 0 ? sumAvaliados : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500);
+  let avaliadosSub = "Total acumulado nas 18 UBS de Rio Claro";
+
+  if (analysisLevel === 'ubs') {
+    const record = selectedUbs ? regionalData[cleanYear]?.[selectedUbs] : null;
+    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 2200;
+    avaliadosSub = `Total de indivíduos avaliados na UBS ${selectedUbs?.replace('UBS ', '').replace('USF ', '')}`;
+  } else if (analysisLevel === 'bairro') {
+    const parentUbs = getParentUbsForBairroName(selectedBairroName) || selectedUbs;
+    const record = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
+    const parentVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 2200;
+    // Perturbed fraction of parent UBS
+    avaliadosVal = Math.floor(getBairroPerturbedValue(selectedBairroName || 'Bairro', parentVal / 4, 'avaliados'));
+    avaliadosSub = `Estimativa de indivíduos avaliados no Bairro ${selectedBairroName}`;
+  } else if (analysisLevel === 'escola') {
+    avaliadosVal = 120; // 120 evaluations per school
+    avaliadosSub = `Alunos avaliados individualmente na Escola ${selectedSchoolName}`;
+  }
 
   const avaliadosStr = avaliadosVal >= 1000 
     ? `${(avaliadosVal / 1000).toFixed(1)}K` 
     : String(avaliadosVal);
-  const avaliadosSub = selectedBairro 
-    ? "Total de indivíduos avaliados nesta UBS" 
-    : "Total acumulado nas 18 UBS de Rio Claro";
 
   // Compute dynamic distribution averages for selected year
-  let eutrofiaAvg = 61.2;
-  let sobrepesoAvg = 16.3;
-  let obesidadeAvg = isObs ? mainValue : (dadosAno.obesidade || 12.93);
-  let desnutricaoAvg = !isObs ? mainValue : (dadosAno.desnutricao || 2.62);
-
-  if (selectedBairro && currentBairroRecord) {
-    eutrofiaAvg = typeof currentBairroRecord.eutrofia === 'number' && currentBairroRecord.eutrofia > 0 ? Number(currentBairroRecord.eutrofia.toFixed(1)) : eutrofiaAvg;
-    sobrepesoAvg = typeof currentBairroRecord.sobrepeso === 'number' && currentBairroRecord.sobrepeso > 0 ? Number(currentBairroRecord.sobrepeso.toFixed(1)) : sobrepesoAvg;
-    obesidadeAvg = typeof currentBairroRecord.obesidade === 'number' && currentBairroRecord.obesidade > 0 ? Number(currentBairroRecord.obesidade.toFixed(1)) : obesidadeAvg;
-    desnutricaoAvg = typeof currentBairroRecord.desnutricao === 'number' && currentBairroRecord.desnutricao > 0 ? Number(currentBairroRecord.desnutricao.toFixed(1)) : desnutricaoAvg;
-  } else if (currentYearRegions.length > 0) {
-    let sumEutrofia = 0, sumSobrepeso = 0, count = 0;
-    currentYearRegions.forEach((reg: any) => {
-      if (typeof reg.eutrofia === 'number') {
-        sumEutrofia += reg.eutrofia;
-        sumSobrepeso += reg.sobrepeso || 0;
-        count++;
-      }
-    });
-    if (count > 0) {
-      eutrofiaAvg = Number((sumEutrofia / count).toFixed(2));
-      sobrepesoAvg = Number((sumSobrepeso / count).toFixed(2));
-      obesidadeAvg = Number((dadosAno.obesidade).toFixed(2));
-      desnutricaoAvg = Number((dadosAno.desnutricao).toFixed(2));
-    }
-  }
-
-  // Aplicamos os multiplicadores dos POIs na desnutrição e obesidade
-  obesidadeAvg = Number((obesidadeAvg * multObs).toFixed(2));
-  desnutricaoAvg = Number((desnutricaoAvg * multDes).toFixed(2));
+  let eutrofiaAvg = Number(dadosAno.eutrofia.toFixed(1));
+  let sobrepesoAvg = Number(dadosAno.sobrepeso.toFixed(1));
+  let obesidadeAvg = Number(dadosAno.obesidade.toFixed(1));
+  let desnutricaoAvg = Number(dadosAno.desnutricao.toFixed(1));
 
   // Normalização para a soma ser exatamente 100%
   const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg;
@@ -308,9 +442,12 @@ export default function ExpertView() {
     desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
   }
 
-  const cleanSelectedBairro = selectedBairro
-    ? selectedBairro.replace('UBS ', '').replace('USF ', '')
-    : '';
+  const cleanSelectedBairro = analysisLevel === 'bairro'
+    ? (getParentUbsForBairroName(selectedBairroName) || selectedUbs || '').replace('UBS ', '').replace('USF ', '')
+    : analysisLevel === 'ubs'
+      ? selectedUbs?.replace('UBS ', '').replace('USF ', '') || ''
+      : '';
+
 
   return (
     <motion.div
@@ -335,13 +472,20 @@ export default function ExpertView() {
             </button>
           )}
           <div>
-            <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">Rio Claro — Painel Epidemiológico</h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-medium">SISVAN · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado}</p>
+             <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">Rio Claro — Painel Epidemiológico</h2>
+             <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-medium">
+               Nutri for Schools · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado} · Nível: {
+                  analysisLevel === 'municipio' ? 'Geral (Rio Claro)' :
+                  analysisLevel === 'ubs' ? (selectedUbs ? `UBS ${selectedUbs.replace('UBS ', '').replace('USF ', '')}` : 'UBS (nenhuma selecionada)') :
+                  analysisLevel === 'bairro' ? (selectedBairroName ? `Bairro ${selectedBairroName}` : 'Bairro (nenhum selecionado)') :
+                  (selectedSchoolName ? `Escola ${selectedSchoolName}` : 'Escola (nenhuma selecionada)')
+                }
+             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 rounded-lg px-3 py-2 shadow-sm">
           <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(13,148,136,0.5)] animate-pulse" />
-          LIVE DATA: SISVAN 2025
+          LIVE DATA: Nutri for Schools 2025
         </div>
       </div>
 
@@ -354,12 +498,12 @@ export default function ExpertView() {
             accentColor="text-slate-800 dark:text-zinc-200"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
-            tooltip="Quantidade total de indivíduos pesados e avaliados no SISVAN na região selecionada."
+            tooltip="Quantidade total de indivíduos pesados e avaliados no Nutri for Schools na região selecionada."
           />
           <KpiCard
             label={`${mainLabel} · ${anoSelecionado}`}
             value={`${mainValue}%`}
-            sub={`Média entre as UBS · SISVAN real`}
+            sub={`Média entre as UBS · Nutri for Schools real`}
             trend={isAlta ? "up" : "down"}
             trendLabel={`${Number(delta) > 0 ? '+' : ''}${delta} p.p. em 2027`}
             accentColor={mainColor}
@@ -383,7 +527,7 @@ export default function ExpertView() {
           <KpiCard
             label={`${isObs ? 'Desnutrição' : 'Obesidade'} · ${anoSelecionado}`}
             value={`${secondaryValue}%`}
-            sub="Outro indicador acompanhado · SISVAN"
+            sub="Outro indicador acompanhado · Nutri for Schools"
             trend="neutral"
             trendLabel="estável"
             accentColor="text-slate-600 dark:text-zinc-300"
@@ -401,9 +545,9 @@ export default function ExpertView() {
               <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
                 Mapa de Risco por Região
               </span>
-              {selectedBairro && (
-                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm inline-block w-fit">
-                  📍 {selectedBairro}
+              {analysisLevel !== 'municipio' && (
+                <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase tracking-widest bg-teal-50/95 dark:bg-teal-950/90 px-3 py-1.5 rounded-lg border border-teal-200/60 dark:border-teal-900/60 shadow-sm flex items-center gap-1.5 w-fit">
+                  <MapPin className="w-3 h-3 shrink-0" /> {analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName}
                 </span>
               )}
             </div>
@@ -441,9 +585,9 @@ export default function ExpertView() {
                   </div>
                   <button
                     onClick={() => setIsLayersOpen(false)}
-                    className="text-slate-400 dark:text-zinc-555 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer text-xs font-bold leading-none p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg"
+                    className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg flex items-center justify-center"
                   >
-                    ✕
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
@@ -490,9 +634,9 @@ export default function ExpertView() {
                             </h4>
                             <button
                               onClick={() => setSelectedPoi(null)}
-                              className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors font-bold text-xs p-0.5 cursor-pointer leading-none"
+                              className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                             >
-                              ✕
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
                           
@@ -517,7 +661,7 @@ export default function ExpertView() {
                       </div>
                     ) : (
                       <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-450 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
-                        <div className="mb-2 text-slate-350 dark:text-zinc-650 text-lg">📍</div>
+                        <div className="mb-2 text-slate-350 dark:text-zinc-650 flex justify-center"><MapPin className="w-5 h-5" /></div>
                         <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
                       </div>
                     )}
@@ -535,10 +679,10 @@ export default function ExpertView() {
           <div className="md:col-span-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300 min-h-[300px]">
             <div className="mb-4">
               <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
-                {selectedBairro ? `Distribuição em ${selectedBairro}` : 'Distribuição Nutricional'}
+                {analysisLevel !== 'municipio' ? `Distribuição em ${analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName}` : 'Distribuição Nutricional'}
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
-                {selectedBairro ? `${selectedBairro}` : 'Rio Claro'} · SISVAN {anoSelecionado}
+                {analysisLevel !== 'municipio' ? `${analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName}` : 'Rio Claro'} · Nutri for Schools {anoSelecionado}
               </p>
             </div>
             <div className="flex-1 min-h-[200px]">
@@ -586,16 +730,16 @@ export default function ExpertView() {
                     {isEut ? 'Recuperação do Peso Adequado por Região' : 'Pontos Críticos de Aceleração de Risco'}
                   </h3>
                   <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
-                    {isEut ? 'Maior ganho de peso adequado (Delta % anual · SISVAN)' : 'Maior avanço de prevalência do risco (Delta % anual · SISVAN)'}
+                    {isEut ? 'Maior ganho de peso adequado (Delta % anual · Nutri for Schools)' : 'Maior avanço de prevalência do risco (Delta % anual · Nutri for Schools)'}
                   </p>
                 </div>
                 {isEut ? (
-                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1 rounded-lg">
-                    ✨ MELHORA ATIVA
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> MELHORA ATIVA
                   </span>
                 ) : (
-                  <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-lg">
-                    ⚠️ ALERTA DE ACELERAÇÃO
+                  <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> ALERTA DE ACELERAÇÃO
                   </span>
                 )}
               </div>
@@ -653,14 +797,14 @@ export default function ExpertView() {
               
               {activePoiTypes.includes('Alimentação - Restaurante/Fast-food') ? (
                 <div className="p-3 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/60 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-700 dark:text-rose-450 font-semibold leading-relaxed flex items-start gap-2">
-                  <span className="text-sm leading-none select-none">⚠️</span>
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
                   <span>
                     <strong>Cenário Passivo:</strong> O livre provimento de fast-food e mercados sem hortifruti nas periferias projeta elevação de <strong>+12% na taxa de obesidade infantil</strong> para o ciclo preditivo de 2027.
                   </span>
                 </div>
               ) : (
                 <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100/60 dark:border-emerald-900/40 rounded-xl text-[10px] text-emerald-700 dark:text-emerald-450 font-semibold leading-relaxed flex items-start gap-2">
-                  <span className="text-sm leading-none select-none">✨</span>
+                  <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
                   <span>
                     <strong>Cenário Interventivo Ativo:</strong> A simulação de intervenção regulatória (restrição espacial de estabelecimentos de fast-food) projeta <strong>redução real de -12% na curva de obesidade infantil</strong> projetada para 2027.
                   </span>
@@ -674,11 +818,11 @@ export default function ExpertView() {
         <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 flex flex-col shadow-sm transition-colors duration-300 min-h-[340px] w-full">
           <div className="mb-4">
             <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide">
-              {selectedBairro ? `Evolução em ${selectedBairro}` : 'Evolução Histórica e Projeção'}
+              {analysisLevel !== 'municipio' ? `Evolução em ${analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName}` : 'Evolução Histórica e Projeção'}
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
               Destaque para: <span className="text-slate-800 dark:text-zinc-200 font-bold">{mainLabel}</span> &nbsp;·&nbsp;
-              {selectedBairro ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{selectedBairro} &nbsp;·&nbsp;</span> : null}
+              {analysisLevel !== 'municipio' ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName} &nbsp;·&nbsp;</span> : null}
               <span className="text-amber-600 dark:text-amber-400 font-semibold">★ Projeção Preditiva 2026–2027</span>
             </p>
           </div>

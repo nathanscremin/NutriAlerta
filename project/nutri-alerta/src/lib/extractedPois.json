@@ -5,7 +5,9 @@
     "lon": -47.586236,
     "color": "#c0392b",
     "nome": "Vigilância Sanitária",
-    "categoria": "Vigilância Sanitária"
+    "categoria": "Vigilância Sanitária",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência"
   },
   {
     "id": "poi-1",
@@ -13,7 +15,9 @@
     "lon": -47.5506379,
     "color": "#8e44ad",
     "nome": "PSMI - Nossa Senhora de Lourdes",
-    "categoria": "Pronto-Atendimento"
+    "categoria": "Pronto-Atendimento",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
     "id": "poi-2",
@@ -21,7 +25,9 @@
     "lon": -47.5506379,
     "color": "#8e44ad",
     "nome": "Pronto Atendimento Ginecológico",
-    "categoria": "Pronto-Atendimento"
+    "categoria": "Pronto-Atendimento",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
     "id": "poi-3",
@@ -29,7 +35,9 @@
     "lon": -47.5637595,
     "color": "#8e44ad",
     "nome": "UPA 29",
-    "categoria": "Pronto-Atendimento"
+    "categoria": "Pronto-Atendimento",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
     "id": "poi-4",
@@ -37,7 +45,9 @@
     "lon": -47.5653482,
     "color": "#8e44ad",
     "nome": "UPA Chervezon",
-    "categoria": "Pronto-Atendimento"
+    "categoria": "Pronto-Atendimento",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
     "id": "poi-5",
@@ -45,7 +55,9 @@
     "lon": -47.5681105,
     "color": "#f39c12",
     "nome": "CAPS III 18 de Maio",
-    "categoria": "Saúde Mental"
+    "categoria": "Saúde Mental",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
     "id": "poi-6",
@@ -53,7 +65,9 @@
     "lon": -47.5699258,
     "color": "#e74c3c",
     "nome": "UBS Jardim Chervezon",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
     "id": "poi-7",
@@ -61,7 +75,9 @@
     "lon": -47.5634923,
     "color": "#e74c3c",
     "nome": "UBS 29 Oreste Armando",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
     "id": "poi-8",
@@ -69,7 +85,9 @@
     "lon": -47.5870718,
     "color": "#e74c3c",
     "nome": "UBS Wenzel",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
     "id": "poi-9",
@@ -77,7 +95,9 @@
     "lon": -47.5501818,
     "color": "#e74c3c",
     "nome": "UBS Vila Cristina",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
     "id": "poi-10",
@@ -85,7 +105,9 @@
     "lon": -47.586236,
     "color": "#e74c3c",
     "nome": "USF Assistência",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência"
   },
   {
     "id": "poi-11",
@@ -93,7 +115,9 @@
     "lon": -47.588831031504,
     "color": "#e74c3c",
     "nome": "USF Ferraz",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
     "id": "poi-12",
@@ -101,7 +125,9 @@
     "lon": -47.5897807,
     "color": "#e74c3c",
     "nome": "USF Nosso Teto / Boa Vista",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”"
   },
   {
     "id": "poi-13",
@@ -109,7 +135,9 @@
     "lon": -47.5874974,
     "color": "#e74c3c",
     "nome": "USF Ajapi",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
     "id": "poi-14",
@@ -117,7 +145,9 @@
     "lon": -47.5515221,
     "color": "#e74c3c",
     "nome": "USF Mãe Preta I/II",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
     "id": "poi-15",
@@ -125,7 +155,9 @@
     "lon": -47.5839577,
     "color": "#e74c3c",
     "nome": "USF Palmeiras",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
     "id": "poi-16",
@@ -133,7 +165,9 @@
     "lon": -47.5790812,
     "color": "#e74c3c",
     "nome": "USF Jardim Novo I e II",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
     "id": "poi-17",
@@ -141,7 +175,9 @@
     "lon": -47.5780932,
     "color": "#e74c3c",
     "nome": "USF Benjamin de Castro",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
     "id": "poi-18",
@@ -149,7 +185,9 @@
     "lon": -47.6029343,
     "color": "#e74c3c",
     "nome": "USF Bonsucesso / Novo Wenzel",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim Novo Wenzel",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
     "id": "poi-19",
@@ -157,7 +195,9 @@
     "lon": -47.5818228,
     "color": "#e74c3c",
     "nome": "USF Jardim das Flores",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”"
   },
   {
     "id": "poi-20",
@@ -165,7 +205,9 @@
     "lon": -47.5792059,
     "color": "#e74c3c",
     "nome": "USF Guanabara",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Jardim Guanabara",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
     "id": "poi-21",
@@ -173,7 +215,9 @@
     "lon": -47.5901844,
     "color": "#e74c3c",
     "nome": "USF Panorama",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "USF Panorama “Dr. Osvaldo Akamine”"
   },
   {
     "id": "poi-22",
@@ -181,3438 +225,4870 @@
     "lon": -47.582697262242,
     "color": "#e74c3c",
     "nome": "USF Terra Nova",
-    "categoria": "UBS"
+    "categoria": "UBS",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência"
   },
   {
     "id": "poi-23",
-    "lat": -22.399372656736837,
-    "lon": -47.5437222607566,
-    "color": "#3498db",
-    "nome": "Centro de Estudos Ambientais",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-24",
-    "lat": -22.385585610833,
-    "lon": -47.56407913468435,
-    "color": "#3498db",
-    "nome": "Escola Prof.ª Zita de Godoy Camargo",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-25",
-    "lat": -22.386162336509518,
-    "lon": -47.563987302468874,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-26",
-    "lat": -22.389255101733617,
-    "lon": -47.55614715620835,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-27",
-    "lat": -22.413384849999996,
-    "lon": -47.56314855,
-    "color": "#3498db",
-    "nome": "Escola Estadual Coronel Joaquim Salles",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-28",
-    "lat": -22.41055493470115,
-    "lon": -47.55327459103108,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-29",
-    "lat": -22.41013955,
-    "lon": -47.5616389,
-    "color": "#3498db",
-    "nome": "Escola Estadual Marcelo Schmidt",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-30",
-    "lat": -22.394848056178557,
-    "lon": -47.564898863286786,
-    "color": "#3498db",
-    "nome": "Escola Estadual Raul Fernandes Chanceler",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-31",
-    "lat": -22.3955439206456,
-    "lon": -47.56773538798776,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-32",
-    "lat": -22.385064623210422,
-    "lon": -47.55124091306915,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-33",
-    "lat": -22.412558370271114,
-    "lon": -47.563494999346034,
-    "color": "#3498db",
-    "nome": "Colégio Puríssimo",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-34",
-    "lat": -22.412624902694507,
-    "lon": -47.561615437535536,
-    "color": "#3498db",
-    "nome": "ETEC Professor Armando Bayeux da Silva",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-35",
-    "lat": -22.448739871416617,
-    "lon": -47.577609422673305,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-36",
-    "lat": -22.42980606193809,
-    "lon": -47.58420880064227,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-37",
-    "lat": -22.406207484076678,
-    "lon": -47.60282264329846,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-38",
-    "lat": -22.420654315136517,
-    "lon": -47.563214580942216,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-39",
-    "lat": -22.414818612467066,
-    "lon": -47.56778137299396,
-    "color": "#3498db",
-    "nome": "Escola Municipal Doutor Paulo Koelle",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-40",
-    "lat": -22.418215553359637,
-    "lon": -47.55065968712947,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-41",
-    "lat": -22.417350055739565,
-    "lon": -47.54827870153117,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-42",
-    "lat": -22.397119476896783,
-    "lon": -47.5504832993571,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-43",
-    "lat": -22.372978563534176,
-    "lon": -47.53905031127736,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-44",
-    "lat": -22.378641474400055,
-    "lon": -47.566681351368906,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-45",
-    "lat": -22.380432488987868,
-    "lon": -47.5715951953099,
-    "color": "#3498db",
-    "nome": "Escola Municipal Antonio Sebastião da Silva",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-46",
-    "lat": -22.380947282730972,
-    "lon": -47.57744344769844,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-47",
-    "lat": -22.37915161530615,
-    "lon": -47.575752524119345,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-48",
-    "lat": -22.377224944280044,
-    "lon": -47.58180113926933,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-49",
-    "lat": -22.390255381866755,
-    "lon": -47.57138771816461,
-    "color": "#3498db",
-    "nome": "Escola Municipal Pastor Nephtali Vieira Júnior",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-50",
-    "lat": -22.39507974911562,
-    "lon": -47.57413641275982,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-51",
-    "lat": -22.38931793846075,
-    "lon": -47.57891948207076,
-    "color": "#3498db",
-    "nome": "Escola Municipal Deputado Hamilton Prado",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-52",
-    "lat": -22.38862,
-    "lon": -47.57650305,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-53",
-    "lat": -22.381104409798095,
-    "lon": -47.589471427084234,
-    "color": "#3498db",
-    "nome": "Escola Municipal Lucidia Therezinha Cassavia Escrivão Soares",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-54",
-    "lat": -22.38834546920649,
-    "lon": -47.58692077117486,
-    "color": "#3498db",
-    "nome": "Escola Municipal de Educação Infantil Clara Freire Castelano",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-55",
-    "lat": -22.400013957249097,
-    "lon": -47.589218920919336,
-    "color": "#3498db",
-    "nome": "Escola Municipal Samira Assencio Savoldi",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-56",
-    "lat": -22.39124621618558,
-    "lon": -47.56724842170766,
-    "color": "#3498db",
-    "nome": "SENAI Manoel José Ferreira",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-57",
-    "lat": -22.397512615146255,
-    "lon": -47.57057824366216,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-58",
-    "lat": -22.404035503574356,
-    "lon": -47.564410263236,
-    "color": "#3498db",
-    "nome": "Escola Koelle",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-59",
-    "lat": -22.402912419719673,
-    "lon": -47.56371818073431,
-    "color": "#3498db",
-    "nome": "Escola Koelle",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-60",
-    "lat": -22.416399658716767,
-    "lon": -47.56098276954326,
-    "color": "#3498db",
-    "nome": "Escola Estadual Joaquim Ribeiro",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-61",
-    "lat": -22.411663041857317,
-    "lon": -47.56352614836396,
-    "color": "#3498db",
-    "nome": "Escola Purisimo de Ensino fundamental",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-62",
-    "lat": -22.378082248415264,
-    "lon": -47.55942503077482,
-    "color": "#3498db",
-    "nome": "Centro Educacional SESI 083",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-63",
-    "lat": -22.408836881665646,
-    "lon": -47.58805760177163,
-    "color": "#3498db",
-    "nome": "Sest / Senat",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-64",
-    "lat": -22.404416763410026,
-    "lon": -47.60162703542558,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-65",
-    "lat": -22.27911206295532,
-    "lon": -47.546435525570125,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-66",
-    "lat": -22.39329936712452,
-    "lon": -47.559305483505796,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-67",
-    "lat": -22.391876416220754,
-    "lon": -47.5589261382122,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-68",
-    "lat": -22.400220095228967,
-    "lon": -47.55510221266662,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-69",
-    "lat": -22.415859930820254,
-    "lon": -47.585358004396035,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-70",
-    "lat": -22.400860226180406,
-    "lon": -47.551885828964274,
-    "color": "#3498db",
-    "nome": "Escola Adventista de Rio Claro",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-71",
-    "lat": -22.4266666900647,
-    "lon": -47.577945396288364,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-72",
-    "lat": -22.45401563289791,
-    "lon": -47.5854492611167,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-73",
-    "lat": -22.45616926611917,
-    "lon": -47.58756087330992,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-74",
-    "lat": -22.391033138366318,
-    "lon": -47.58643105939836,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-75",
-    "lat": -22.384748859219755,
-    "lon": -47.58343709825566,
-    "color": "#3498db",
-    "nome": "Escola Municipal Lucia Helena Ferreira Camargo",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-76",
-    "lat": -22.377261925680738,
-    "lon": -47.576882237677026,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-77",
-    "lat": -22.42987271512998,
-    "lon": -47.57388350592266,
-    "color": "#3498db",
-    "nome": "Escola Municipal Jardim Novo I",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-78",
-    "lat": -22.435964111597865,
-    "lon": -47.57990000560887,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-79",
-    "lat": -22.41916785062674,
-    "lon": -47.572149733602615,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-80",
-    "lat": -22.295457159092233,
-    "lon": -47.54287609992189,
-    "color": "#3498db",
-    "nome": "Núcleo de Difusão de Agricultura Natural Pedro Partezan",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-81",
-    "lat": -22.278544248801232,
-    "lon": -47.541153842443464,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-82",
-    "lat": -22.261959493830243,
-    "lon": -47.588198817774,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-83",
-    "lat": -22.389630834234357,
-    "lon": -47.5584247432452,
-    "color": "#3498db",
-    "nome": "Guarda Mirim de Rio Claro",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-84",
-    "lat": -22.38238951675652,
-    "lon": -47.557352668812456,
-    "color": "#3498db",
-    "nome": "Ana's Park",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-85",
-    "lat": -22.380748599018894,
-    "lon": -47.568739950877124,
-    "color": "#3498db",
-    "nome": "Programa Educação Integral Professor Victorino Machado",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-86",
-    "lat": -22.43397389507834,
-    "lon": -47.58150883190992,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-87",
-    "lat": -22.378756599114894,
-    "lon": -47.54950005027663,
-    "color": "#3498db",
-    "nome": "Desconhecido",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-88",
-    "lat": -22.377639256680542,
-    "lon": -47.543478775547705,
-    "color": "#3498db",
-    "nome": "Escola Municipal Monteiro Lobato",
-    "categoria": "Educação"
-  },
-  {
-    "id": "poi-89",
     "lat": -22.3843569,
     "lon": -47.5509181,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-90",
+    "id": "poi-24",
     "lat": -22.428157,
     "lon": -47.577748,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-91",
+    "id": "poi-25",
     "lat": -22.2796754,
     "lon": -47.5450436,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-92",
+    "id": "poi-26",
     "lat": -22.398058,
     "lon": -47.5635354,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-93",
+    "id": "poi-27",
     "lat": -22.3756703,
     "lon": -47.5431585,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-94",
+    "id": "poi-28",
     "lat": -22.392667279719028,
     "lon": -47.56371665705291,
     "color": "#2ecc71",
     "nome": "Parque Lago Azul",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-95",
+    "id": "poi-29",
     "lat": -22.384461722559664,
     "lon": -47.56927395673559,
     "color": "#2ecc71",
     "nome": "Lagoa Seca",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-96",
+    "id": "poi-30",
     "lat": -22.4223959689642,
     "lon": -47.56194109665721,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-97",
+    "id": "poi-31",
     "lat": -22.418022750000002,
     "lon": -47.556457949999995,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-98",
+    "id": "poi-32",
     "lat": -22.400855709713525,
     "lon": -47.54614382367325,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-99",
+    "id": "poi-33",
     "lat": -22.409047000000005,
     "lon": -47.55260669999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-100",
+    "id": "poi-34",
     "lat": -22.424218704449885,
     "lon": -47.56028608834352,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-101",
+    "id": "poi-35",
     "lat": -22.407827918409126,
     "lon": -47.56874044774707,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-102",
+    "id": "poi-36",
     "lat": -22.4131236,
     "lon": -47.5501181,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-103",
+    "id": "poi-37",
     "lat": -22.39933369126023,
     "lon": -47.57969368074495,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-104",
+    "id": "poi-38",
     "lat": -22.396455322970446,
     "lon": -47.57340317799946,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-105",
+    "id": "poi-39",
     "lat": -22.429185332679396,
     "lon": -47.58047150202569,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-106",
+    "id": "poi-40",
     "lat": -22.393509824082944,
     "lon": -47.54655099397458,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-107",
+    "id": "poi-41",
     "lat": -22.426288158269326,
     "lon": -47.563411581616364,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-108",
+    "id": "poi-42",
     "lat": -22.42364235346137,
     "lon": -47.56089119801212,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-109",
+    "id": "poi-43",
     "lat": -22.41001635687968,
     "lon": -47.56038718204273,
     "color": "#2ecc71",
     "nome": "Jardim Público",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-110",
+    "id": "poi-44",
     "lat": -22.419694092425708,
     "lon": -47.550422226948626,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Paulista",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-111",
+    "id": "poi-45",
     "lat": -22.381288533333336,
     "lon": -47.56432713333334,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-112",
+    "id": "poi-46",
     "lat": -22.424312211483077,
     "lon": -47.55702619218237,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-113",
+    "id": "poi-47",
     "lat": -22.424541619841495,
     "lon": -47.55767236188514,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-114",
+    "id": "poi-48",
     "lat": -22.42446388402699,
     "lon": -47.57304545299122,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-115",
+    "id": "poi-49",
     "lat": -22.418324074612556,
     "lon": -47.55833229021701,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-116",
+    "id": "poi-50",
     "lat": -22.41475024928582,
     "lon": -47.56465709532695,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-117",
+    "id": "poi-51",
     "lat": -22.41899094745329,
     "lon": -47.5761250407,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-118",
+    "id": "poi-52",
     "lat": -22.405983574578677,
     "lon": -47.564549005495145,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-119",
+    "id": "poi-53",
     "lat": -22.39793277834277,
     "lon": -47.54725327337553,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-120",
+    "id": "poi-54",
     "lat": -22.398099495220837,
     "lon": -47.55322680513387,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-121",
+    "id": "poi-55",
     "lat": -22.398424105675087,
     "lon": -47.55298516185569,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-122",
+    "id": "poi-56",
     "lat": -22.398298767877044,
     "lon": -47.5535911027456,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-123",
+    "id": "poi-57",
     "lat": -22.386131625009632,
     "lon": -47.54857052797866,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-124",
+    "id": "poi-58",
     "lat": -22.404213533333333,
     "lon": -47.575542766666665,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-125",
+    "id": "poi-59",
     "lat": -22.405263429992637,
     "lon": -47.57588040115611,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-126",
+    "id": "poi-60",
     "lat": -22.39172486421704,
     "lon": -47.57910997810444,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-127",
+    "id": "poi-61",
     "lat": -22.383738028796223,
     "lon": -47.559877185663474,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-128",
+    "id": "poi-62",
     "lat": -22.388044410279836,
     "lon": -47.58191462641475,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-129",
+    "id": "poi-63",
     "lat": -22.382002824271645,
     "lon": -47.55968798539215,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-130",
+    "id": "poi-64",
     "lat": -22.391062759597375,
     "lon": -47.56427066976105,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-131",
+    "id": "poi-65",
     "lat": -22.390655412121713,
     "lon": -47.564179468923264,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-132",
+    "id": "poi-66",
     "lat": -22.3907574,
     "lon": -47.5643783,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-133",
+    "id": "poi-67",
     "lat": -22.391008449999998,
     "lon": -47.56467705,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-134",
+    "id": "poi-68",
     "lat": -22.39104258026279,
     "lon": -47.56514510473023,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-135",
+    "id": "poi-69",
     "lat": -22.40190394671538,
     "lon": -47.55326099464003,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-136",
+    "id": "poi-70",
     "lat": -22.401788603065317,
     "lon": -47.55270524073985,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-137",
+    "id": "poi-71",
     "lat": -22.40291468232099,
     "lon": -47.552352135304645,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-138",
+    "id": "poi-72",
     "lat": -22.403824919303627,
     "lon": -47.55217893391823,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-139",
+    "id": "poi-73",
     "lat": -22.412161642314125,
     "lon": -47.56264666536952,
     "color": "#2ecc71",
     "nome": "Praça da Liberdade",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-140",
+    "id": "poi-74",
     "lat": -22.42695935,
     "lon": -47.57784049999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-141",
+    "id": "poi-75",
     "lat": -22.42875920921187,
     "lon": -47.57788803102898,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-142",
+    "id": "poi-76",
     "lat": -22.426431694034353,
     "lon": -47.57714201555312,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-143",
+    "id": "poi-77",
     "lat": -22.41951387049507,
     "lon": -47.5846466844054,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-144",
+    "id": "poi-78",
     "lat": -22.394714320388672,
     "lon": -47.54676793983982,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-145",
+    "id": "poi-79",
     "lat": -22.394171111572838,
     "lon": -47.54716437053438,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-146",
+    "id": "poi-80",
     "lat": -22.394762550000003,
     "lon": -47.54701735,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-147",
+    "id": "poi-81",
     "lat": -22.395101671938537,
     "lon": -47.54381421687776,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-148",
+    "id": "poi-82",
     "lat": -22.396069232353693,
     "lon": -47.5454951288786,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-149",
+    "id": "poi-83",
     "lat": -22.39500317317065,
     "lon": -47.545685035726656,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-150",
+    "id": "poi-84",
     "lat": -22.379693437408374,
     "lon": -47.55941427395187,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-151",
+    "id": "poi-85",
     "lat": -22.3803658,
     "lon": -47.5854228,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”"
   },
   {
-    "id": "poi-152",
+    "id": "poi-86",
     "lat": -22.379296600000004,
     "lon": -47.584844700000005,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”"
   },
   {
-    "id": "poi-153",
+    "id": "poi-87",
     "lat": -22.406592471087947,
     "lon": -47.549069043726725,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-154",
+    "id": "poi-88",
     "lat": -22.40690856979548,
     "lon": -47.54656175624175,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-155",
+    "id": "poi-89",
     "lat": -22.407259243288525,
     "lon": -47.5452690971499,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-156",
+    "id": "poi-90",
     "lat": -22.40740114144013,
     "lon": -47.57263193312663,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-157",
+    "id": "poi-91",
     "lat": -22.406197759211366,
     "lon": -47.56516485579652,
     "color": "#2ecc71",
     "nome": "Espaço Livre",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-158",
+    "id": "poi-92",
     "lat": -22.413557911516666,
     "lon": -47.57048356267757,
     "color": "#2ecc71",
     "nome": "Praça Dalva de Oliveira",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-159",
+    "id": "poi-93",
     "lat": -22.417113409447357,
     "lon": -47.57415910949704,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-160",
+    "id": "poi-94",
     "lat": -22.420239394857525,
     "lon": -47.56446421232627,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-161",
+    "id": "poi-95",
     "lat": -22.407784757642823,
     "lon": -47.57264291809219,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-162",
+    "id": "poi-96",
     "lat": -22.40611417614766,
     "lon": -47.58132578926485,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-163",
+    "id": "poi-97",
     "lat": -22.402359410565385,
     "lon": -47.5711930629031,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-164",
+    "id": "poi-98",
     "lat": -22.39652783809189,
     "lon": -47.57675183881332,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-165",
+    "id": "poi-99",
     "lat": -22.390952249883213,
     "lon": -47.56402366870568,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-166",
+    "id": "poi-100",
     "lat": -22.38403863337149,
     "lon": -47.55530791554551,
     "color": "#2ecc71",
     "nome": "Praça do jardim América",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-167",
+    "id": "poi-101",
     "lat": -22.384323969640196,
     "lon": -47.5684915239035,
     "color": "#2ecc71",
     "nome": "Campo de futebol da Lagoa Seca",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-168",
+    "id": "poi-102",
     "lat": -22.385755115612955,
     "lon": -47.56331563395504,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-169",
+    "id": "poi-103",
     "lat": -22.3871651989133,
     "lon": -47.562476490612525,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-170",
+    "id": "poi-104",
     "lat": -22.38940312864981,
     "lon": -47.5571615490238,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-171",
+    "id": "poi-105",
     "lat": -22.388101914069065,
     "lon": -47.554977187883125,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-172",
+    "id": "poi-106",
     "lat": -22.384716109568807,
     "lon": -47.54977521667908,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-173",
+    "id": "poi-107",
     "lat": -22.380017789930488,
     "lon": -47.553348329774686,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-174",
+    "id": "poi-108",
     "lat": -22.381987716958303,
     "lon": -47.558189077734355,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-175",
+    "id": "poi-109",
     "lat": -22.381841204594302,
     "lon": -47.55862378360054,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-176",
+    "id": "poi-110",
     "lat": -22.38347086721451,
     "lon": -47.558516398880975,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-177",
+    "id": "poi-111",
     "lat": -22.383845377274678,
     "lon": -47.55848165452376,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-178",
+    "id": "poi-112",
     "lat": -22.38516530291669,
     "lon": -47.55743044934208,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-179",
+    "id": "poi-113",
     "lat": -22.38288641152087,
     "lon": -47.55689167227958,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-180",
+    "id": "poi-114",
     "lat": -22.38056730663923,
     "lon": -47.55634389465347,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-181",
+    "id": "poi-115",
     "lat": -22.377988581818688,
     "lon": -47.5557222853965,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-182",
+    "id": "poi-116",
     "lat": -22.355937888927343,
     "lon": -47.550684843146655,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Distrito Industrial",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-183",
+    "id": "poi-117",
     "lat": -22.36032262768173,
     "lon": -47.55172959327387,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Distrito Industrial",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-184",
+    "id": "poi-118",
     "lat": -22.380414421737537,
     "lon": -47.5504645667148,
     "color": "#2ecc71",
     "nome": "Bosque dos Angicos",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-185",
+    "id": "poi-119",
     "lat": -22.407649968739115,
     "lon": -47.568351296916795,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-186",
+    "id": "poi-120",
     "lat": -22.407961191833188,
     "lon": -47.568217130878,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-187",
+    "id": "poi-121",
     "lat": -22.40759965,
     "lon": -47.56792989999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-188",
+    "id": "poi-122",
     "lat": -22.407662949999995,
     "lon": -47.568110499999996,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-189",
+    "id": "poi-123",
     "lat": -22.40840754713814,
     "lon": -47.56850008096356,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-190",
+    "id": "poi-124",
     "lat": -22.384383507813197,
     "lon": -47.55337981787085,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-191",
+    "id": "poi-125",
     "lat": -22.39671838044209,
     "lon": -47.547215762289255,
     "color": "#2ecc71",
     "nome": "Praça Prof Dr. Antônio Christofoletti",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-192",
+    "id": "poi-126",
     "lat": -22.40129295,
     "lon": -47.547319200000004,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-193",
+    "id": "poi-127",
     "lat": -22.40158698842175,
     "lon": -47.5472921667265,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-194",
+    "id": "poi-128",
     "lat": -22.401234606832244,
     "lon": -47.546806543719015,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-195",
+    "id": "poi-129",
     "lat": -22.398960075628686,
     "lon": -47.55361935152829,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-196",
+    "id": "poi-130",
     "lat": -22.419775848586802,
     "lon": -47.57102918197717,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-197",
+    "id": "poi-131",
     "lat": -22.421483641267752,
     "lon": -47.56802559462238,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-198",
+    "id": "poi-132",
     "lat": -22.422258996900386,
     "lon": -47.56761530137544,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-199",
+    "id": "poi-133",
     "lat": -22.423818710350425,
     "lon": -47.567777369125096,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-200",
+    "id": "poi-134",
     "lat": -22.413660009941495,
     "lon": -47.57496927006918,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-201",
+    "id": "poi-135",
     "lat": -22.413591199999995,
     "lon": -47.57544535,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-202",
+    "id": "poi-136",
     "lat": -22.41344343139214,
     "lon": -47.57504926482805,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-203",
+    "id": "poi-137",
     "lat": -22.400644219958437,
     "lon": -47.57385442432299,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-204",
+    "id": "poi-138",
     "lat": -22.398545839507925,
     "lon": -47.57076853593369,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-205",
+    "id": "poi-139",
     "lat": -22.397210016733926,
     "lon": -47.56954163205852,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-206",
+    "id": "poi-140",
     "lat": -22.395727542297987,
     "lon": -47.57341017126773,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-207",
+    "id": "poi-141",
     "lat": -22.392147124892496,
     "lon": -47.562246269104875,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-208",
+    "id": "poi-142",
     "lat": -22.38985420265655,
     "lon": -47.56172103699245,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-209",
+    "id": "poi-143",
     "lat": -22.390291491435644,
     "lon": -47.56157537623332,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-210",
+    "id": "poi-144",
     "lat": -22.387228208872994,
     "lon": -47.56343502470169,
     "color": "#2ecc71",
     "nome": "Praça Vereador Silas Bianchini",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-211",
+    "id": "poi-145",
     "lat": -22.411485252286337,
     "lon": -47.55554744526546,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-212",
+    "id": "poi-146",
     "lat": -22.412594069147847,
     "lon": -47.55567639496589,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-213",
+    "id": "poi-147",
     "lat": -22.411481438794006,
     "lon": -47.55687312473484,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-214",
+    "id": "poi-148",
     "lat": -22.411518085562978,
     "lon": -47.55609795503084,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-215",
+    "id": "poi-149",
     "lat": -22.411201961044753,
     "lon": -47.554798327336755,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-216",
+    "id": "poi-150",
     "lat": -22.411217348360022,
     "lon": -47.55518629952002,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-217",
+    "id": "poi-151",
     "lat": -22.41313675276081,
     "lon": -47.5713609204621,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-218",
+    "id": "poi-152",
     "lat": -22.413517557210465,
     "lon": -47.569917952959194,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-219",
+    "id": "poi-153",
     "lat": -22.397844708281628,
     "lon": -47.56353484512137,
     "color": "#2ecc71",
     "nome": "Praça do Antigo Autoclube de Rio Claro",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-220",
+    "id": "poi-154",
     "lat": -22.39629364840421,
     "lon": -47.56288230474344,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-221",
+    "id": "poi-155",
     "lat": -22.379103103712293,
     "lon": -47.56004118167428,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-222",
+    "id": "poi-156",
     "lat": -22.38019669829777,
     "lon": -47.560105388299846,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-223",
+    "id": "poi-157",
     "lat": -22.37968044575536,
     "lon": -47.56016818544934,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-224",
+    "id": "poi-158",
     "lat": -22.37908365,
     "lon": -47.56023869999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-225",
+    "id": "poi-159",
     "lat": -22.379345659917163,
     "lon": -47.56022056075531,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-226",
+    "id": "poi-160",
     "lat": -22.41748313944202,
     "lon": -47.5750725055901,
     "color": "#2ecc71",
     "nome": "Praça Monumento Rio Claro",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-227",
+    "id": "poi-161",
     "lat": -22.417175226382827,
     "lon": -47.57530965579062,
     "color": "#2ecc71",
     "nome": "Praça da Rodoviária Municipal",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-228",
+    "id": "poi-162",
     "lat": -22.391124931884793,
     "lon": -47.57735301277026,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-229",
+    "id": "poi-163",
     "lat": -22.391902675488204,
     "lon": -47.577674981226394,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-230",
+    "id": "poi-164",
     "lat": -22.410664603625982,
     "lon": -47.558843569637425,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-231",
+    "id": "poi-165",
     "lat": -22.413189052568708,
     "lon": -47.56328536866122,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-232",
+    "id": "poi-166",
     "lat": -22.413330199999997,
     "lon": -47.56347615,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-233",
+    "id": "poi-167",
     "lat": -22.395019098288884,
     "lon": -47.56774608158358,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-234",
+    "id": "poi-168",
     "lat": -22.410702394289125,
     "lon": -47.55729517779083,
     "color": "#2ecc71",
     "nome": "Praça dos Ferroviários",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-235",
+    "id": "poi-169",
     "lat": -22.420490057681167,
     "lon": -47.562245480320044,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-236",
+    "id": "poi-170",
     "lat": -22.39023382299798,
     "lon": -47.58672744100722,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-237",
+    "id": "poi-171",
     "lat": -22.38732289671625,
     "lon": -47.58167354427696,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-238",
+    "id": "poi-172",
     "lat": -22.387975654604197,
     "lon": -47.58258810887759,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-239",
+    "id": "poi-173",
     "lat": -22.388827789297515,
     "lon": -47.580526247196374,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-240",
+    "id": "poi-174",
     "lat": -22.384620572832308,
     "lon": -47.5801977175149,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-241",
+    "id": "poi-175",
     "lat": -22.392669473411615,
     "lon": -47.57798638143642,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-242",
+    "id": "poi-176",
     "lat": -22.3985674133447,
     "lon": -47.5752563984086,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-243",
+    "id": "poi-177",
     "lat": -22.39433007457046,
     "lon": -47.57790831730213,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-244",
+    "id": "poi-178",
     "lat": -22.406639672161834,
     "lon": -47.55131866630088,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-245",
+    "id": "poi-179",
     "lat": -22.417266526032336,
     "lon": -47.56361396537645,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-246",
+    "id": "poi-180",
     "lat": -22.386706111369243,
     "lon": -47.57188598525233,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-247",
+    "id": "poi-181",
     "lat": -22.387413224290995,
     "lon": -47.57179404130515,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-248",
+    "id": "poi-182",
     "lat": -22.387599168239113,
     "lon": -47.571943468556455,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-249",
+    "id": "poi-183",
     "lat": -22.429792096531596,
     "lon": -47.58056052011238,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-250",
+    "id": "poi-184",
     "lat": -22.40208153533983,
     "lon": -47.57496688454747,
     "color": "#2ecc71",
     "nome": "Pracinha Pasetto",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-251",
+    "id": "poi-185",
     "lat": -22.384839388619195,
     "lon": -47.55191398665051,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-252",
+    "id": "poi-186",
     "lat": -22.403031037534923,
     "lon": -47.58352666962377,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-253",
+    "id": "poi-187",
     "lat": -22.399072476431254,
     "lon": -47.575723983636486,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-254",
+    "id": "poi-188",
     "lat": -22.375434951236063,
     "lon": -47.56201346932458,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-255",
+    "id": "poi-189",
     "lat": -22.406341910370212,
     "lon": -47.60053249116635,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo Wenzel",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-256",
+    "id": "poi-190",
     "lat": -22.40689092962059,
     "lon": -47.5669039717996,
     "color": "#2ecc71",
     "nome": "Praça Santa Cruz",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-257",
+    "id": "poi-191",
     "lat": -22.412945900000004,
     "lon": -47.56121380000001,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-258",
+    "id": "poi-192",
     "lat": -22.429313184761913,
     "lon": -47.55162392340197,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Paulista",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-259",
+    "id": "poi-193",
     "lat": -22.429234499999996,
     "lon": -47.55180264999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Paulista",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-260",
+    "id": "poi-194",
     "lat": -22.426402650000004,
     "lon": -47.55535295,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-261",
+    "id": "poi-195",
     "lat": -22.37510925680036,
     "lon": -47.527481782753,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Residencial Florença",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-262",
+    "id": "poi-196",
     "lat": -22.423843938357273,
     "lon": -47.58107232985874,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-263",
+    "id": "poi-197",
     "lat": -22.403043519981182,
     "lon": -47.58672278197523,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-264",
+    "id": "poi-198",
     "lat": -22.404009000000002,
     "lon": -47.586474849999995,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-265",
+    "id": "poi-199",
     "lat": -22.4039753,
     "lon": -47.58625215,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-266",
+    "id": "poi-200",
     "lat": -22.41236523395403,
     "lon": -47.56741401299554,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-267",
+    "id": "poi-201",
     "lat": -22.40691856125233,
     "lon": -47.57264923217773,
     "color": "#2ecc71",
     "nome": "Praça Rotary",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-268",
+    "id": "poi-202",
     "lat": -22.41033774235085,
     "lon": -47.55750153416001,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-269",
+    "id": "poi-203",
     "lat": -22.41348395,
     "lon": -47.57451639999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-270",
+    "id": "poi-204",
     "lat": -22.39983161767611,
     "lon": -47.575705865024105,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-271",
+    "id": "poi-205",
     "lat": -22.394901,
     "lon": -47.5905757,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-272",
+    "id": "poi-206",
     "lat": -22.395795033362194,
     "lon": -47.59496715008625,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-273",
+    "id": "poi-207",
     "lat": -22.400753599784167,
     "lon": -47.58991328348912,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-274",
+    "id": "poi-208",
     "lat": -22.396728204240624,
     "lon": -47.57089322464174,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-275",
+    "id": "poi-209",
     "lat": -22.39748418013641,
     "lon": -47.5727299573577,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-276",
+    "id": "poi-210",
     "lat": -22.404474889847144,
     "lon": -47.56506167965172,
     "color": "#2ecc71",
     "nome": "Praça Theodor Koelle",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-277",
+    "id": "poi-211",
     "lat": -22.39717117024101,
     "lon": -47.56299248564887,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-278",
+    "id": "poi-212",
     "lat": -22.403335830291013,
     "lon": -47.54491617829582,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Bela Vista",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-279",
+    "id": "poi-213",
     "lat": -22.414290295868394,
     "lon": -47.573510252262146,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-280",
+    "id": "poi-214",
     "lat": -22.37733419364738,
     "lon": -47.55158959316044,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-281",
+    "id": "poi-215",
     "lat": -22.37738953119907,
     "lon": -47.55175173523449,
     "color": "#2ecc71",
     "nome": "Campo de areia comunitário Arco-íris",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-282",
+    "id": "poi-216",
     "lat": -22.37720165,
     "lon": -47.551679299999996,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-283",
+    "id": "poi-217",
     "lat": -22.37883595617577,
     "lon": -47.54840653894437,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-284",
+    "id": "poi-218",
     "lat": -22.40041315242408,
     "lon": -47.58441067126315,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-285",
+    "id": "poi-219",
     "lat": -22.44023702848842,
     "lon": -47.55960379188081,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-286",
+    "id": "poi-220",
     "lat": -22.282937008685934,
     "lon": -47.55041869323261,
     "color": "#2ecc71",
     "nome": "Campo de Bocha",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-287",
+    "id": "poi-221",
     "lat": -22.378241723640794,
     "lon": -47.54974807059694,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-288",
+    "id": "poi-222",
     "lat": -22.377684579736513,
     "lon": -47.550103197652504,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-289",
+    "id": "poi-223",
     "lat": -22.376904365283792,
     "lon": -47.54872294414991,
     "color": "#2ecc71",
     "nome": "Vasco da Gama",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-290",
+    "id": "poi-224",
     "lat": -22.381592641621282,
     "lon": -47.54887977312096,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-291",
+    "id": "poi-225",
     "lat": -22.377249873523873,
     "lon": -47.544416352271114,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-292",
+    "id": "poi-226",
     "lat": -22.377127745307764,
     "lon": -47.55298818059849,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-293",
+    "id": "poi-227",
     "lat": -22.378779059930444,
     "lon": -47.565309713781495,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-294",
+    "id": "poi-228",
     "lat": -22.408855917818116,
     "lon": -47.5654215345081,
     "color": "#2ecc71",
     "nome": "Praça Antonio Paes de Barros",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-295",
+    "id": "poi-229",
     "lat": -22.40847107340013,
     "lon": -47.56477114681375,
     "color": "#2ecc71",
     "nome": "Praça Capitão Mor Estevam Cardoso de Negreiros",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-296",
+    "id": "poi-230",
     "lat": -22.40770507347961,
     "lon": -47.56489035810697,
     "color": "#2ecc71",
     "nome": "Praça Delfino da Silva Barbosa",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-297",
+    "id": "poi-231",
     "lat": -22.42217636357554,
     "lon": -47.56119748055364,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-298",
+    "id": "poi-232",
     "lat": -22.434981406533133,
     "lon": -47.55865822218356,
     "color": "#2ecc71",
     "nome": "Praça Jardim Leblon",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-299",
+    "id": "poi-233",
     "lat": -22.432364964577292,
     "lon": -47.561063038095185,
     "color": "#2ecc71",
     "nome": "Praça Jardim Botânico",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-300",
+    "id": "poi-234",
     "lat": -22.39335313920091,
     "lon": -47.5790952773612,
     "color": "#2ecc71",
     "nome": "Praça do Parque Universitário",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-301",
+    "id": "poi-235",
     "lat": -22.38984495137359,
     "lon": -47.579898388896694,
     "color": "#2ecc71",
     "nome": "Praça Jardim Olinda",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-302",
+    "id": "poi-236",
     "lat": -22.426340914200377,
     "lon": -47.571457635858536,
     "color": "#2ecc71",
     "nome": "Praça Capeça",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-303",
+    "id": "poi-237",
     "lat": -22.427968462757566,
     "lon": -47.5721867783103,
     "color": "#2ecc71",
     "nome": "Praça Jardim Quitandinha",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-304",
+    "id": "poi-238",
     "lat": -22.438481399788643,
     "lon": -47.56136423574883,
     "color": "#2ecc71",
     "nome": "Praça Jd. Itapuã",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-305",
+    "id": "poi-239",
     "lat": -22.437025620134744,
     "lon": -47.56500066347266,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-306",
+    "id": "poi-240",
     "lat": -22.436161179910805,
     "lon": -47.56075177608512,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-307",
+    "id": "poi-241",
     "lat": -22.426000475084688,
     "lon": -47.57419303581315,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-308",
+    "id": "poi-242",
     "lat": -22.42852126979149,
     "lon": -47.572925513604645,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-309",
+    "id": "poi-243",
     "lat": -22.399479533736777,
     "lon": -47.57126113491641,
     "color": "#2ecc71",
     "nome": "Praça Professor Doutor João Dias da Silva",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-310",
+    "id": "poi-244",
     "lat": -22.39914581020785,
     "lon": -47.57157994820454,
     "color": "#2ecc71",
     "nome": "Praça Santana",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-311",
+    "id": "poi-245",
     "lat": -22.500474587306446,
     "lon": -47.58576617493134,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência"
   },
   {
-    "id": "poi-312",
+    "id": "poi-246",
     "lat": -22.500233104244344,
     "lon": -47.585301166293135,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência"
   },
   {
-    "id": "poi-313",
+    "id": "poi-247",
     "lat": -22.380896899999996,
     "lon": -47.55978565,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-314",
+    "id": "poi-248",
     "lat": -22.391123217841717,
     "lon": -47.57084238822608,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-315",
+    "id": "poi-249",
     "lat": -22.377294931362595,
     "lon": -47.59482495323688,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”"
   },
   {
-    "id": "poi-316",
+    "id": "poi-250",
     "lat": -22.409369199999997,
     "lon": -47.58873454999999,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-317",
+    "id": "poi-251",
     "lat": -22.40939651388619,
     "lon": -47.588565578117176,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-318",
+    "id": "poi-252",
     "lat": -22.38989099812392,
     "lon": -47.61681776832297,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Rio Claro (Rural)",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-319",
+    "id": "poi-253",
     "lat": -22.389987990158836,
     "lon": -47.61588904854715,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Rio Claro (Rural)",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-320",
+    "id": "poi-254",
     "lat": -22.431733985279173,
     "lon": -47.56031797491925,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-321",
+    "id": "poi-255",
     "lat": -22.43129706035082,
     "lon": -47.560296320209545,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-322",
+    "id": "poi-256",
     "lat": -22.38351829973209,
     "lon": -47.558904879053905,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-323",
+    "id": "poi-257",
     "lat": -22.383509554231797,
     "lon": -47.558727836960045,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-324",
+    "id": "poi-258",
     "lat": -22.383847899732096,
     "lon": -47.558701879053906,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-325",
+    "id": "poi-259",
     "lat": -22.38385885428972,
     "lon": -47.558869486824186,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-326",
+    "id": "poi-260",
     "lat": -22.38412953708686,
     "lon": -47.55861449002474,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-327",
+    "id": "poi-261",
     "lat": -22.38675558740076,
     "lon": -47.55769562045051,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-328",
+    "id": "poi-262",
     "lat": -22.383272923320586,
     "lon": -47.56274993528749,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-329",
+    "id": "poi-263",
     "lat": -22.383523823320587,
     "lon": -47.56273693528749,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-330",
+    "id": "poi-264",
     "lat": -22.43292673227042,
     "lon": -47.572210287066184,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-331",
+    "id": "poi-265",
     "lat": -22.44714669371383,
     "lon": -47.580215938235625,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Terra Nova"
   },
   {
-    "id": "poi-332",
+    "id": "poi-266",
     "lat": -22.446975617431626,
     "lon": -47.58009208676173,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Terra Nova"
   },
   {
-    "id": "poi-333",
+    "id": "poi-267",
     "lat": -22.438966350121397,
     "lon": -47.577826233388556,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Guanabara",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-334",
+    "id": "poi-268",
     "lat": -22.39601433458682,
     "lon": -47.589919794830955,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-335",
+    "id": "poi-269",
     "lat": -22.384156000000004,
     "lon": -47.56934325,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-336",
+    "id": "poi-270",
     "lat": -22.398469499928467,
     "lon": -47.57987699084846,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-337",
+    "id": "poi-271",
     "lat": -22.3993161,
     "lon": -47.572444499999996,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-338",
+    "id": "poi-272",
     "lat": -22.38758358922673,
     "lon": -47.582618635344296,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-339",
+    "id": "poi-273",
     "lat": -22.4574037400496,
     "lon": -47.57261016835227,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-340",
+    "id": "poi-274",
     "lat": -22.45916874844605,
     "lon": -47.573504289239374,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-341",
+    "id": "poi-275",
     "lat": -22.459869252735903,
     "lon": -47.57378561404676,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-342",
+    "id": "poi-276",
     "lat": -22.460212350000003,
     "lon": -47.571041949999994,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-343",
+    "id": "poi-277",
     "lat": -22.460735513583128,
     "lon": -47.57000498265469,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-344",
+    "id": "poi-278",
     "lat": -22.460681700000002,
     "lon": -47.570153149999996,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-345",
+    "id": "poi-279",
     "lat": -22.46054971358313,
     "lon": -47.570401782654685,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-346",
+    "id": "poi-280",
     "lat": -22.460266117345377,
     "lon": -47.5702589507988,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-347",
+    "id": "poi-281",
     "lat": -22.460129230935923,
     "lon": -47.57045468345311,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-348",
+    "id": "poi-282",
     "lat": -22.460422582654623,
     "lon": -47.57058694920119,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-349",
+    "id": "poi-283",
     "lat": -22.460305217345372,
     "lon": -47.5707985507988,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-350",
+    "id": "poi-284",
     "lat": -22.46000211358313,
     "lon": -47.57067158265468,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-351",
+    "id": "poi-285",
     "lat": -22.459855417345377,
     "lon": -47.57088325079881,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-352",
+    "id": "poi-286",
     "lat": -22.459566996244583,
     "lon": -47.570735081855545,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-353",
+    "id": "poi-287",
     "lat": -22.45667885340209,
     "lon": -47.575902735014694,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”"
   },
   {
-    "id": "poi-354",
+    "id": "poi-288",
     "lat": -22.438286671000863,
     "lon": -47.565760933361084,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-355",
+    "id": "poi-289",
     "lat": -22.438214316745068,
     "lon": -47.565575699893834,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-356",
+    "id": "poi-290",
     "lat": -22.438132350000004,
     "lon": -47.56539305,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-357",
+    "id": "poi-291",
     "lat": -22.426763116487013,
     "lon": -47.56677407135216,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-358",
+    "id": "poi-292",
     "lat": -22.376379091504237,
     "lon": -47.58078916117272,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”"
   },
   {
-    "id": "poi-359",
+    "id": "poi-293",
     "lat": -22.385224193974945,
     "lon": -47.59142876586937,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "USF Panorama “Dr. Osvaldo Akamine”"
   },
   {
-    "id": "poi-360",
+    "id": "poi-294",
     "lat": -22.429391100000004,
     "lon": -47.57559215,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-361",
+    "id": "poi-295",
     "lat": -22.43610645445808,
     "lon": -47.581658765626834,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Guanabara",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-362",
+    "id": "poi-296",
     "lat": -22.278592597712763,
     "lon": -47.54075016074408,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-363",
+    "id": "poi-297",
     "lat": -22.279544366768764,
     "lon": -47.540478893396475,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-364",
+    "id": "poi-298",
     "lat": -22.279437304759465,
     "lon": -47.54527904413231,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-365",
+    "id": "poi-299",
     "lat": -22.26142316800994,
     "lon": -47.58715253774451,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-366",
+    "id": "poi-300",
     "lat": -22.261881552009214,
     "lon": -47.58783466828969,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-367",
+    "id": "poi-301",
     "lat": -22.40418490517533,
     "lon": -47.606568697963816,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Rio Claro (Rural)",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-368",
+    "id": "poi-302",
     "lat": -22.374811000339918,
     "lon": -47.55321873372421,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-369",
+    "id": "poi-303",
     "lat": -22.369954110803953,
     "lon": -47.557250129014285,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Distrito Industrial",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-370",
+    "id": "poi-304",
     "lat": -22.41689116671136,
     "lon": -47.552786313929275,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Vila Paulista",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-371",
+    "id": "poi-305",
     "lat": -22.379144952442722,
     "lon": -47.55955644528471,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-372",
+    "id": "poi-306",
     "lat": -22.379116464283243,
     "lon": -47.55926762134833,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-373",
+    "id": "poi-307",
     "lat": -22.38027285839587,
     "lon": -47.55956033582992,
     "color": "#2ecc71",
     "nome": "Desconhecido",
-    "categoria": "Esporte e Lazer"
+    "categoria": "Esporte e Lazer",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-374",
+    "id": "poi-308",
     "lat": -22.3865925,
     "lon": -47.5560987,
     "color": "#e67e22",
     "nome": "Subway",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-375",
+    "id": "poi-309",
     "lat": -22.4189226,
     "lon": -47.5601911,
     "color": "#e67e22",
     "nome": "Bella Capri Pizza e Pasta",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-376",
+    "id": "poi-310",
     "lat": -22.3866271,
     "lon": -47.5568934,
     "color": "#e67e22",
     "nome": "Lanches Val",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-377",
+    "id": "poi-311",
     "lat": -22.3889055,
     "lon": -47.5578573,
     "color": "#e67e22",
     "nome": "Sorveteria Vanilla Ice",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-378",
+    "id": "poi-312",
     "lat": -22.3868722,
     "lon": -47.55357,
     "color": "#e67e22",
     "nome": "Pizzaria Ypê",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-379",
+    "id": "poi-313",
     "lat": -22.4077455,
     "lon": -47.5586846,
     "color": "#e67e22",
     "nome": "Bar e Lanchonete do Rafael",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-380",
+    "id": "poi-314",
     "lat": -22.4155228,
     "lon": -47.5658092,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-381",
+    "id": "poi-315",
     "lat": -22.4089534,
     "lon": -47.5597575,
     "color": "#e67e22",
     "nome": "Rio Café",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-382",
+    "id": "poi-316",
     "lat": -22.4092951,
     "lon": -47.5619963,
     "color": "#e67e22",
     "nome": "Jack Brown",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-383",
+    "id": "poi-317",
     "lat": -22.4097342,
     "lon": -47.5664329,
     "color": "#e67e22",
     "nome": "Brooks Hamburgueria",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-384",
+    "id": "poi-318",
     "lat": -22.281774,
     "lon": -47.5479105,
     "color": "#e67e22",
     "nome": "Kikas",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-385",
+    "id": "poi-319",
     "lat": -22.2795988,
     "lon": -47.5464993,
     "color": "#e67e22",
     "nome": "Me Gusta",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-386",
+    "id": "poi-320",
     "lat": -22.4136904,
     "lon": -47.5717099,
     "color": "#e67e22",
     "nome": "China in Box",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-387",
+    "id": "poi-321",
     "lat": -22.4135002,
     "lon": -47.5679233,
     "color": "#e67e22",
     "nome": "Cebola Brava Rotisserie",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-388",
+    "id": "poi-322",
     "lat": -22.3948187,
     "lon": -47.5612899,
     "color": "#e67e22",
     "nome": "Paris 32",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-389",
+    "id": "poi-323",
     "lat": -22.4045381,
     "lon": -47.5640158,
     "color": "#e67e22",
     "nome": "Seu Bentô",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-390",
+    "id": "poi-324",
     "lat": -22.4383596,
     "lon": -47.5612279,
     "color": "#e67e22",
     "nome": "Enricco Cafeteria",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-391",
+    "id": "poi-325",
     "lat": -22.4034166,
     "lon": -47.5649996,
     "color": "#e67e22",
     "nome": "Restaurant China Express",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-392",
+    "id": "poi-326",
     "lat": -22.3716454,
     "lon": -47.5403132,
     "color": "#e67e22",
     "nome": "Padoka's",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-393",
+    "id": "poi-327",
     "lat": -22.4218514,
     "lon": -47.5565867,
     "color": "#e67e22",
     "nome": "Hermmanito Fast Food",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-394",
+    "id": "poi-328",
     "lat": -22.4036919,
     "lon": -47.5657272,
     "color": "#e67e22",
     "nome": "Barão Burguer",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-395",
+    "id": "poi-329",
     "lat": -22.414906729007573,
     "lon": -47.58227990971774,
     "color": "#e67e22",
     "nome": "Restaurante e Lanchinete Confiante",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-396",
+    "id": "poi-330",
     "lat": -22.39487439093158,
     "lon": -47.54582737550098,
     "color": "#e67e22",
     "nome": "Cantina",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-397",
+    "id": "poi-331",
     "lat": -22.39477937303208,
     "lon": -47.54605103508753,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-398",
+    "id": "poi-332",
     "lat": -22.4149656353109,
     "lon": -47.572854195671916,
     "color": "#e67e22",
     "nome": "Churrascaria Estância Gaúcha",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-399",
+    "id": "poi-333",
     "lat": -22.41382566916964,
     "lon": -47.5710993215784,
     "color": "#e67e22",
     "nome": "McDonald's",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-400",
+    "id": "poi-334",
     "lat": -22.41430920474476,
     "lon": -47.571986898117714,
     "color": "#e67e22",
     "nome": "Habib's",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-401",
+    "id": "poi-335",
     "lat": -22.40821680568743,
     "lon": -47.56017998928923,
     "color": "#e67e22",
     "nome": "Maçã Verde",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-402",
+    "id": "poi-336",
     "lat": -22.4039651,
     "lon": -47.58671745,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-403",
+    "id": "poi-337",
     "lat": -22.403769618446447,
     "lon": -47.58655534620191,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-404",
+    "id": "poi-338",
     "lat": -22.403746749999996,
     "lon": -47.586381,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-405",
+    "id": "poi-339",
     "lat": -22.414225916660303,
     "lon": -47.56984956303073,
     "color": "#e67e22",
     "nome": "Burger King",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-406",
+    "id": "poi-340",
     "lat": -22.41214430030767,
     "lon": -47.56892219870231,
     "color": "#e67e22",
     "nome": "Hioto",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-407",
+    "id": "poi-341",
     "lat": -22.419996200000003,
     "lon": -47.56318707960441,
     "color": "#e67e22",
     "nome": "Restaurante e Pizzaria Jangada",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-408",
+    "id": "poi-342",
     "lat": -22.424326390250172,
     "lon": -47.582316789373536,
     "color": "#e67e22",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Inocoop",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-409",
+    "id": "poi-343",
     "lat": -22.4149577886375,
     "lon": -47.569058908367175,
     "color": "#e67e22",
     "nome": "Pizzaiolo",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-410",
+    "id": "poi-344",
     "lat": -22.355697469503784,
     "lon": -47.54994731621519,
     "color": "#e67e22",
     "nome": "Loja e Restaurante Cacareco",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Distrito Industrial",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-411",
+    "id": "poi-345",
     "lat": -22.40369579337201,
     "lon": -47.5650287724943,
     "color": "#e67e22",
     "nome": "Pizzaria da Chef",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-412",
+    "id": "poi-346",
     "lat": -22.42293531392597,
     "lon": -47.55990177545229,
     "color": "#e67e22",
     "nome": "Restaurante Barril 200",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-413",
+    "id": "poi-347",
     "lat": -22.42107867404379,
     "lon": -47.55453994700478,
     "color": "#e67e22",
     "nome": "Al Forno Trattoria e Pizzaria",
-    "categoria": "Alimentação - Restaurante/Fast-food"
+    "categoria": "Alimentação - Restaurante/Fast-food",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-414",
+    "id": "poi-348",
     "lat": -22.3762855,
     "lon": -47.5518907,
     "color": "#9b59b6",
     "nome": "Supermercado Furkim",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-415",
+    "id": "poi-349",
     "lat": -22.3870598,
     "lon": -47.5531562,
     "color": "#9b59b6",
     "nome": "Supermercado Tetra",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-416",
+    "id": "poi-350",
     "lat": -22.3829758,
     "lon": -47.5642162,
     "color": "#9b59b6",
     "nome": "Alvimar Guedes",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-417",
+    "id": "poi-351",
     "lat": -22.382125,
     "lon": -47.5649384,
     "color": "#9b59b6",
     "nome": "Mercearia Rocha",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-418",
+    "id": "poi-352",
     "lat": -22.3830578,
     "lon": -47.5650001,
     "color": "#9b59b6",
     "nome": "Mercado Rocha",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-419",
+    "id": "poi-353",
     "lat": -22.2812715,
     "lon": -47.5476236,
     "color": "#9b59b6",
     "nome": "Bar do Jé",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-420",
+    "id": "poi-354",
     "lat": -22.4084055,
     "lon": -47.6021985,
     "color": "#9b59b6",
     "nome": "Supermercado da Rosa Rio Claro",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim Novo Wenzel",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-421",
+    "id": "poi-355",
     "lat": -22.4228324,
     "lon": -47.5663048,
     "color": "#9b59b6",
     "nome": "Casa&Vida",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-422",
+    "id": "poi-356",
     "lat": -22.387285,
     "lon": -47.6139328,
     "color": "#9b59b6",
     "nome": "Mercado Família",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Rio Claro (Rural)",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”"
   },
   {
-    "id": "poi-423",
+    "id": "poi-357",
     "lat": -22.395929,
     "lon": -47.5923492,
     "color": "#9b59b6",
     "nome": "Padaria e Casa de Carnes Paulista",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-424",
+    "id": "poi-358",
     "lat": -22.3769001,
     "lon": -47.5413795,
     "color": "#9b59b6",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
   },
   {
-    "id": "poi-425",
+    "id": "poi-359",
     "lat": -22.4226909,
     "lon": -47.5592579,
     "color": "#9b59b6",
     "nome": "Entreposto",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-426",
+    "id": "poi-360",
     "lat": -22.4229631,
     "lon": -47.5605285,
     "color": "#9b59b6",
     "nome": "BR Mania",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-427",
+    "id": "poi-361",
     "lat": -22.384731578531895,
     "lon": -47.55646809233629,
     "color": "#9b59b6",
     "nome": "Paulistão Atacadista",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-428",
+    "id": "poi-362",
     "lat": -22.384244168998244,
     "lon": -47.573099845435884,
     "color": "#9b59b6",
     "nome": "Covabra Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-429",
+    "id": "poi-363",
     "lat": -22.415059499419602,
     "lon": -47.575008342619014,
     "color": "#9b59b6",
     "nome": "Assaí Atacadista",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-430",
+    "id": "poi-364",
     "lat": -22.400812573520724,
     "lon": -47.56839903418401,
     "color": "#9b59b6",
     "nome": "Supermercado Covabra",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-431",
+    "id": "poi-365",
     "lat": -22.406710103313063,
     "lon": -47.57113253830727,
     "color": "#9b59b6",
     "nome": "Qualidade",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-432",
+    "id": "poi-366",
     "lat": -22.392034376890475,
     "lon": -47.55965477318427,
     "color": "#9b59b6",
     "nome": "Supermercado Brasil Frios",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-433",
+    "id": "poi-367",
     "lat": -22.42379778402952,
     "lon": -47.562878124436814,
     "color": "#9b59b6",
     "nome": "Savegnano Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-434",
+    "id": "poi-368",
     "lat": -22.401071497066457,
     "lon": -47.584770576044896,
     "color": "#9b59b6",
     "nome": "Examine Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-435",
+    "id": "poi-369",
     "lat": -22.39552977008951,
     "lon": -47.58367418056995,
     "color": "#9b59b6",
     "nome": "Supermercado Tropical",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-436",
+    "id": "poi-370",
     "lat": -22.38743141090673,
     "lon": -47.580290552166595,
     "color": "#9b59b6",
     "nome": "Examine Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”"
   },
   {
-    "id": "poi-437",
+    "id": "poi-371",
     "lat": -22.394620752895836,
     "lon": -47.57330783186777,
     "color": "#9b59b6",
     "nome": "Supermercado Tropical",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-438",
+    "id": "poi-372",
     "lat": -22.421880293320616,
     "lon": -47.56589025524841,
     "color": "#9b59b6",
     "nome": "Savegnago Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”"
   },
   {
-    "id": "poi-439",
+    "id": "poi-373",
     "lat": -22.37556117679075,
     "lon": -47.57966760762707,
     "color": "#9b59b6",
     "nome": "Matos Supermercado",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”"
   },
   {
-    "id": "poi-440",
+    "id": "poi-374",
     "lat": -22.43570854663125,
     "lon": -47.581991971169074,
     "color": "#9b59b6",
     "nome": "Examine Supermercados",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim Guanabara",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”"
   },
   {
-    "id": "poi-441",
+    "id": "poi-375",
     "lat": -22.419994860680507,
     "lon": -47.58396908424835,
     "color": "#9b59b6",
     "nome": "Big Bem Supermercado",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-442",
+    "id": "poi-376",
     "lat": -22.28109314150028,
     "lon": -47.54657126179244,
     "color": "#9b59b6",
     "nome": "Supermercado Casagrande",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-443",
+    "id": "poi-377",
     "lat": -22.261245050535447,
     "lon": -47.58863149875434,
     "color": "#9b59b6",
     "nome": "Mercadinho do Nézio",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz"
   },
   {
-    "id": "poi-444",
+    "id": "poi-378",
     "lat": -22.429604630803517,
     "lon": -47.58198530435337,
     "color": "#9b59b6",
     "nome": "Supermercado Tropical",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”"
   },
   {
-    "id": "poi-445",
+    "id": "poi-379",
     "lat": -22.38008315153151,
     "lon": -47.564106276669136,
     "color": "#9b59b6",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”"
   },
   {
-    "id": "poi-446",
+    "id": "poi-380",
     "lat": -22.403829235764633,
     "lon": -47.56571053739372,
     "color": "#9b59b6",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz"
   },
   {
-    "id": "poi-447",
+    "id": "poi-381",
     "lat": -22.418090846064086,
     "lon": -47.580450681412216,
     "color": "#9b59b6",
     "nome": "Atacadão",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro"
   },
   {
-    "id": "poi-448",
+    "id": "poi-382",
     "lat": -22.381066760814715,
     "lon": -47.587438499169394,
     "color": "#9b59b6",
     "nome": "Supermercado Santo Antônio",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”"
   },
   {
-    "id": "poi-449",
+    "id": "poi-383",
     "lat": -22.38190341575009,
     "lon": -47.54774536924158,
     "color": "#9b59b6",
     "nome": "Supermercados Savegnago",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-450",
+    "id": "poi-384",
     "lat": -22.374900850000003,
     "lon": -47.5541168,
     "color": "#9b59b6",
     "nome": "Desconhecido",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Arco-Íris",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”"
   },
   {
-    "id": "poi-451",
+    "id": "poi-385",
     "lat": -22.369336384710174,
     "lon": -47.53943268668759,
     "color": "#9b59b6",
     "nome": "Supermercado Jóia",
-    "categoria": "Alimentação - Mercado"
+    "categoria": "Alimentação - Mercado",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II"
+  },
+  {
+    "id": "school-0",
+    "lat": -22.397470014355,
+    "lon": -47.570424958863,
+    "color": "#3498db",
+    "nome": "E.E. BARAO DE PIRACICABA",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 2.6,
+    "obesidade": 9.9,
+    "sobrepeso": 17.7,
+    "eutrofia": 69.8
+  },
+  {
+    "id": "school-1",
+    "lat": -22.40989457906,
+    "lon": -47.552924363247,
+    "color": "#3498db",
+    "nome": "E.E. CAROLINA AUGUSTA SERAPHIM PROFESSORA",
+    "categoria": "Educação",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 2.2,
+    "obesidade": 10.3,
+    "sobrepeso": 19.0,
+    "eutrofia": 68.5
+  },
+  {
+    "id": "school-2",
+    "lat": -22.427450109387,
+    "lon": -47.55951650535,
+    "color": "#3498db",
+    "nome": "E.E. DELCIO BACCARO PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 3.4,
+    "obesidade": 11.0,
+    "sobrepeso": 19.4,
+    "eutrofia": 66.2
+  },
+  {
+    "id": "school-3",
+    "lat": -22.396785003318,
+    "lon": -47.549917040183,
+    "color": "#3498db",
+    "nome": "E.E. HELOISA LEMENHE MARASCA PROFESSORA",
+    "categoria": "Educação",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”",
+    "desnutricao": 3.0,
+    "obesidade": 15.7,
+    "sobrepeso": 14.1,
+    "eutrofia": 67.2
+  },
+  {
+    "id": "school-4",
+    "lat": -22.380619941921,
+    "lon": -47.576698989133,
+    "color": "#3498db",
+    "nome": "E.E. JANUARIO SYLVIO PEZZOTTI PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 1.5,
+    "obesidade": 7.0,
+    "sobrepeso": 19.5,
+    "eutrofia": 72.0
+  },
+  {
+    "id": "school-5",
+    "lat": -22.383500365038,
+    "lon": -47.580461161956,
+    "color": "#3498db",
+    "nome": "E.E. JOAO BAPTISTA NEGRAO FILHO PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.7,
+    "obesidade": 7.4,
+    "sobrepeso": 17.2,
+    "eutrofia": 72.7
+  },
+  {
+    "id": "school-6",
+    "lat": -22.39241400845,
+    "lon": -47.559405019302,
+    "color": "#3498db",
+    "nome": "E.E. JOAO BATISTA LEME PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.4,
+    "obesidade": 10.3,
+    "sobrepeso": 19.0,
+    "eutrofia": 66.3
+  },
+  {
+    "id": "school-7",
+    "lat": -22.279579007197,
+    "lon": -47.547015979675,
+    "color": "#3498db",
+    "nome": "E.E. JOAQUIM RIBEIRO",
+    "categoria": "Educação",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz",
+    "desnutricao": 1.8,
+    "obesidade": 12.6,
+    "sobrepeso": 18.4,
+    "eutrofia": 67.2
+  },
+  {
+    "id": "school-8",
+    "lat": -22.4135079898,
+    "lon": -47.562564996799,
+    "color": "#3498db",
+    "nome": "E.E. JOAQUIM SALLES CORONEL",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.6,
+    "obesidade": 14.5,
+    "sobrepeso": 19.3,
+    "eutrofia": 62.6
+  },
+  {
+    "id": "school-9",
+    "lat": -22.40050022997,
+    "lon": -47.570187995559,
+    "color": "#3498db",
+    "nome": "E.E. JOSE CARDOSO PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 2.7,
+    "obesidade": 8.9,
+    "sobrepeso": 20.8,
+    "eutrofia": 67.6
+  },
+  {
+    "id": "school-10",
+    "lat": -22.412350644224,
+    "lon": -47.564500999277,
+    "color": "#3498db",
+    "nome": "E.E. JOSE FERNANDES PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.9,
+    "obesidade": 13.3,
+    "sobrepeso": 13.8,
+    "eutrofia": 71.0
+  },
+  {
+    "id": "school-11",
+    "lat": -22.411601534316,
+    "lon": -47.553821040794,
+    "color": "#3498db",
+    "nome": "E.E. MARCIANO DE TOLEDO PIZA PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 4.0,
+    "obesidade": 12.7,
+    "sobrepeso": 13.2,
+    "eutrofia": 70.1
+  },
+  {
+    "id": "school-12",
+    "lat": -22.41774898135,
+    "lon": -47.571339005405,
+    "color": "#3498db",
+    "nome": "E.E. MICHEL ANTONIO ALEM PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 3.4,
+    "obesidade": 9.8,
+    "sobrepeso": 16.1,
+    "eutrofia": 70.7
+  },
+  {
+    "id": "school-13",
+    "lat": -22.377890421762,
+    "lon": -47.576061324712,
+    "color": "#3498db",
+    "nome": "E.E. NELSON STROILI PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.4,
+    "obesidade": 9.7,
+    "sobrepeso": 18.2,
+    "eutrofia": 69.7
+  },
+  {
+    "id": "school-14",
+    "lat": -22.407398708346,
+    "lon": -47.574323459032,
+    "color": "#3498db",
+    "nome": "E.E. ODILON CORREA PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Jardim São Paulo",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.6,
+    "obesidade": 10.7,
+    "sobrepeso": 16.1,
+    "eutrofia": 71.6
+  },
+  {
+    "id": "school-15",
+    "lat": -22.391179107406,
+    "lon": -47.585472954688,
+    "color": "#3498db",
+    "nome": "E.E. OSCALIA GOES CORREA SANTOS PROFESSORA",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 3.7,
+    "obesidade": 11.5,
+    "sobrepeso": 19.2,
+    "eutrofia": 65.6
+  },
+  {
+    "id": "school-16",
+    "lat": -22.49917,
+    "lon": -47.58639,
+    "color": "#3498db",
+    "nome": "E.E. OSCAR DE ALMEIDA PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência",
+    "desnutricao": 2.2,
+    "obesidade": 11.6,
+    "sobrepeso": 20.3,
+    "eutrofia": 65.9
+  },
+  {
+    "id": "school-17",
+    "lat": -22.39351046563,
+    "lon": -47.564921619522,
+    "color": "#3498db",
+    "nome": "E.E. RAUL FERNANDES CHANCELER",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 3.4,
+    "obesidade": 11.3,
+    "sobrepeso": 20.8,
+    "eutrofia": 64.5
+  },
+  {
+    "id": "school-18",
+    "lat": -22.379332560757,
+    "lon": -47.589784095804,
+    "color": "#3498db",
+    "nome": "E.E. ROBERTO GARCIA LOSZ PROFESSOR",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”",
+    "desnutricao": 3.2,
+    "obesidade": 14.4,
+    "sobrepeso": 15.8,
+    "eutrofia": 66.6
+  },
+  {
+    "id": "school-19",
+    "lat": -22.385381783806,
+    "lon": -47.565743324738,
+    "color": "#3498db",
+    "nome": "E.E. ZITA DE GODOY CAMARGO PROFESSORA",
+    "categoria": "Educação",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 3.2,
+    "obesidade": 9.7,
+    "sobrepeso": 20.2,
+    "eutrofia": 66.9
+  },
+  {
+    "id": "school-20",
+    "lat": -22.4159,
+    "lon": -47.5858,
+    "color": "#3498db",
+    "nome": "E.M. Aldo Zottarelli Junior",
+    "categoria": "Educação",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro",
+    "desnutricao": 2.3,
+    "obesidade": 7.4,
+    "sobrepeso": 14.6,
+    "eutrofia": 75.7
+  },
+  {
+    "id": "school-21",
+    "lat": -22.4485,
+    "lon": -47.5779,
+    "color": "#3498db",
+    "nome": "E.M. Ângela Mônaco Perin Aily",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”",
+    "desnutricao": 4.0,
+    "obesidade": 7.8,
+    "sobrepeso": 21.9,
+    "eutrofia": 66.3
+  },
+  {
+    "id": "school-22",
+    "lat": -22.426557,
+    "lon": -47.5676951,
+    "color": "#3498db",
+    "nome": "E.M. Antônio Maria Marrote",
+    "categoria": "Educação",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 3.1,
+    "obesidade": 7.0,
+    "sobrepeso": 15.9,
+    "eutrofia": 74.0
+  },
+  {
+    "id": "school-23",
+    "lat": -22.3809712,
+    "lon": -47.5614681,
+    "color": "#3498db",
+    "nome": "E.M. Antônio Sebastião da Silva",
+    "categoria": "Educação",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 1.6,
+    "obesidade": 7.7,
+    "sobrepeso": 15.8,
+    "eutrofia": 74.9
+  },
+  {
+    "id": "school-24",
+    "lat": -22.41516,
+    "lon": -47.58421,
+    "color": "#3498db",
+    "nome": "E.M. Aparecida José Carlini Bonilha",
+    "categoria": "Educação",
+    "bairro": "Centenário",
+    "regiao_ubs": "USF Benjamin de Castro",
+    "desnutricao": 3.5,
+    "obesidade": 13.6,
+    "sobrepeso": 16.7,
+    "eutrofia": 66.2
+  },
+  {
+    "id": "school-25",
+    "lat": -22.3988839,
+    "lon": -47.5730107,
+    "color": "#3498db",
+    "nome": "E.M. Arlindo Ansanello",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.2,
+    "obesidade": 7.0,
+    "sobrepeso": 16.5,
+    "eutrofia": 73.3
+  },
+  {
+    "id": "school-26",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Benedicto José Zaine",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.8,
+    "obesidade": 14.8,
+    "sobrepeso": 17.2,
+    "eutrofia": 64.2
+  },
+  {
+    "id": "school-27",
+    "lat": -22.4112,
+    "lon": -47.5534,
+    "color": "#3498db",
+    "nome": "E.M. Benjamin Ferreira",
+    "categoria": "Educação",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.6,
+    "obesidade": 10.9,
+    "sobrepeso": 19.5,
+    "eutrofia": 68.0
+  },
+  {
+    "id": "school-28",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Caminho da Vida Profª Margarida Penteado",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.7,
+    "obesidade": 15.8,
+    "sobrepeso": 13.6,
+    "eutrofia": 68.9
+  },
+  {
+    "id": "school-29",
+    "lat": -22.3888149,
+    "lon": -47.5870725,
+    "color": "#3498db",
+    "nome": "E.M. Clara Freire Castellano",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 3.6,
+    "obesidade": 12.5,
+    "sobrepeso": 16.2,
+    "eutrofia": 67.7
+  },
+  {
+    "id": "school-30",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Comecinho de Vida Professora Diva Cabral de Oliveira",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.0,
+    "obesidade": 11.9,
+    "sobrepeso": 16.5,
+    "eutrofia": 68.6
+  },
+  {
+    "id": "school-31",
+    "lat": -22.42609,
+    "lon": -47.55249,
+    "color": "#3498db",
+    "nome": "E.M. Dante Egreggio",
+    "categoria": "Educação",
+    "bairro": "Vila Paulista",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 2.8,
+    "obesidade": 11.3,
+    "sobrepeso": 20.1,
+    "eutrofia": 65.8
+  },
+  {
+    "id": "school-32",
+    "lat": -22.399,
+    "lon": -47.5754,
+    "color": "#3498db",
+    "nome": "E.M. Darci Reginatto",
+    "categoria": "Educação",
+    "bairro": "Wenzel",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 4.0,
+    "obesidade": 8.2,
+    "sobrepeso": 19.0,
+    "eutrofia": 68.8
+  },
+  {
+    "id": "school-33",
+    "lat": -22.3902793,
+    "lon": -47.6167153,
+    "color": "#3498db",
+    "nome": "E.M. Dennizard França Machado",
+    "categoria": "Educação",
+    "bairro": "Rio Claro (Rural)",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”",
+    "desnutricao": 2.5,
+    "obesidade": 13.7,
+    "sobrepeso": 13.9,
+    "eutrofia": 69.9
+  },
+  {
+    "id": "school-34",
+    "lat": -22.4204024,
+    "lon": -47.5632388,
+    "color": "#3498db",
+    "nome": "E.M. Diva Marques Gouvêa",
+    "categoria": "Educação",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 2.9,
+    "obesidade": 11.4,
+    "sobrepeso": 20.7,
+    "eutrofia": 65.0
+  },
+  {
+    "id": "school-35",
+    "lat": -22.39,
+    "lon": -47.5736,
+    "color": "#3498db",
+    "nome": "E.M. Djalma Camargo Outeiro Pinto Dr.",
+    "categoria": "Educação",
+    "bairro": "Alto do Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 2.1,
+    "obesidade": 10.1,
+    "sobrepeso": 19.6,
+    "eutrofia": 68.2
+  },
+  {
+    "id": "school-36",
+    "lat": -22.38919,
+    "lon": -47.55636,
+    "color": "#3498db",
+    "nome": "E.M. Djiliah Camargo de Souza",
+    "categoria": "Educação",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”",
+    "desnutricao": 3.5,
+    "obesidade": 15.7,
+    "sobrepeso": 15.5,
+    "eutrofia": 65.3
+  },
+  {
+    "id": "school-37",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Edna Cristina Fardim Fernandes",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 4.5,
+    "obesidade": 7.4,
+    "sobrepeso": 21.5,
+    "eutrofia": 66.6
+  },
+  {
+    "id": "school-38",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Elpídio Mina",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 2.5,
+    "obesidade": 12.9,
+    "sobrepeso": 15.9,
+    "eutrofia": 68.7
+  },
+  {
+    "id": "school-39",
+    "lat": -22.38462,
+    "lon": -47.55117,
+    "color": "#3498db",
+    "nome": "E.M. Ephraim Ribeiro dos Santos",
+    "categoria": "Educação",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”",
+    "desnutricao": 2.9,
+    "obesidade": 15.8,
+    "sobrepeso": 13.1,
+    "eutrofia": 68.2
+  },
+  {
+    "id": "school-40",
+    "lat": -22.413254913521,
+    "lon": -47.554685351879,
+    "color": "#3498db",
+    "nome": "E.M. Francesco Paoli",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 4.0,
+    "obesidade": 14.8,
+    "sobrepeso": 20.1,
+    "eutrofia": 61.1
+  },
+  {
+    "id": "school-41",
+    "lat": -22.381,
+    "lon": -47.577,
+    "color": "#3498db",
+    "nome": "E.M. Francisca Coan",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 3.8,
+    "obesidade": 15.1,
+    "sobrepeso": 15.0,
+    "eutrofia": 66.1
+  },
+  {
+    "id": "school-42",
+    "lat": -22.3839,
+    "lon": -47.5577,
+    "color": "#3498db",
+    "nome": "E.M. Gisele Brizotti Ferraz Ferreira",
+    "categoria": "Educação",
+    "bairro": "Jardim Floridiana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 2.0,
+    "obesidade": 10.2,
+    "sobrepeso": 21.3,
+    "eutrofia": 66.5
+  },
+  {
+    "id": "school-43",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Gunar Wilhelm Koelle",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.4,
+    "obesidade": 9.6,
+    "sobrepeso": 19.5,
+    "eutrofia": 67.5
+  },
+  {
+    "id": "school-44",
+    "lat": -22.448919,
+    "lon": -47.578032,
+    "color": "#3498db",
+    "nome": "E.M. Hélio Jorge dos Santos",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”",
+    "desnutricao": 3.0,
+    "obesidade": 7.4,
+    "sobrepeso": 20.9,
+    "eutrofia": 68.7
+  },
+  {
+    "id": "school-45",
+    "lat": -22.43379,
+    "lon": -47.58142,
+    "color": "#3498db",
+    "nome": "E.M. Isolina Huppert Cassavia",
+    "categoria": "Educação",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”",
+    "desnutricao": 2.3,
+    "obesidade": 13.4,
+    "sobrepeso": 18.3,
+    "eutrofia": 66.0
+  },
+  {
+    "id": "school-46",
+    "lat": -22.43243,
+    "lon": -47.58584,
+    "color": "#3498db",
+    "nome": "E.M. Jardim das Palmeiras",
+    "categoria": "Educação",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”",
+    "desnutricao": 3.2,
+    "obesidade": 12.1,
+    "sobrepeso": 17.6,
+    "eutrofia": 67.1
+  },
+  {
+    "id": "school-47",
+    "lat": -22.4976,
+    "lon": -47.5834,
+    "color": "#3498db",
+    "nome": "E.M. João Batista Maule",
+    "categoria": "Educação",
+    "bairro": "Assistência",
+    "regiao_ubs": "USF Assistência",
+    "desnutricao": 3.7,
+    "obesidade": 14.8,
+    "sobrepeso": 18.4,
+    "eutrofia": 63.1
+  },
+  {
+    "id": "school-48",
+    "lat": -22.3958851,
+    "lon": -47.5738585,
+    "color": "#3498db",
+    "nome": "E.M. João Rehder Netto",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.4,
+    "obesidade": 8.1,
+    "sobrepeso": 13.8,
+    "eutrofia": 73.7
+  },
+  {
+    "id": "school-49",
+    "lat": -22.4114062,
+    "lon": -47.5544252,
+    "color": "#3498db",
+    "nome": "E.M. José de Campos Chagas",
+    "categoria": "Educação",
+    "bairro": "Cidade Nova",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.9,
+    "obesidade": 15.3,
+    "sobrepeso": 21.2,
+    "eutrofia": 61.6
+  },
+  {
+    "id": "school-50",
+    "lat": -22.429715,
+    "lon": -47.584347,
+    "color": "#3498db",
+    "nome": "E.M. José Martins da Silva",
+    "categoria": "Educação",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”",
+    "desnutricao": 3.5,
+    "obesidade": 10.4,
+    "sobrepeso": 14.1,
+    "eutrofia": 72.0
+  },
+  {
+    "id": "school-51",
+    "lat": -22.3733,
+    "lon": -47.5393,
+    "color": "#3498db",
+    "nome": "E.M. Jovelina Morateli",
+    "categoria": "Educação",
+    "bairro": "Mãe Preta",
+    "regiao_ubs": "USF Mãe PretaI/II",
+    "desnutricao": 3.9,
+    "obesidade": 9.4,
+    "sobrepeso": 14.7,
+    "eutrofia": 72.0
+  },
+  {
+    "id": "school-52",
+    "lat": -22.2789754,
+    "lon": -47.5419174,
+    "color": "#3498db",
+    "nome": "E.M. Laura Penna Joly",
+    "categoria": "Educação",
+    "bairro": "Ajapi",
+    "regiao_ubs": "USF Ajapi/Ferraz",
+    "desnutricao": 4.1,
+    "obesidade": 13.7,
+    "sobrepeso": 19.5,
+    "eutrofia": 62.7
+  },
+  {
+    "id": "school-53",
+    "lat": -22.392331,
+    "lon": -47.586619,
+    "color": "#3498db",
+    "nome": "E.M. Lúcia Aparecida Buschinelli Carneiro",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 4.5,
+    "obesidade": 7.1,
+    "sobrepeso": 18.7,
+    "eutrofia": 69.7
+  },
+  {
+    "id": "school-54",
+    "lat": -22.384838,
+    "lon": -47.583627,
+    "color": "#3498db",
+    "nome": "E.M. Lúcia Helena Ferreira Camargo",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 2.6,
+    "obesidade": 11.5,
+    "sobrepeso": 16.9,
+    "eutrofia": 69.0
+  },
+  {
+    "id": "school-55",
+    "lat": -22.38147,
+    "lon": -47.58951,
+    "color": "#3498db",
+    "nome": "E.M. Lucidia T. Cassavia Escrivão Soares",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”",
+    "desnutricao": 4.5,
+    "obesidade": 7.4,
+    "sobrepeso": 13.1,
+    "eutrofia": 75.0
+  },
+  {
+    "id": "school-56",
+    "lat": -22.4062,
+    "lon": -47.6024,
+    "color": "#3498db",
+    "nome": "E.M. Luiz Martins Rodrigues Filho",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo Wenzel",
+    "regiao_ubs": "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”",
+    "desnutricao": 1.5,
+    "obesidade": 10.8,
+    "sobrepeso": 14.8,
+    "eutrofia": 72.9
+  },
+  {
+    "id": "school-57",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "E.M. Lygia do Carmo P. Vendramel",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.7,
+    "obesidade": 8.1,
+    "sobrepeso": 14.5,
+    "eutrofia": 75.7
+  },
+  {
+    "id": "school-58",
+    "lat": -22.4186,
+    "lon": -47.5538,
+    "color": "#3498db",
+    "nome": "E.M. Marcello Schmidt",
+    "categoria": "Educação",
+    "bairro": "Cidade Jardim",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.7,
+    "obesidade": 9.4,
+    "sobrepeso": 19.3,
+    "eutrofia": 67.6
+  },
+  {
+    "id": "school-59",
+    "lat": -22.41166,
+    "lon": -47.56664,
+    "color": "#3498db",
+    "nome": "E.M. Marcello Schmidt Unidade 2",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 3.4,
+    "obesidade": 13.6,
+    "sobrepeso": 13.6,
+    "eutrofia": 69.4
+  },
+  {
+    "id": "school-60",
+    "lat": -22.37721,
+    "lon": -47.57698,
+    "color": "#3498db",
+    "nome": "E.M. Maria Aparecida Polastri Hartung - Dona Birro",
+    "categoria": "Educação",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 3.7,
+    "obesidade": 12.6,
+    "sobrepeso": 15.9,
+    "eutrofia": 67.8
+  },
+  {
+    "id": "school-61",
+    "lat": -22.424112,
+    "lon": -47.5696638,
+    "color": "#3498db",
+    "nome": "E.M. Maria Isabel Soares",
+    "categoria": "Educação",
+    "bairro": "Consolação",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 2.3,
+    "obesidade": 15.6,
+    "sobrepeso": 18.2,
+    "eutrofia": 63.9
+  },
+  {
+    "id": "school-62",
+    "lat": -22.4302868,
+    "lon": -47.5840785,
+    "color": "#3498db",
+    "nome": "E.M. Maria Teixeira Fittipaldi",
+    "categoria": "Educação",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Palmeiras I/II “Dr. Gilson Giovanni”",
+    "desnutricao": 3.5,
+    "obesidade": 15.6,
+    "sobrepeso": 19.4,
+    "eutrofia": 61.5
+  },
+  {
+    "id": "school-63",
+    "lat": -22.4357319,
+    "lon": -47.5840098,
+    "color": "#3498db",
+    "nome": "E.M. Marilda dos Santos Souza",
+    "categoria": "Educação",
+    "bairro": "Jardim das Palmeiras",
+    "regiao_ubs": "USF Guanabara “Dr. Celestino Donato”",
+    "desnutricao": 4.1,
+    "obesidade": 9.2,
+    "sobrepeso": 14.1,
+    "eutrofia": 72.6
+  },
+  {
+    "id": "school-64",
+    "lat": -22.3985237,
+    "lon": -47.565011,
+    "color": "#3498db",
+    "nome": "E.M. Marina Fredine Dainese Cyrino",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.6,
+    "obesidade": 14.0,
+    "sobrepeso": 19.8,
+    "eutrofia": 64.6
+  },
+  {
+    "id": "school-65",
+    "lat": -22.3811865,
+    "lon": -47.5773056,
+    "color": "#3498db",
+    "nome": "E.M. Mitiko Matsushita Nevoeiro",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.0,
+    "obesidade": 14.1,
+    "sobrepeso": 18.2,
+    "eutrofia": 65.7
+  },
+  {
+    "id": "school-66",
+    "lat": -22.3955,
+    "lon": -47.5676,
+    "color": "#3498db",
+    "nome": "E.M. Monsenhor Martins",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.1,
+    "obesidade": 15.4,
+    "sobrepeso": 16.4,
+    "eutrofia": 64.1
+  },
+  {
+    "id": "school-67",
+    "lat": -22.3813349,
+    "lon": -47.5895064,
+    "color": "#3498db",
+    "nome": "E.M. Mora Guimarães",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”",
+    "desnutricao": 3.7,
+    "obesidade": 7.5,
+    "sobrepeso": 17.4,
+    "eutrofia": 71.4
+  },
+  {
+    "id": "school-68",
+    "lat": -22.4173054,
+    "lon": -47.5603853,
+    "color": "#3498db",
+    "nome": "E.M. Nephtali Vieira Junior Pastor",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "UBS 29 “Oreste Armando Giovani”",
+    "desnutricao": 3.7,
+    "obesidade": 13.3,
+    "sobrepeso": 18.8,
+    "eutrofia": 64.2
+  },
+  {
+    "id": "school-69",
+    "lat": -22.45366,
+    "lon": -47.5853,
+    "color": "#3498db",
+    "nome": "E.M. Octávio José Chiossi",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Terra Nova",
+    "desnutricao": 3.6,
+    "obesidade": 9.2,
+    "sobrepeso": 13.8,
+    "eutrofia": 73.4
+  },
+  {
+    "id": "school-70",
+    "lat": -22.4144893,
+    "lon": -47.5672688,
+    "color": "#3498db",
+    "nome": "E.M. Paulo Koelle Dr.",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 4.1,
+    "obesidade": 15.4,
+    "sobrepeso": 16.5,
+    "eutrofia": 64.0
+  },
+  {
+    "id": "school-71",
+    "lat": -22.38636,
+    "lon": -47.56422,
+    "color": "#3498db",
+    "nome": "E.M. Rosa Maria Castellano Pieroni",
+    "categoria": "Educação",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.2,
+    "obesidade": 11.3,
+    "sobrepeso": 16.4,
+    "eutrofia": 68.1
+  },
+  {
+    "id": "school-72",
+    "lat": -22.3891457,
+    "lon": -47.5544474,
+    "color": "#3498db",
+    "nome": "E.M. Rubens Foot Guimarães - Escola Agrícola",
+    "categoria": "Educação",
+    "bairro": "Vila Nova",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”",
+    "desnutricao": 3.3,
+    "obesidade": 9.5,
+    "sobrepeso": 18.0,
+    "eutrofia": 69.2
+  },
+  {
+    "id": "school-73",
+    "lat": -22.4501,
+    "lon": -47.5838,
+    "color": "#3498db",
+    "nome": "E.M. Rutinéia Paulino de Souza Ferreira da Silva",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Terra Nova",
+    "desnutricao": 3.0,
+    "obesidade": 10.5,
+    "sobrepeso": 13.9,
+    "eutrofia": 72.6
+  },
+  {
+    "id": "school-74",
+    "lat": -22.4,
+    "lon": -47.5889,
+    "color": "#3498db",
+    "nome": "E.M. Samira Assêncio Savoldi",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "UBS Wenzel “Dr. Mario Fittipaldi”",
+    "desnutricao": 1.7,
+    "obesidade": 7.8,
+    "sobrepeso": 14.5,
+    "eutrofia": 76.0
+  },
+  {
+    "id": "school-75",
+    "lat": -22.39422,
+    "lon": -47.56723,
+    "color": "#3498db",
+    "nome": "E.M. Santo Antônio de Pádua",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.4,
+    "obesidade": 7.0,
+    "sobrepeso": 17.8,
+    "eutrofia": 70.8
+  },
+  {
+    "id": "school-76",
+    "lat": -22.4494283,
+    "lon": -47.5776346,
+    "color": "#3498db",
+    "nome": "E.M. Sebastião Ambrózio",
+    "categoria": "Educação",
+    "bairro": "Jardim Novo/Terra Nova",
+    "regiao_ubs": "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”",
+    "desnutricao": 4.0,
+    "obesidade": 9.0,
+    "sobrepeso": 19.0,
+    "eutrofia": 68.0
+  },
+  {
+    "id": "school-77",
+    "lat": -22.377214,
+    "lon": -47.581935,
+    "color": "#3498db",
+    "nome": "E.M. Sérgio Hernani Fittipaldi",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.8,
+    "obesidade": 8.1,
+    "sobrepeso": 18.6,
+    "eutrofia": 70.5
+  },
+  {
+    "id": "school-78",
+    "lat": -22.3809636,
+    "lon": -47.5767243,
+    "color": "#3498db",
+    "nome": "E.M. Sueli Aparecida Marin",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.9,
+    "obesidade": 8.7,
+    "sobrepeso": 20.7,
+    "eutrofia": 67.7
+  },
+  {
+    "id": "school-79",
+    "lat": -22.385444,
+    "lon": -47.551748,
+    "color": "#3498db",
+    "nome": "E.M. Sueli Maria Proni Cerri",
+    "categoria": "Educação",
+    "bairro": "Jardim América",
+    "regiao_ubs": "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”",
+    "desnutricao": 4.5,
+    "obesidade": 15.6,
+    "sobrepeso": 20.7,
+    "eutrofia": 59.2
+  },
+  {
+    "id": "school-80",
+    "lat": -22.4108522,
+    "lon": -47.5596837,
+    "color": "#3498db",
+    "nome": "E.M. Sylvio de Araújo",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.7,
+    "obesidade": 10.2,
+    "sobrepeso": 13.2,
+    "eutrofia": 74.9
+  },
+  {
+    "id": "school-81",
+    "lat": -22.414913,
+    "lon": -47.567722,
+    "color": "#3498db",
+    "nome": "E.M. Theodoro Paulo Koelle",
+    "categoria": "Educação",
+    "bairro": "Centro",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.9,
+    "obesidade": 8.2,
+    "sobrepeso": 15.9,
+    "eutrofia": 74.0
+  },
+  {
+    "id": "school-82",
+    "lat": -22.379,
+    "lon": -47.5663,
+    "color": "#3498db",
+    "nome": "E.M. Victorino Machado",
+    "categoria": "Educação",
+    "bairro": "Grande Cervezão",
+    "regiao_ubs": "UBS Jardim Chervezon “Dr. Nicolino Maziotti”",
+    "desnutricao": 4.2,
+    "obesidade": 12.2,
+    "sobrepeso": 13.4,
+    "eutrofia": 70.2
+  },
+  {
+    "id": "school-83",
+    "lat": -22.3916549,
+    "lon": -47.5931341,
+    "color": "#3498db",
+    "nome": "Programa Integra - Jardim das Palmeiras (CAIC)",
+    "categoria": "Educação",
+    "bairro": "Recanto Paraíso",
+    "regiao_ubs": "USF Panorama “Dr. Osvaldo Akamine”",
+    "desnutricao": 4.0,
+    "obesidade": 12.0,
+    "sobrepeso": 14.2,
+    "eutrofia": 69.8
+  },
+  {
+    "id": "school-84",
+    "lat": -22.377214,
+    "lon": -47.581935,
+    "color": "#3498db",
+    "nome": "Programa Integra - Sérgio Hernani Fittipaldi",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 2.4,
+    "obesidade": 8.8,
+    "sobrepeso": 19.6,
+    "eutrofia": 69.2
+  },
+  {
+    "id": "school-85",
+    "lat": -22.3809636,
+    "lon": -47.5767243,
+    "color": "#3498db",
+    "nome": "Programa Integra - Sueli Aparecida Marin",
+    "categoria": "Educação",
+    "bairro": "Santa Maria",
+    "regiao_ubs": "USF Jardim das Flores “Dr. Moacir Camargo”",
+    "desnutricao": 4.4,
+    "obesidade": 11.7,
+    "sobrepeso": 17.0,
+    "eutrofia": 66.9
+  },
+  {
+    "id": "school-86",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "Programa Integra - Sylvio de Araújo",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 4.5,
+    "obesidade": 10.6,
+    "sobrepeso": 21.2,
+    "eutrofia": 63.7
+  },
+  {
+    "id": "school-87",
+    "lat": -22.4074609,
+    "lon": -47.5655179,
+    "color": "#3498db",
+    "nome": "Programa Integra - Victorino Machado",
+    "categoria": "Educação",
+    "bairro": "Santana",
+    "regiao_ubs": "USF Ferraz",
+    "desnutricao": 1.9,
+    "obesidade": 12.0,
+    "sobrepeso": 20.7,
+    "eutrofia": 65.4
   }
 ]

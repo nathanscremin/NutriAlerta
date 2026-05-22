@@ -1,74 +1,89 @@
-nome,lat,lon
-E.M. Aldo Zottarelli Junior,-22.2740885,-47.5540603
-E.M. Ângela Mônaco Perin Aily,-22.2740885,-47.5540603
-E.M. Antônio Maria Marrote,-22.4266235,-47.5674696
-E.M. Antônio Sebastião da Silva,-22.2740885,-47.5540603
-E.M. Aparecida José Carlini Bonilha,-22.417039,-47.5835072
-E.M. Arlindo Ansanello,-22.2740885,-47.5540603
-E.M. Armando Grisi,-22.4298487,-47.5882639
-E.M. Benedicto José Zaine,-22.2576882,-47.5904891
-E.M. Benjamin Ferreira,-22.4114279,-47.5531641
-E.M. Caminho da Vida Profª Margarida Penteado,-22.2740885,-47.5540603
-E.M. Celeste Calil,-22.4070236,-47.602954
-E.M. Clara Freire Castellano,-22.3883681,-47.5931886
-E.M. Comecinho de Vida Professora Diva Cabral de Oliveira,-22.3911423,-47.5515507
-E.M. Dante Egreggio,-22.2740885,-47.5540603
-E.M. Darci Reginatto,-22.4021166,-47.5647848
-E.M. Dennizard França Machado,-22.2740885,-47.5540603
-E.M. Diva Marques Gouvêa,-22.4208262,-47.5647688
-E.M. Djalma Camargo Outeiro Pinto Dr.,-22.4060355,-47.5666877
-E.M. Djiliah Camargo de Souza,-22.2740885,-47.5540603
-E.M. Dom Pedro I,-22.3950944,-47.5599304
-E.M. Edna Cristina Fardim Fernandes,-22.2740885,-47.5540603
-E.M. Elpídio Mina,-22.3903617,-47.5472239
-E.M. Ephraim Ribeiro dos Santos,-22.3822186,-47.548947
-E.M. Francesco Paoli,-22.2740885,-47.5540603
-E.M. Francisca Coan,-22.2740885,-47.5540603
-E.M. Gisele Brizotti Ferraz Ferreira,-22.2740885,-47.5540603
-E.M. Gunar Wilhelm Koelle,-22.4469617,-47.5847635
-E.M. Hamilton Prado,-22.3945831,-47.5686978
-E.M. Hélio Jorge dos Santos,-22.2740885,-47.5540603
-E.M. Isolina Huppert Cassavia,-22.4339592,-47.5815071
-E.M. Jardim das Palmeiras,-22.4339592,-47.5815071
-E.M. João Batista Maule,-22.4924421,-47.5824468
-E.M. João Rehder Netto,-22.396138,-47.5735494
-E.M. José de Campos Chagas,-22.3885042,-47.5734441
-E.M. José Martins da Silva,-22.4297998,-47.5842257
-E.M. Jovelina Morateli,-22.372289,-47.5419935
-E.M. Laura Penna Joly,-22.3067982,-47.5433779
-E.M. Lúcia Aparecida Buschinelli Carneiro,-22.4307747,-47.5883783
-E.M. Lúcia Helena Ferreira Camargo,-22.2740885,-47.5540603
-E.M. Lucidia T. Cassavia Escrivão Soares,-22.3801951,-47.5902328
-E.M. Luiz Martins Rodrigues Filho,-22.4069184,-47.6026434
-E.M. Lygia do Carmo P. Vendramel,-22.3826949,-47.5441816
-E.M. Marcello Schmidt,-22.417466,-47.5775459
-E.M. Marcello Schmidt Unidade 2,-22.2814694,-47.5502469
-E.M. Maria Aparecida Polastri Hartung - Dona Birro,-22.4189225,-47.5601911
-E.M. Maria Isabel Soares,-22.4266235,-47.5674696
-E.M. Maria Teixeira Fittipaldi,-22.2740885,-47.5540603
-E.M. Marilda dos Santos Souza,-22.4265045,-47.5800681
-E.M. Marina Fredine Dainese Cyrino,-22.2740885,-47.5540603
-E.M. Mitiko Matsushita Nevoeiro,-22.2740885,-47.5540603
-E.M. Monsenhor Martins,-22.2740885,-47.5540603
-E.M. Monteiro Lobato,-22.3804984,-47.5588675
-E.M. Mora Guimarães,-22.3801951,-47.5902328
-E.M. Nephtali Vieira Junior Pastor,-22.2740885,-47.5540603
-E.M. Octávio José Chiossi,-22.2740885,-47.5540603
-E.M. Paulo Koelle Dr.,-22.2814694,-47.5502469
-E.M. Rosa Maria Castellano Pieroni,-22.2740885,-47.5540603
-E.M. Rubens Foot Guimarães - Escola Agrícola,-22.3067982,-47.5433779
-E.M. Rutinéia Paulino de Souza Ferreira da Silva,-22.2740885,-47.5540603
-E.M. Samira Assêncio Savoldi,-22.3997222,-47.588475
-E.M. Santo Antônio de Pádua,-22.2740885,-47.5540603
-E.M. Sebastião Ambrózio,-22.2740885,-47.5540603
-E.M. Sérgio Hernani Fittipaldi,-22.3775292,-47.5818228
-E.M. Sueli Aparecida Marin,-22.2740885,-47.5540603
-E.M. Sueli Maria Proni Cerri,-22.3846774,-47.5544353
-E.M. Sylvio de Araújo,-22.382074,-47.5461148
-E.M. Theodoro Paulo Koelle,-22.4516504,-47.5852826
-E.M. Victorino Machado,-22.378445,-47.5616079
-Programa Integra - Jardim das Palmeiras (CAIC),-22.2740885,-47.5540603
-Programa Integra - Sérgio Hernani Fittipaldi,-22.3825809,-47.5253253
-Programa Integra - Sueli Aparecida Marin,-22.3825809,-47.5253253
-Programa Integra - Sylvio de Araújo,-22.382074,-47.5461148
-Programa Integra - Victorino Machado,-22.3825809,-47.5253253
+nome,lat,lon,desnutricao,obesidade,sobrepeso,eutrofia
+E.E. BARAO DE PIRACICABA,-22.397470014355,-47.570424958863,2.6,9.9,17.7,69.8
+E.E. CAROLINA AUGUSTA SERAPHIM PROFESSORA,-22.40989457906,-47.552924363247,2.2,10.3,19.0,68.5
+E.E. DELCIO BACCARO PROFESSOR,-22.427450109387,-47.55951650535,3.4,11.0,19.4,66.2
+E.E. HELOISA LEMENHE MARASCA PROFESSORA,-22.396785003318,-47.549917040183,3.0,15.7,14.1,67.2
+E.E. JANUARIO SYLVIO PEZZOTTI PROFESSOR,-22.380619941921,-47.576698989133,1.5,7.0,19.5,72.0
+E.E. JOAO BAPTISTA NEGRAO FILHO PROFESSOR,-22.383500365038,-47.580461161956,2.7,7.4,17.2,72.7
+E.E. JOAO BATISTA LEME PROFESSOR,-22.39241400845,-47.559405019302,4.4,10.3,19.0,66.3
+E.E. JOAQUIM RIBEIRO,-22.279579007197,-47.547015979675,1.8,12.6,18.4,67.2
+E.E. JOAQUIM SALLES CORONEL,-22.4135079898,-47.562564996799,3.6,14.5,19.3,62.6
+E.E. JOSE CARDOSO PROFESSOR,-22.40050022997,-47.570187995559,2.7,8.9,20.8,67.6
+E.E. JOSE FERNANDES PROFESSOR,-22.412350644224,-47.564500999277,1.9,13.3,13.8,71.0
+E.E. MARCIANO DE TOLEDO PIZA PROFESSOR,-22.411601534316,-47.553821040794,4.0,12.7,13.2,70.1
+E.E. MICHEL ANTONIO ALEM PROFESSOR,-22.41774898135,-47.571339005405,3.4,9.8,16.1,70.7
+E.E. NELSON STROILI PROFESSOR,-22.377890421762,-47.576061324712,2.4,9.7,18.2,69.7
+E.E. ODILON CORREA PROFESSOR,-22.407398708346,-47.574323459032,1.6,10.7,16.1,71.6
+E.E. OSCALIA GOES CORREA SANTOS PROFESSORA,-22.391179107406,-47.585472954688,3.7,11.5,19.2,65.6
+E.E. OSCAR DE ALMEIDA PROFESSOR,-22.49917,-47.58639,2.2,11.6,20.3,65.9
+E.E. RAUL FERNANDES CHANCELER,-22.39351046563,-47.564921619522,3.4,11.3,20.8,64.5
+E.E. ROBERTO GARCIA LOSZ PROFESSOR,-22.379332560757,-47.589784095804,3.2,14.4,15.8,66.6
+E.E. ZITA DE GODOY CAMARGO PROFESSORA,-22.385381783806,-47.565743324738,3.2,9.7,20.2,66.9
+E.M. Aldo Zottarelli Junior,-22.4159,-47.5858,2.3,7.4,14.6,75.7
+E.M. Ângela Mônaco Perin Aily,-22.4485,-47.5779,4.0,7.8,21.9,66.3
+E.M. Antônio Maria Marrote,-22.426557,-47.5676951,3.1,7.0,15.9,74.0
+E.M. Antônio Sebastião da Silva,-22.3809712,-47.5614681,1.6,7.7,15.8,74.9
+E.M. Aparecida José Carlini Bonilha,-22.41516,-47.58421,3.5,13.6,16.7,66.2
+E.M. Arlindo Ansanello,-22.3988839,-47.5730107,3.2,7.0,16.5,73.3
+E.M. Benedicto José Zaine,-22.4074609,-47.5655179,3.8,14.8,17.2,64.2
+E.M. Benjamin Ferreira,-22.4112,-47.5534,1.6,10.9,19.5,68.0
+E.M. Caminho da Vida Profª Margarida Penteado,-22.4074609,-47.5655179,1.7,15.8,13.6,68.9
+E.M. Clara Freire Castellano,-22.3888149,-47.5870725,3.6,12.5,16.2,67.7
+E.M. Comecinho de Vida Professora Diva Cabral de Oliveira,-22.4074609,-47.5655179,3.0,11.9,16.5,68.6
+E.M. Dante Egreggio,-22.42609,-47.55249,2.8,11.3,20.1,65.8
+E.M. Darci Reginatto,-22.399,-47.5754,4.0,8.2,19.0,68.8
+E.M. Dennizard França Machado,-22.3902793,-47.6167153,2.5,13.7,13.9,69.9
+E.M. Diva Marques Gouvêa,-22.4204024,-47.5632388,2.9,11.4,20.7,65.0
+E.M. Djalma Camargo Outeiro Pinto Dr.,-22.39,-47.5736,2.1,10.1,19.6,68.2
+E.M. Djiliah Camargo de Souza,-22.38919,-47.55636,3.5,15.7,15.5,65.3
+E.M. Edna Cristina Fardim Fernandes,-22.4074609,-47.5655179,4.5,7.4,21.5,66.6
+E.M. Elpídio Mina,-22.4074609,-47.5655179,2.5,12.9,15.9,68.7
+E.M. Ephraim Ribeiro dos Santos,-22.38462,-47.55117,2.9,15.8,13.1,68.2
+E.M. Francesco Paoli,-22.413254913521,-47.554685351879,4.0,14.8,20.1,61.1
+E.M. Francisca Coan,-22.381,-47.577,3.8,15.1,15.0,66.1
+E.M. Gisele Brizotti Ferraz Ferreira,-22.3839,-47.5577,2.0,10.2,21.3,66.5
+E.M. Gunar Wilhelm Koelle,-22.4074609,-47.5655179,3.4,9.6,19.5,67.5
+E.M. Hélio Jorge dos Santos,-22.448919,-47.578032,3.0,7.4,20.9,68.7
+E.M. Isolina Huppert Cassavia,-22.43379,-47.58142,2.3,13.4,18.3,66.0
+E.M. Jardim das Palmeiras,-22.43243,-47.58584,3.2,12.1,17.6,67.1
+E.M. João Batista Maule,-22.4976,-47.5834,3.7,14.8,18.4,63.1
+E.M. João Rehder Netto,-22.3958851,-47.5738585,4.4,8.1,13.8,73.7
+E.M. José de Campos Chagas,-22.4114062,-47.5544252,1.9,15.3,21.2,61.6
+E.M. José Martins da Silva,-22.429715,-47.584347,3.5,10.4,14.1,72.0
+E.M. Jovelina Morateli,-22.3733,-47.5393,3.9,9.4,14.7,72.0
+E.M. Laura Penna Joly,-22.2789754,-47.5419174,4.1,13.7,19.5,62.7
+E.M. Lúcia Aparecida Buschinelli Carneiro,-22.392331,-47.586619,4.5,7.1,18.7,69.7
+E.M. Lúcia Helena Ferreira Camargo,-22.384838,-47.583627,2.6,11.5,16.9,69.0
+E.M. Lucidia T. Cassavia Escrivão Soares,-22.38147,-47.58951,4.5,7.4,13.1,75.0
+E.M. Luiz Martins Rodrigues Filho,-22.4062,-47.6024,1.5,10.8,14.8,72.9
+E.M. Lygia do Carmo P. Vendramel,-22.4074609,-47.5655179,1.7,8.1,14.5,75.7
+E.M. Marcello Schmidt,-22.4186,-47.5538,3.7,9.4,19.3,67.6
+E.M. Marcello Schmidt Unidade 2,-22.41166,-47.56664,3.4,13.6,13.6,69.4
+E.M. Maria Aparecida Polastri Hartung - Dona Birro,-22.37721,-47.57698,3.7,12.6,15.9,67.8
+E.M. Maria Isabel Soares,-22.424112,-47.5696638,2.3,15.6,18.2,63.9
+E.M. Maria Teixeira Fittipaldi,-22.4302868,-47.5840785,3.5,15.6,19.4,61.5
+E.M. Marilda dos Santos Souza,-22.4357319,-47.5840098,4.1,9.2,14.1,72.6
+E.M. Marina Fredine Dainese Cyrino,-22.3985237,-47.565011,1.6,14.0,19.8,64.6
+E.M. Mitiko Matsushita Nevoeiro,-22.3811865,-47.5773056,2.0,14.1,18.2,65.7
+E.M. Monsenhor Martins,-22.3955,-47.5676,4.1,15.4,16.4,64.1
+E.M. Mora Guimarães,-22.3813349,-47.5895064,3.7,7.5,17.4,71.4
+E.M. Nephtali Vieira Junior Pastor,-22.4173054,-47.5603853,3.7,13.3,18.8,64.2
+E.M. Octávio José Chiossi,-22.45366,-47.5853,3.6,9.2,13.8,73.4
+E.M. Paulo Koelle Dr.,-22.4144893,-47.5672688,4.1,15.4,16.5,64.0
+E.M. Rosa Maria Castellano Pieroni,-22.38636,-47.56422,4.2,11.3,16.4,68.1
+E.M. Rubens Foot Guimarães - Escola Agrícola,-22.3891457,-47.5544474,3.3,9.5,18.0,69.2
+E.M. Rutinéia Paulino de Souza Ferreira da Silva,-22.4501,-47.5838,3.0,10.5,13.9,72.6
+E.M. Samira Assêncio Savoldi,-22.4,-47.5889,1.7,7.8,14.5,76.0
+E.M. Santo Antônio de Pádua,-22.39422,-47.56723,4.4,7.0,17.8,70.8
+E.M. Sebastião Ambrózio,-22.4494283,-47.5776346,4.0,9.0,19.0,68.0
+E.M. Sérgio Hernani Fittipaldi,-22.377214,-47.581935,2.8,8.1,18.6,70.5
+E.M. Sueli Aparecida Marin,-22.3809636,-47.5767243,2.9,8.7,20.7,67.7
+E.M. Sueli Maria Proni Cerri,-22.385444,-47.551748,4.5,15.6,20.7,59.2
+E.M. Sylvio de Araújo,-22.4108522,-47.5596837,1.7,10.2,13.2,74.9
+E.M. Theodoro Paulo Koelle,-22.414913,-47.567722,1.9,8.2,15.9,74.0
+E.M. Victorino Machado,-22.379,-47.5663,4.2,12.2,13.4,70.2
+Programa Integra - Jardim das Palmeiras (CAIC),-22.3916549,-47.5931341,4.0,12.0,14.2,69.8
+Programa Integra - Sérgio Hernani Fittipaldi,-22.377214,-47.581935,2.4,8.8,19.6,69.2
+Programa Integra - Sueli Aparecida Marin,-22.3809636,-47.5767243,4.4,11.7,17.0,66.9
+Programa Integra - Sylvio de Araújo,-22.4074609,-47.5655179,4.5,10.6,21.2,63.7
+Programa Integra - Victorino Machado,-22.4074609,-47.5655179,1.9,12.0,20.7,65.4

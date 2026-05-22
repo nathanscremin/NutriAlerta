@@ -1,16 +1,32 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { DADOS_TEMPORAIS } from '@/lib/mockData';
+
 
 type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant';
 
 export type PoiType = 'UBS' | 'Pronto-Atendimento' | 'Saúde Mental' | 'Vigilância Sanitária' | 'Educação' | 'Esporte e Lazer' | 'Alimentação - Restaurante/Fast-food' | 'Alimentação - Mercado';
+
+export type AnalysisLevel = 'municipio' | 'ubs' | 'bairro' | 'escola';
 
 interface AppState {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   selectedBairro: string | null;
   setSelectedBairro: (bairro: string | null) => void;
+
+  // Hierarchical analysis states
+  analysisLevel: AnalysisLevel;
+  selectedUbs: string | null;
+  selectedBairroName: string | null;
+  selectedSchoolName: string | null;
+  setAnalysisLevel: (level: AnalysisLevel) => void;
+  setSelectedUbs: (ubs: string | null) => void;
+  /** Sets selectedUbs WITHOUT changing analysisLevel or resetting bairro/escola.
+   *  Use when you need to store the parent UBS reference after already setting bairro/escola level. */
+  setParentUbs: (ubs: string | null) => void;
+  setSelectedBairroName: (bairro: string | null) => void;
+  setSelectedSchoolName: (school: string | null) => void;
+
   anoSelecionado: string;
   setAnoSelecionado: (ano: string) => void;
   indicador: string;
@@ -19,7 +35,7 @@ interface AppState {
   setActivePoiTypes: (types: PoiType[]) => void;
   selectedPoi: any | null;
   setSelectedPoi: (poi: any | null) => void;
-  
+
   // Dark mode & Sidebar toggles
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
@@ -48,7 +64,115 @@ export const useAppStore = create<AppState>()(
       viewMode: 'map',
       setViewMode: (mode) => set({ viewMode: mode }),
       selectedBairro: null,
-      setSelectedBairro: (bairro) => set({ selectedBairro: bairro }),
+      setSelectedBairro: (bairro) => {
+        if (!bairro) {
+          set({
+            selectedBairro: null,
+            analysisLevel: 'municipio',
+            selectedUbs: null,
+            selectedBairroName: null,
+            selectedSchoolName: null
+          });
+        } else if (bairro.startsWith('UBS ') || bairro.startsWith('USF ') || bairro.toLowerCase().includes('urgência')) {
+          set({
+            selectedBairro: bairro,
+            analysisLevel: 'ubs',
+            selectedUbs: bairro,
+            selectedBairroName: null,
+            selectedSchoolName: null
+          });
+        } else {
+          set({ selectedBairro: bairro });
+        }
+      },
+
+      // Hierarchical analysis initial state
+      analysisLevel: 'municipio',
+      selectedUbs: null,
+      selectedBairroName: null,
+      selectedSchoolName: null,
+
+      setAnalysisLevel: (level) => set((state) => {
+        if (level === 'municipio') {
+          return {
+            analysisLevel: 'municipio',
+            selectedBairro: null,
+            selectedUbs: null,
+            selectedBairroName: null,
+            selectedSchoolName: null
+          };
+        }
+        if (level === 'ubs') {
+          return {
+            analysisLevel: 'ubs',
+            selectedBairroName: null,
+            selectedSchoolName: null
+          };
+        }
+        if (level === 'bairro') {
+          return {
+            analysisLevel: 'bairro',
+            selectedSchoolName: null
+          };
+        }
+        return { analysisLevel: level };
+      }),
+
+      // Full UBS selection — changes analysisLevel to 'ubs' and clears sub-selections
+      setSelectedUbs: (ubs) => set((state) => {
+        if (!ubs) {
+          return {
+            selectedUbs: null,
+            selectedBairro: null,
+            analysisLevel: 'municipio',
+            selectedBairroName: null,
+            selectedSchoolName: null
+          };
+        }
+        return {
+          selectedUbs: ubs,
+          selectedBairro: ubs,
+          analysisLevel: 'ubs',
+          selectedBairroName: null,
+          selectedSchoolName: null
+        };
+      }),
+
+      // Silent UBS reference setter — does NOT change analysisLevel or clear sub-selections
+      // Use after setSelectedBairroName or setSelectedSchoolName to preserve parent context
+      setParentUbs: (ubs) => set({ selectedUbs: ubs }),
+
+      setSelectedBairroName: (bairro) => set((state) => {
+        if (!bairro) {
+          return {
+            selectedBairroName: null,
+            selectedBairro: state.selectedUbs,
+            analysisLevel: state.selectedUbs ? 'ubs' : 'municipio'
+          };
+        }
+        return {
+          selectedBairroName: bairro,
+          selectedBairro: bairro,
+          analysisLevel: 'bairro',
+          selectedSchoolName: null
+        };
+      }),
+
+      setSelectedSchoolName: (school) => set((state) => {
+        if (!school) {
+          return {
+            selectedSchoolName: null,
+            selectedBairro: state.selectedBairroName || state.selectedUbs,
+            analysisLevel: state.selectedBairroName ? 'bairro' : (state.selectedUbs ? 'ubs' : 'municipio')
+          };
+        }
+        return {
+          selectedSchoolName: school,
+          selectedBairro: school,
+          analysisLevel: 'escola'
+        };
+      }),
+
       anoSelecionado: '2025',
       setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
       indicador: 'obesidade',
@@ -64,10 +188,10 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       setSidebarCollapsed: (val) => set({ sidebarCollapsed: val }),
 
-      // Initial State Hydration with Mock Data Fallback
-      temporalData: DADOS_TEMPORAIS,
+      // Initial State Hydration with Database (no mock fallback)
+      temporalData: [],
       regionalData: {},
-      yearsList: ['2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026 ★', '2027 ★'],
+      yearsList: [],
       loading: false,
       error: null,
 
@@ -93,7 +217,7 @@ export const useAppStore = create<AppState>()(
       }
     }),
     {
-      name: 'nutrialerta-ui-state', // chave no localStorage
+      name: 'nutrialerta-ui-state',
       storage: createJSONStorage(() => localStorage),
       // Persiste só o que faz sentido — dados de API são sempre buscados frescos
       partialize: (state) => ({

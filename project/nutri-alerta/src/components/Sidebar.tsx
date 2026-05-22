@@ -1,10 +1,8 @@
 "use client";
 import React from 'react';
-import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Bot } from 'lucide-react';
+import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Bot, Hospital, Home, School, Search, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
-import { UNIDADES_SAUDE } from '@/lib/mockData';
-
-
+import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
 
 export default function Sidebar() {
   const { 
@@ -12,6 +10,10 @@ export default function Sidebar() {
     anoSelecionado, setAnoSelecionado, 
     indicador, setIndicador, 
     selectedBairro, setSelectedBairro, 
+    analysisLevel, setAnalysisLevel,
+    selectedUbs, setSelectedUbs,
+    selectedBairroName, setSelectedBairroName,
+    selectedSchoolName, setSelectedSchoolName,
     yearsList,
     temporalData,
     regionalData,
@@ -23,10 +25,18 @@ export default function Sidebar() {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  // Sincroniza a busca caso a UBS seja clicada diretamente no mapa
+  // Sincroniza a busca caso o escopo de análise mude globalmente (ex: clicado no mapa)
   React.useEffect(() => {
-    setSearchQuery(selectedBairro || '');
-  }, [selectedBairro]);
+    if (analysisLevel === 'ubs') {
+      setSearchQuery(selectedUbs || '');
+    } else if (analysisLevel === 'bairro') {
+      setSearchQuery(selectedBairroName || '');
+    } else if (analysisLevel === 'escola') {
+      setSearchQuery(selectedSchoolName || '');
+    } else {
+      setSearchQuery('');
+    }
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
 
   // Fecha o menu de sugestões ao clicar fora dele
   React.useEffect(() => {
@@ -39,14 +49,65 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const ubsList = UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-    const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-    const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-    return nameA.localeCompare(nameB);
-  });
-  const filteredUbs = ubsList.filter(u =>
-    u.nome.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Lista de UBSs
+  const ubsList = React.useMemo(() => {
+    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
+      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
+      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
+      return nameA.localeCompare(nameB);
+    });
+  }, []);
+
+  // Lista de Bairros Únicos extraídos do GeoJSON
+  const uniqueBairrosList = React.useMemo(() => {
+    const bairrosGeoJSON = getVoronoiGeoJSON();
+    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
+    const setNames = new Set<string>();
+    const list: Array<{ nome: string; parentUbs: string }> = [];
+    bairrosGeoJSON.features.forEach((feat: any) => {
+      const name = feat.properties?.nome_real_bairro;
+      const ubs = feat.properties?.nome_bairro;
+      if (name && !setNames.has(name)) {
+        setNames.add(name);
+        list.push({ nome: name, parentUbs: ubs || '' });
+      }
+    });
+    return list.sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  // Lista de 88 Escolas Analisadas
+  const schoolsList = React.useMemo(() => {
+    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  // Filtros aplicados baseados no searchQuery ativo e na hierarquia de foco
+  const filteredUbs = React.useMemo(() => {
+    return ubsList.filter(u =>
+      u.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [ubsList, searchQuery]);
+
+  const filteredBairros = React.useMemo(() => {
+    let list = uniqueBairrosList;
+    if (selectedUbs) {
+      list = list.filter(b => b.parentUbs === selectedUbs);
+    }
+    return list.filter(b =>
+      b.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [uniqueBairrosList, selectedUbs, searchQuery]);
+
+  const filteredSchools = React.useMemo(() => {
+    let list = schoolsList;
+    if (selectedBairroName) {
+      list = list.filter(s => s.bairro === selectedBairroName);
+    } else if (selectedUbs) {
+      list = list.filter(s => s.regiao_ubs === selectedUbs);
+    }
+    return list.filter(s =>
+      s.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
   const selectedYearData = temporalData.find(d => d.ano === anoSelecionado);
   const avgObs = selectedYearData ? `${selectedYearData.obesidade.toFixed(2)}%` : '...';
@@ -112,69 +173,188 @@ export default function Sidebar() {
             {/* Separador Interno */}
             <div className="border-t border-slate-100 dark:border-zinc-900/60" />
 
-            {/* Filtro Geográfico */}
+            {/* Filtro Geográfico de Escopo Hierárquico */}
             <div ref={dropdownRef} className="relative z-[100]">
               <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-widest mb-2.5 flex items-center gap-1.5 leading-none">
                 <Map className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" /> Região em Foco
               </label>
+              
+              {/* Segmented level control button group */}
+              <div className="flex bg-slate-100 dark:bg-zinc-900/60 rounded-xl p-0.5 mb-2.5 gap-0.5 shadow-inner">
+                {[
+                  { id: 'municipio', label: 'Geral', icon: Globe },
+                  { id: 'ubs', label: 'UBS', icon: Hospital },
+                  { id: 'bairro', label: 'Bairro', icon: Home },
+                  { id: 'escola', label: 'Escola', icon: School }
+                ].map((lvl) => {
+                  const Icon = lvl.icon;
+                  const isActive = analysisLevel === lvl.id;
+                  return (
+                    <button
+                      key={lvl.id}
+                      onClick={() => {
+                        setAnalysisLevel(lvl.id as any);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={`flex-1 flex flex-col items-center py-1.5 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-white dark:bg-zinc-800 text-teal-650 dark:text-teal-400 shadow-sm'
+                          : 'text-slate-550 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/30 dark:hover:bg-zinc-800/20'
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 mb-1 ${isActive ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-550'}`} />
+                      {lvl.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Seletor do Input baseado no nível ativo */}
               <div className="relative">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => {
-                    setSearchQuery(e.target.value);
-                    setIsDropdownOpen(true);
-                    if (e.target.value === '') {
-                      setSelectedBairro(null);
+                {analysisLevel === 'municipio' ? (
+                  <input
+                    type="text"
+                    disabled
+                    value="Rio Claro (Geral)"
+                    className="w-full bg-slate-100/50 dark:bg-zinc-900/30 border border-slate-200 dark:border-zinc-850 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-bold text-slate-500 dark:text-zinc-400 cursor-not-allowed opacity-80"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => {
+                      setSearchQuery(e.target.value);
+                      setIsDropdownOpen(true);
+                      if (e.target.value === '') {
+                        if (analysisLevel === 'ubs') setSelectedUbs(null);
+                        else if (analysisLevel === 'bairro') setSelectedBairroName(null);
+                        else if (analysisLevel === 'escola') setSelectedSchoolName(null);
+                      }
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    placeholder={
+                      analysisLevel === 'ubs' 
+                        ? "Pesquisar UBS..." 
+                        : analysisLevel === 'bairro' 
+                          ? "Pesquisar Bairro..." 
+                          : "Pesquisar Escola..."
                     }
-                  }}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  placeholder="Pesquisar UBS..."
-                  className="w-full bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-900"
-                />
-                {selectedBairro ? (
+                    className="w-full bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100 dark:hover:bg-zinc-900"
+                  />
+                )}
+
+                {analysisLevel !== 'municipio' && (
+                  (analysisLevel === 'ubs' && selectedUbs) || 
+                  (analysisLevel === 'bairro' && selectedBairroName) || 
+                  (analysisLevel === 'escola' && selectedSchoolName)
+                ) ? (
                   <button
                     onClick={() => {
-                      setSelectedBairro(null);
                       setSearchQuery('');
                       setIsDropdownOpen(false);
+                      if (analysisLevel === 'ubs') setSelectedUbs(null);
+                      else if (analysisLevel === 'bairro') setSelectedBairroName(null);
+                      else if (analysisLevel === 'escola') setSelectedSchoolName(null);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors text-xs font-bold px-1"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                   >
-                    ✕
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 ) : (
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 dark:text-zinc-500 pointer-events-none">
-                    🔍
-                  </div>
+                  analysisLevel !== 'municipio' && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550" />
+                    </div>
+                  )
                 )}
               </div>
               
               {/* Dropdown Suggestions */}
-              {isDropdownOpen && (
+              {isDropdownOpen && analysisLevel !== 'municipio' && (
                 <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto bg-white dark:bg-[#0c0d10] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg z-[500] scrollbar-thin">
-                  {filteredUbs.length > 0 ? (
-                    filteredUbs.map(u => (
-                      <button
-                        key={u.nome}
-                        onClick={() => {
-                          setSelectedBairro(u.nome);
-                          setSearchQuery(u.nome);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
-                          selectedBairro === u.nome
-                            ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
-                            : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                        }`}
-                      >
-                        {u.nome}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-500 italic text-center">
-                      Nenhuma UBS encontrada
-                    </div>
+                  {analysisLevel === 'ubs' && (
+                    filteredUbs.length > 0 ? (
+                      filteredUbs.map(u => (
+                        <button
+                          key={u.nome}
+                          onClick={() => {
+                            setSelectedUbs(u.nome);
+                            setSearchQuery(u.nome);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                            selectedUbs === u.nome
+                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                          }`}
+                        >
+                          {u.nome}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
+                        Nenhuma UBS encontrada
+                      </div>
+                    )
+                  )}
+
+                  {analysisLevel === 'bairro' && (
+                    filteredBairros.length > 0 ? (
+                      filteredBairros.map(b => (
+                        <button
+                          key={b.nome}
+                          onClick={() => {
+                            setSelectedUbs(b.parentUbs);
+                            setSelectedBairroName(b.nome);
+                            setSearchQuery(b.nome);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                            selectedBairroName === b.nome
+                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                          }`}
+                        >
+                                                    <span className="block font-bold truncate">{b.nome}</span>
+                          <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-0.5">UBS: {b.parentUbs.replace('UBS ', '').replace('USF ', '')}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
+                        Nenhum bairro encontrado
+                      </div>
+                    )
+                  )}
+
+                  {analysisLevel === 'escola' && (
+                    filteredSchools.length > 0 ? (
+                      filteredSchools.map(s => (
+                        <button
+                          key={s.nome}
+                          onClick={() => {
+                            setSelectedUbs(s.regiao_ubs || null);
+                            setSelectedBairroName(s.bairro || null);
+                            setSelectedSchoolName(s.nome);
+                            setSearchQuery(s.nome);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold transition-colors border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 ${
+                            selectedSchoolName === s.nome
+                              ? 'bg-teal-50/55 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400'
+                              : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                          }`}
+                        >
+                          <span className="block font-bold text-slate-850 dark:text-zinc-200 leading-tight">{s.nome}</span>
+                          <span className="block text-[8.5px] text-slate-450 dark:text-zinc-500 font-semibold uppercase mt-1">
+                            {s.bairro ? `${s.bairro} · ` : ''}UBS: {(s.regiao_ubs || '').replace('UBS ', '').replace('USF ', '')}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-3.5 py-2.5 text-[11px] text-slate-400 dark:text-zinc-550 italic text-center">
+                        Nenhuma escola encontrada
+                      </div>
+                    )
                   )}
                 </div>
               )}
@@ -280,7 +460,7 @@ export default function Sidebar() {
         {/* Fonte de dados */}
         <div className="pt-2">
           <p className="text-[9px] text-slate-450 dark:text-zinc-550 leading-relaxed font-medium">
-            Fonte: SISVAN/CNES · Status: Dados reais + ML (2026–2027)
+            Fonte: Nutri for Schools/CNES · Status: Dados reais + ML (2026–2027)
           </p>
         </div>
       </div>

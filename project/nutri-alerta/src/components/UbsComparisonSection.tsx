@@ -28,8 +28,8 @@ export default function UbsComparisonSection() {
   }, []);
 
   // Estados locais para seleção das duas UBSs
-  const [ubsA, setUbsA] = useState<string>("UBS Jardim Chervezon");
-  const [ubsB, setUbsB] = useState<string>("UBS Vila Cristina");
+  const [ubsA, setUbsA] = useState<string>("UBS Jardim Chervezon “Dr. Nicolino Maziotti”");
+  const [ubsB, setUbsB] = useState<string>("UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”");
 
   // Sincroniza a UBS A com a UBS/Bairro selecionado no mapa/sidebar globalmente
   React.useEffect(() => {
@@ -208,7 +208,7 @@ export default function UbsComparisonSection() {
               Comparador Territorial de UBS
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
-              Análise comparativa em tempo real entre duas unidades de atenção básica · SISVAN 2025
+              Análise comparativa em tempo real entre duas unidades de atenção básica · Nutri for Schools 2025
             </p>
           </div>
         </div>
@@ -379,7 +379,7 @@ export default function UbsComparisonSection() {
                 </span>
               </div>
               <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-blue-50 dark:bg-blue-950/20 text-blue-500 border border-blue-100 dark:border-blue-900/35">
-                SISVAN
+                Nutri for Schools
               </span>
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function UbsComparisonSection() {
                 </span>
               </div>
               <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500 border border-indigo-100 dark:border-indigo-900/35">
-                SISVAN
+                Nutri for Schools
               </span>
             </div>
           </div>

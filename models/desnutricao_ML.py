@@ -79,11 +79,42 @@ df_ubs = df_ubs.dropna(subset=['cnes'])
 df_ubs['cnes'] = df_ubs['cnes'].astype(int).astype(str).str.strip()
 df_escolas['tipo_rede'] = np.where(df_escolas['nome'].str.contains('E.M.|E.E.', regex=True, na=False), 'publica', 'privada')
 
+# Calcular as médias globais das escolas para fallback
+global_mean_desnutricao = df_escolas['desnutricao'].mean()
+global_mean_obesidade = df_escolas['obesidade'].mean()
+global_mean_sobrepeso = df_escolas['sobrepeso'].mean()
+global_mean_eutrofia = df_escolas['eutrofia'].mean()
+
 features_espaciais = []
 for _, ubs in df_ubs.iterrows():
     lat_u, lon_u = ubs['lat'], ubs['lon']
-    escolas_pub = sum(1 for _, e in df_escolas[df_escolas['tipo_rede']=='publica'].iterrows() if calcular_distancia(lat_u, lon_u, e['lat'], e['lon']) <= 1.5)
-    escolas_priv = sum(1 for _, e in df_escolas[df_escolas['tipo_rede']=='privada'].iterrows() if calcular_distancia(lat_u, lon_u, e['lat'], e['lon']) <= 1.5)
+    
+    # Encontrar escolas no entorno de 1.5 km
+    escolas_entorno = []
+    escolas_pub = 0
+    escolas_priv = 0
+    
+    for _, e in df_escolas.iterrows():
+        dist = calcular_distancia(lat_u, lon_u, e['lat'], e['lon'])
+        if dist <= 1.5:
+            escolas_entorno.append(e)
+            if e['tipo_rede'] == 'publica':
+                escolas_pub += 1
+            else:
+                escolas_priv += 1
+                
+    if len(escolas_entorno) > 0:
+        esc_media_desnutricao = np.mean([e['desnutricao'] for e in escolas_entorno])
+        esc_media_obesidade = np.mean([e['obesidade'] for e in escolas_entorno])
+        esc_media_sobrepeso = np.mean([e['sobrepeso'] for e in escolas_entorno])
+        esc_media_eutrofia = np.mean([e['eutrofia'] for e in escolas_entorno])
+    else:
+        # Fallback global
+        esc_media_desnutricao = global_mean_desnutricao
+        esc_media_obesidade = global_mean_obesidade
+        esc_media_sobrepeso = global_mean_sobrepeso
+        esc_media_eutrofia = global_mean_eutrofia
+        
     fastfood = sum(1 for _, a in df_ambiente.iterrows() if calcular_distancia(lat_u, lon_u, a['lat'], a['lon']) <= 1.5)
     supermercados = sum(1 for _, o in df_oasis.iterrows() if calcular_distancia(lat_u, lon_u, o['lat'], o['lon']) <= 1.5)
     pracas = sum(1 for _, e in df_esporte.iterrows() if calcular_distancia(lat_u, lon_u, e['lat'], e['lon']) <= 1.5)
@@ -92,6 +123,10 @@ for _, ubs in df_ubs.iterrows():
     features_espaciais.append({
         'cnes': ubs['cnes'], 'lat_ubs': lat_u, 'lon_ubs': lon_u,
         'qtd_esc_publicas': escolas_pub, 'qtd_esc_privadas': escolas_priv,
+        'esc_media_desnutricao': esc_media_desnutricao,
+        'esc_media_obesidade': esc_media_obesidade,
+        'esc_media_sobrepeso': esc_media_sobrepeso,
+        'esc_media_eutrofia': esc_media_eutrofia,
         'qtd_fastfood': fastfood, 'qtd_supermercados': supermercados,
         'qtd_pracas_esporte': pracas, 'acesso_transporte': onibus
     })
@@ -109,7 +144,12 @@ df_master['Delta_Desnutricao'] = df_master['Tendencia_Desnutricao'] - df_master[
 
 df_modelo = df_master.dropna(subset=['Desnutricao_Ano_Anterior', 'Delta_Desnutricao']).copy()
 
-features = ['Ano', 'Faixa_Etaria_Cod', 'Desnutricao_Ano_Anterior', 'qtd_esc_publicas', 'qtd_esc_privadas', 'qtd_fastfood', 'qtd_supermercados', 'qtd_pracas_esporte', 'acesso_transporte']
+features = [
+    'Ano', 'Faixa_Etaria_Cod', 'Desnutricao_Ano_Anterior', 
+    'qtd_esc_publicas', 'qtd_esc_privadas', 
+    'esc_media_desnutricao', 'esc_media_obesidade', 'esc_media_sobrepeso', 'esc_media_eutrofia',
+    'qtd_fastfood', 'qtd_supermercados', 'qtd_pracas_esporte', 'acesso_transporte'
+]
 X = df_modelo[features]
 y = df_modelo['Delta_Desnutricao'] # IA prevê o crescimento da magreza
 

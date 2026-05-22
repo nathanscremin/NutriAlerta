@@ -5,7 +5,7 @@
  * (Idade Média, Distribuição por Gênero e Faixas Etárias) para o NutriAlerta.
  * 
  * Baseia-se no baseline da UBS e do ano selecionado para garantir consistência visual
- * e científica absoluta (OMS / SISVAN).
+ * e científica absoluta (OMS / Nutri for Schools).
  */
 
 export interface GroupMetric {

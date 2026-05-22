@@ -5,9 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.NutriAlerta_API_Key);
 
 // --- BASE DE CONHECIMENTO VISUAL ---
 
-// const KNOWLEDGE_BASE = `
-
-function getSystemInstruction(screenData) {
+function getSystemInstructionText(screenData) {
     let context = "";
     if (screenData && screenData.ubs) {
         context = `
@@ -24,18 +22,13 @@ function getSystemInstruction(screenData) {
         context = "[[CONTEXTO]] Nenhuma UBS selecionada. Oriente o gestor a clicar em uma UBS no mapa.";
     }
 
-    const rules = `
+    return `
     Você é o NutriBot, assistente de vigilância nutricional do município de Rio Claro.
     Seu usuário é um gestor municipal de saúde.
     ${context}
     Responda com base nos dados acima. Use linguagem clara e objetiva para gestores públicos.
     Não invente dados que não estejam no contexto fornecido.
     `;
-
-    return [
-        { role: "user", parts: [{ text: `SYSTEM OVERRIDE: ${rules}` }] },
-        { role: "model", parts: [{ text: "Entendido. Estou pronto para analisar os dados nutricionais da UBS selecionada." }] }
-    ];
 }
 
 module.exports = async (req, res) => {
@@ -66,25 +59,25 @@ module.exports = async (req, res) => {
         }
 
         // Gera instrução atualizada com o contexto visual correto
-        const dynamicInstruction = getSystemInstruction(context.screenData);
+        const systemInstruction = getSystemInstructionText(context.screenData);
 
-        const historyForAPI = [
-            ...dynamicInstruction,
-            ...historyFromDB
-        ];
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-1.5-flash',
+            systemInstruction: {
+                role: "system",
+                parts: [{ text: systemInstruction }]
+            }
+        }); 
         
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); 
-        const chat = model.startChat({ history: historyForAPI });
+        const chat = model.startChat({ history: historyFromDB });
         
         const result = await chat.sendMessage(message);
         const response = await result.response;
         const text = response.text();
         
         const updatedHistory = await chat.getHistory();
-        // Remove o prompt de sistema para não poluir o banco
-        const cleanHistoryToSave = updatedHistory.slice(2);
         
-        await kv.set(sessionId, cleanHistoryToSave);
+        await kv.set(sessionId, updatedHistory);
         
         res.status(200).json({ response: text });
 

@@ -2,64 +2,149 @@
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getDemographicsForUbs, AgeGroupData } from '@/lib/demographics';
+import { ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users2, Cake, Baby, HelpCircle, AlertCircle, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 export default function DemographicsSection() {
-  const { selectedBairro, anoSelecionado, temporalData, regionalData, darkMode } = useAppStore();
+  const { 
+    analysisLevel, 
+    selectedUbs, 
+    selectedBairroName, 
+    selectedSchoolName,
+    anoSelecionado, 
+    temporalData, 
+    regionalData, 
+    darkMode 
+  } = useAppStore();
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(2); // Padrão: Escolares (6 a 11 anos)
 
   const cleanYear = anoSelecionado.replace('★', '').trim();
 
   // Encontra os baselines dinâmicos de taxas
   const rates = useMemo(() => {
-    const currentBairroRecord = selectedBairro && regionalData[cleanYear]?.[selectedBairro];
-    
-    // Obesidade
-    let obs = 12.93;
-    if (selectedBairro && currentBairroRecord && typeof currentBairroRecord.obesidade === 'number') {
-      obs = currentBairroRecord.obesidade;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) obs = yearRec.obesidade;
+    // Helper to get parent UBS for a neighborhood
+    const getParentUbsForBairroName = (bName: string | null): string | null => {
+      if (!bName) return null;
+      const bairrosGeoJSON = getVoronoiGeoJSON();
+      if (!bairrosGeoJSON || !bairrosGeoJSON.features) return null;
+      const feat = bairrosGeoJSON.features.find((f: any) => f.properties?.nome_real_bairro === bName);
+      return feat?.properties?.nome_bairro || null;
+    };
+
+    // Helper for stable neighborhood perturbation
+    const getBairroPerturbedValue = (bairro: string, val: number, seed: string) => {
+      let hash = 0;
+      const key = `${bairro}-${seed}`;
+      for (let i = 0; i < key.length; i++) {
+        hash = key.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const factor = 1 + (((Math.abs(hash) % 101) - 50) / 1000); // stable scale factor between 0.95 and 1.05
+      return val * factor;
+    };
+
+    // 1. Get the global record for this cleanYear
+    const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 58 };
+    const globalDes = globalRec.desnutricao;
+    const globalObs = globalRec.obesidade;
+    const globalSob = (globalRec as any).sobrepeso || 15.2;
+    const globalEut = (globalRec as any).eutrofia || 58;
+
+    let pDes = globalDes;
+    let pObs = globalObs;
+    let pSob = globalSob;
+    let pEut = globalEut;
+
+    if (analysisLevel === 'municipio') {
+      // Just keep global values
+    } else if (analysisLevel === 'ubs') {
+      const ubsName = selectedUbs;
+      const yrRecord = ubsName ? regionalData[cleanYear]?.[ubsName] : null;
+      pDes = yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalDes;
+      pObs = yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalObs;
+      pSob = yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : globalSob;
+      pEut = yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : globalEut;
+    } else if (analysisLevel === 'bairro') {
+      const parentUbs = getParentUbsForBairroName(selectedBairroName) || selectedUbs;
+      const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
+      const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
+      const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
+      const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
+      const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
+
+      const bName = selectedBairroName || 'Bairro';
+      pDes = getBairroPerturbedValue(bName, baseDes, 'desnutricao');
+      pObs = getBairroPerturbedValue(bName, baseObs, 'obesidade');
+      pSob = getBairroPerturbedValue(bName, baseSob, 'sobrepeso');
+      pEut = getBairroPerturbedValue(bName, baseEut, 'eutrofia');
+
+      // Normalização a 100%
+      const sum = pDes + pObs + pSob + pEut;
+      if (sum > 0) {
+        pDes = (pDes / sum) * 100;
+        pObs = (pObs / sum) * 100;
+        pSob = (pSob / sum) * 100;
+        pEut = (pEut / sum) * 100;
+      }
+    } else if (analysisLevel === 'escola') {
+      const school = ALL_POIS.find(p => p.categoria === 'Educação' && p.nome === selectedSchoolName);
+      const parentUbs = school?.regiao_ubs || getParentUbsForBairroName(school?.bairro || null) || selectedUbs;
+      
+      const parentUbs2025 = parentUbs ? regionalData['2025']?.[parentUbs] : null;
+      const global2025 = temporalData.find(t => t.ano.replace('★', '').trim() === '2025') || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55 };
+      const refDes = parentUbs2025?.desnutricao ?? global2025.desnutricao;
+      const refObs = parentUbs2025?.obesidade ?? global2025.obesidade;
+      const refSob = parentUbs2025?.sobrepeso ?? (global2025 as any).sobrepeso ?? 21.0;
+      const refEut = parentUbs2025?.eutrofia ?? (global2025 as any).eutrofia ?? 61.55;
+
+      const ratioDes = school && typeof school.desnutricao === 'number' && refDes > 0 ? school.desnutricao / refDes : 1;
+      const ratioObs = school && typeof school.obesidade === 'number' && refObs > 0 ? school.obesidade / refObs : 1;
+      const ratioSob = school && typeof school.sobrepeso === 'number' && refSob > 0 ? school.sobrepeso / refSob : 1;
+      const ratioEut = school && typeof school.eutrofia === 'number' && refEut > 0 ? school.eutrofia / refEut : 1;
+
+      const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
+      const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
+      const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
+      const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
+      const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
+
+      pDes = baseDes * ratioDes;
+      pObs = baseObs * ratioObs;
+      pSob = baseSob * ratioSob;
+      pEut = baseEut * ratioEut;
+
+      // Normalização a 100%
+      const sum = pDes + pObs + pSob + pEut;
+      if (sum > 0) {
+        pDes = (pDes / sum) * 100;
+        pObs = (pObs / sum) * 100;
+        pSob = (pSob / sum) * 100;
+        pEut = (pEut / sum) * 100;
+      }
     }
 
-    // Desnutrição
-    let des = 2.62;
-    if (selectedBairro && currentBairroRecord && typeof currentBairroRecord.desnutricao === 'number') {
-      des = currentBairroRecord.desnutricao;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) des = yearRec.desnutricao;
-    }
-
-    // Sobrepeso
-    let sob = 16.3;
-    if (selectedBairro && currentBairroRecord && typeof currentBairroRecord.sobrepeso === 'number') {
-      sob = currentBairroRecord.sobrepeso;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).sobrepeso === 'number') sob = (yearRec as any).sobrepeso;
-    }
-
-    // Peso Adequado (Eutrofia)
-    let eut = 61.55;
-    if (selectedBairro && currentBairroRecord && typeof currentBairroRecord.eutrofia === 'number') {
-      eut = currentBairroRecord.eutrofia;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).eutrofia === 'number') eut = (yearRec as any).eutrofia;
-    }
-
-    return { obs, des, sob, eut };
-  }, [selectedBairro, anoSelecionado, temporalData, regionalData, cleanYear]);
+    return {
+      des: Number(pDes.toFixed(2)),
+      obs: Number(pObs.toFixed(2)),
+      sob: Number(pSob.toFixed(2)),
+      eut: Number(pEut.toFixed(2))
+    };
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData]);
 
   // Calcula os dados demográficos
   const demoData = useMemo(() => {
-    return getDemographicsForUbs(selectedBairro, cleanYear, rates.des, rates.sob, rates.obs, rates.eut);
-  }, [selectedBairro, cleanYear, rates]);
+    const focusName = analysisLevel === 'escola' 
+      ? selectedSchoolName 
+      : analysisLevel === 'bairro' 
+        ? selectedBairroName 
+        : analysisLevel === 'ubs' 
+          ? selectedUbs 
+          : 'Geral';
+    return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut);
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates]);
 
   const activeGroup = demoData.ageGroups[activeGroupIndex];
+
 
   // Helper para renderizar a barra de progresso de gênero
   const renderGenderBar = (label: string, male: number, female: number, badgeBg: string) => {
@@ -112,14 +197,14 @@ export default function DemographicsSection() {
   const groupInsightText = useMemo(() => {
     switch (activeGroupIndex) {
       case 0:
-        return "👶 Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos têm 52% de predominância em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida.";
+        return "Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos têm 52% de predomínio em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida.";
       case 1:
-        return "🧸 Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com leve predominância feminina para sobrepeso (52%).";
+        return "Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com leve predomínio feminino para sobrepeso (52%).";
       case 2:
-        return "🎒 Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos (55% de prevalência).";
+        return "Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos (55% de prevalência).";
       case 3:
       default:
-        return "⚡ Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas (54%), impulsionada por fatores hormonais e fisiológicos do desenvolvimento.";
+        return "Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas (54%), impulsionada por fatores hormonais e fisiológicos do desenvolvimento.";
     }
   }, [activeGroupIndex]);
 
@@ -137,15 +222,24 @@ export default function DemographicsSection() {
               Análise Demográfica Escolar
             </h3>
             <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
-              Idade média e análise de gênero estruturadas em 4 faixas etárias · SISVAN {anoSelecionado}
+              Idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
             </p>
           </div>
         </div>
 
         {/* Selo do Indicador */}
         <div className="text-[10px] text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-lg px-2.5 py-1.5 font-bold self-start sm:self-center shadow-sm">
-          Filtro: {selectedBairro ? selectedBairro.replace('UBS ', '').replace('USF ', '') : 'Consolidado Rio Claro'}
+          Filtro: {
+            analysisLevel === 'escola'
+              ? `Escola ${selectedSchoolName}`
+              : analysisLevel === 'bairro'
+                ? `Bairro ${selectedBairroName}`
+                : analysisLevel === 'ubs'
+                  ? selectedUbs
+                  : 'Consolidado Rio Claro'
+          }
         </div>
+
       </div>
 
       {/* Grid de Idades Médias Globais */}

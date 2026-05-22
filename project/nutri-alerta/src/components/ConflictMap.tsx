@@ -20,6 +20,7 @@ export default function ConflictMap() {
           color: ${darkMode ? '#f5f5f7' : '#0f172a'} !important;
           border-radius: 8px !important;
           padding: 5px 10px !important;
+          white-space: normal !important;
         }
         .custom-glass-tooltip::before { display: none !important; }
         .leaflet-container { background: ${mapBackground} !important; }
@@ -27,6 +28,8 @@ export default function ConflictMap() {
       <MapContainer
         center={[-22.405, -47.565]}
         zoom={13}
+        minZoom={10}
+        maxZoom={18}
         style={{ height: '100%', width: '100%', background: mapBackground }}
         scrollWheelZoom={false}
       >
@@ -48,9 +51,9 @@ export default function ConflictMap() {
             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.8, weight: 1 }}
           >
             <Tooltip className="custom-glass-tooltip">
-              <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              <div className="min-w-[140px] max-w-[200px] font-sans">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] block truncate" title={p.nome}>{p.nome}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold block mt-0.5">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>
@@ -65,9 +68,9 @@ export default function ConflictMap() {
             pathOptions={{ color: '#10b981', fillColor: '#10b981', fillOpacity: 0.8, weight: 1 }}
           >
             <Tooltip className="custom-glass-tooltip">
-              <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              <div className="min-w-[140px] max-w-[200px] font-sans">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] block truncate" title={p.nome}>{p.nome}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold block mt-0.5">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>
@@ -82,9 +85,9 @@ export default function ConflictMap() {
             pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.7, weight: 1 }}
           >
             <Tooltip className="custom-glass-tooltip">
-              <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7]">{p.nome}</span><br />
-                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">{p.tipo}</span>
+              <div className="min-w-[140px] max-w-[200px] font-sans">
+                <span className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] block truncate" title={p.nome}>{p.nome}</span>
+                <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold block mt-0.5">{p.tipo}</span>
               </div>
             </Tooltip>
           </CircleMarker>

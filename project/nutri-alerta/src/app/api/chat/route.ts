@@ -132,52 +132,69 @@ function getSystemInstruction(context: any, contextoRAG: string) {
     rules = getKnowledgeBaseGuia(screenData);
   } else {
     let contextStr = '';
+    const level = screenData?.analysisLevel || 'municipio';
+    const scopeName = screenData?.scopeName || 'Rio Claro (Geral)';
+    const ano = screenData?.ano ?? 'não informado';
+    const indicador = screenData?.indicador ?? 'não informado';
+    const des = screenData?.desnutricao ?? 'não informado';
+    const obs = screenData?.obesidade ?? 'não informado';
+    const sob = screenData?.sobrepeso ?? 'não informado';
+    const eut = screenData?.eutrofia ?? 'não informado';
 
-    if (screenData && screenData.bairro && screenData.bairro !== 'Não selecionado') {
-      contextStr = `
-      [[CONTEXTO DO BAIRRO SELECIONADO]]
-      Bairro: ${screenData.bairro}
-      Ano: ${screenData.ano ?? 'não informado'}
-      Faixa Etária: ${screenData.faixaEtaria ?? 'não informada'}
-      Indicador em foco: ${screenData.indicador ?? 'não informado'}
-      % Obesidade: ${screenData.obesidade ?? 'não informado'}
-      % Desnutrição: ${screenData.desnutricao ?? 'não informado'}
-      % Sobrepeso: ${screenData.sobrepeso ?? 'não informado'}
-      % Peso Adequado (Eutrofia): ${screenData.eutrofia ?? 'não informado'}
+    contextStr = `
+    [[CONTEXTO DE ANÁLISE MULTINÍVEL]]
+    Nível de Foco: ${level.toUpperCase()}
+    Nome da Região/Local: ${scopeName}
+    Ano de Referência: ${ano}
+    Indicador Principal em Foco: ${indicador}
+    
+    Estatísticas Nutricionais na Região Selecionada (${ano}):
+    - % Peso Adequado (Eutrofia): ${eut}%
+    - % Obesidade: ${obs}%
+    - % Sobrepeso: ${sob}%
+    - % Desnutrição: ${des}%
+    `;
+
+    if (level === 'escola') {
+      contextStr += `
+      A escola monitorada está localizada no bairro: ${screenData.bairro || 'não informado'}
+      Região de UBS parceira associada: ${screenData.regiaoUbs || 'não informada'}
       `;
-    } else {
-      contextStr = '[[CONTEXTO]] Nenhum bairro selecionado no painel. Use as médias agregadas gerais de Rio Claro descritas acima.';
+    } else if (level === 'bairro') {
+      contextStr += `
+      O bairro monitorado pertence à região de abrangência da UBS: ${screenData.regiaoUbs || 'não informada'}
+      `;
     }
 
     rules = `
-    Você é o NutriBot, assistente analítico e epidemiológico de vigilância nutricional do município de Rio Claro — SP.
+    Você é o NutriBot, assistente de vigilância nutricional de inteligência de saúde pública do município de Rio Claro — SP.
     Seu usuário é um gestor municipal de saúde pública.
 
     ${contextStr}
 
-    [[DOCUMENTAÇÃO TÉCNICA DE REFERÊNCIA (MINISTÉRIO DA SAÚDE / SISVAN)]]
-    ${contextoRAG ? contextoRAG : "Nenhum trecho de documento oficial indexado para esta pergunta específica. Use as diretrizes básicas do SISVAN."}
+    [[DOCUMENTAÇÃO TÉCNICA DE REFERÊNCIA (MINISTÉRIO DA SAÚDE / Nutri for Schools)]]
+    ${contextoRAG ? contextoRAG : "Nenhum trecho de documento oficial indexado para esta pergunta específica. Use as diretrizes básicas do Nutri for Schools."}
 
-    REGRAS DA IA:
-    1. Responda combinando os dados do contexto geográfico acima com as diretrizes oficiais do Ministério da Saúde recuperadas. Não invente números, parâmetros ou prazos de pesagem.
-    2. Use linguagem clara, objetiva e executiva para gestores públicos.
-    3. Se não houver bairro selecionado e a pergunta exigir dados locais específicos, lembre amigavelmente o gestor de selecionar uma unidade ou bairro na lista lateral.
-    4. Responda sempre em português brasileiro de forma pragmática e direta.
+    REGRAS DE RESPOSTA E POSTURA:
+    1. Responda combinando os dados do contexto geográfico e de análise multinível acima com as diretrizes oficiais do Ministério da Saúde recuperadas. Não invente números, parâmetros ou prazos de pesagem sob qualquer hipótese.
+    2. Adapte sua análise para o nível hierárquico ativo:
+       - Se for uma ESCOLA, analise a escola, mencione o bairro dela e a UBS de referência, recomendando intervenções diretas de ambiente escolar (cantinas saudáveis, hortas comunitárias, reavaliação de merenda).
+       - Se for um BAIRRO, mencione a UBS responsável pela cobertura e proponha ações focadas na vizinhança e agentes de saúde locais.
+       - Se for uma UBS, ofereça propostas focadas nas equipes de atenção primária.
+       - Se for MUNICIPIO (Geral), discuta políticas macro para a cidade de Rio Claro.
+    3. Use linguagem clara, objetiva, estruturada com listas ou tópicos elegantes, mantendo tom sério e profissional de consultoria estratégica.
+    4. Se não houver unidade/bairro/escola selecionada e a pergunta exigir dados locais específicos, lembre amigavelmente o gestor de selecionar uma unidade na lista lateral.
+    5. Responda sempre em português brasileiro de forma pragmática e direta.
     `;
   }
 
-  return [
-    { role: 'user', parts: [{ text: `SYSTEM OVERRIDE: ${rules}` }] },
-    {
-      role: 'model',
-      parts: [{ text: 'Entendido. Estou pronto para atuar cruzando dados do território com os marcos referenciais oficiais.' }],
-    },
-  ];
+  return rules;
 }
 
 function getLocalFallbackResponse(message: string, screenData: any) {
   const msgLower = message.toLowerCase();
-  const bairro = screenData?.bairro || 'Rio Claro';
+  const level = screenData?.analysisLevel || 'municipio';
+  const scopeName = screenData?.scopeName || 'Rio Claro';
   const ano = screenData?.ano || '2025';
   const indicador = screenData?.indicador || 'obesidade';
   
@@ -186,44 +203,64 @@ function getLocalFallbackResponse(message: string, screenData: any) {
     valor = screenData?.desnutricao || 2.62;
   } else if (indicador === 'sobrepeso') {
     valor = screenData?.sobrepeso || 16.3;
+  } else if (indicador === 'eutrofia') {
+    valor = screenData?.eutrofia || 61.55;
   } else {
     valor = screenData?.obesidade || 12.93;
   }
 
   const isHighRisk = (indicador === 'desnutricao' && valor > 3.0) || 
                      (indicador === 'obesidade' && valor > 13.0) ||
-                     (indicador === 'sobrepeso' && valor > 18.0);
+                     (indicador === 'sobrepeso' && valor > 18.0) ||
+                     (indicador === 'eutrofia' && valor < 55.0);
   const riskLabel = isHighRisk ? 'Alto' : 'Moderado';
+
+  const levelText = level === 'municipio' 
+    ? 'em todo o município de Rio Claro' 
+    : level === 'ubs' 
+      ? `na região da UBS ${scopeName}` 
+      : level === 'bairro' 
+        ? `no bairro ${scopeName} (área de abrangência da UBS ${screenData.regiaoUbs || 'responsável'})` 
+        : `na escola ${scopeName} (situada no bairro ${screenData.bairro || 'da escola'} e vinculada à UBS ${screenData.regiaoUbs || 'parceira'})`;
 
   if (msgLower.includes('olá') || msgLower.includes('oi') || msgLower.includes('bom') || msgLower.includes('boa')) {
     return `Olá! Sou o NutriBot, seu assistente de vigilância nutricional em Rio Claro.
     
-Atualmente estamos analisando os dados de **${bairro}** para o ano **${ano}**. 
+Atualmente estamos analisando os dados **${levelText}** para o ano **${ano}**. 
 A taxa de **${indicador}** nesta região está em **${valor}%** (Risco ${riskLabel}). 
 
 Como posso ajudar você na formulação de políticas públicas ou no planejamento de intervenções para esta unidade hoje?`;
   }
 
   if (msgLower.includes('ação') || msgLower.includes('acoes') || msgLower.includes('recomenda') || msgLower.includes('fazer') || msgLower.includes('intervir') || msgLower.includes('medida')) {
+    if (level === 'escola') {
+      return `Com base na prevalência de **${valor}%** de **${indicador}** na escola **${scopeName}**, proponho as seguintes intervenções prioritárias no ambiente escolar:
+
+1. **Readequação da Merenda Escolar:** Parceria com nutricionistas do PNAE para enriquecer o cardápio e fiscalizar o cumprimento das diretrizes de alimentos frescos.
+2. **Hortas Pedagógicas:** Criação de hortas comunitárias na escola como ferramenta pedagógica interdisciplinar, integrando crianças no cultivo de legumes e hortaliças.
+3. **Auditoria da Cantina:** Implementação de regulamento proibindo a venda de ultraprocessados, refrigerantes e doces industrializados na cantina interna.
+4. **Canais de Orientação Familiar:** Envio regular de cartilhas e receitas saudáveis de baixo custo para as famílias via reuniões de pais e aplicativos de comunicação escolar.`;
+    }
+
     if (isHighRisk) {
-      return `Com base na taxa elevada de **${valor}%** de **${indicador}** projetada para **${bairro}**, recomendo as seguintes ações prioritárias de saúde pública:
+      return `Com base na taxa elevada de **${valor}%** de **${indicador}** projetada **${levelText}**, recomendo as seguintes ações prioritárias de saúde pública no território:
 
-1. **Mutirão de Avaliação Nutricional Escolar:** Articulação imediata com as escolas da região de abrangência da UBS para avaliação antropométrica dos estudantes.
-2. **Busca Ativa de Famílias Vulneráveis:** Acionar os Agentes Comunitários de Saúde (ACS) para visitas focadas no aconselhamento dietético familiar.
-3. **Grupo de Apoio Nutricional na UBS:** Criação de grupos semanais de orientação com equipe multidisciplinar (nutricionistas, psicólogos e educadores físicos).
-4. **Combate ao Ambiente Obesogênico:** Restrição da publicidade de ultraprocessados nos arredores das escolas e promoção da Feira do Produtor local.`;
+1. **Mutirão de Avaliação e Triagem:** Articulação de mutirões antropométricos focados em localizar as famílias em situação de vulnerabilidade nutricional grave.
+2. **Busca Ativa de Famílias Vulneráveis:** Intensificar as visitas dos Agentes Comunitários de Saúde (ACS) focando no aconselhamento dietético das microáreas de risco.
+3. **Grupos Multidisciplinares de Apoio:** Criação de oficinas de nutrição prática e grupos terapêuticos integrando psicólogos, nutricionistas e educadores físicos nas unidades de saúde locais.
+4. **Feiras de Alimentos Saudáveis:** Fomentar feiras livres com preços acessíveis de hortifrúti diretamente nas imediações dos bairros mais vulneráveis.`;
     } else {
-      return `Como a taxa de **${indicador}** em **${bairro}** é de **${valor}%** (considerada dentro dos parâmetros de risco moderado), as ações recomendadas são de caráter preventivo e de manutenção:
+      return `Como a taxa de **${indicador}** **${levelText}** é de **${valor}%** (considerada dentro dos parâmetros de risco moderado), as ações recomendadas são de caráter preventivo e de manutenção da saúde:
 
-1. **Monitoramento Quadrimestral:** Acompanhar as pesagens do Programa Bolsa Família e do SISVAN para detecção de variações abruptas.
-2. **Campanhas Educativas:** Implementar palestras rápidas na sala de espera da UBS sobre escolhas alimentares saudáveis e rotulagem nutricional.
-3. **Estímulo à Atividade Física:** Fomentar o uso de praças e academias ao ar livre da região, em parceria com a Secretaria de Esportes.`;
+1. **Monitoramento Sistemático:** Acompanhar bimestralmente as pesagens de rotina do Nutri for Schools para prevenir flutuações e picos de risco.
+2. **Ações Rápidas na Sala de Espera:** Oferecer rápidas oficinas educativas ou distribuir informativos sobre rotulagem nutricional e escolhas alimentares inteligentes na recepção da UBS.
+3. **Integração com Esporte e Lazer:** Fomentar grupos de caminhada orientada e incentivar o uso das academias ao ar livre da vizinhança.`;
     }
   }
 
-  return `Entendido. Em termos epidemiológicos, os dados de **${bairro}** no ano de **${ano}** indicam que a taxa de **${indicador}** está em **${valor}%** (Risco **${riskLabel}**). 
+  return `Entendido. Em termos epidemiológicos, os dados **${levelText}** no ano de **${ano}** indicam que a taxa de **${indicador}** está em **${valor}%** (Risco **${riskLabel}**). 
 
-Recomendo focar no fortalecimento da atenção primária e na busca ativa de casos críticos nas microáreas periféricas mapeadas pelo nosso motor de geoprocessamento. Se desejar, posso sugerir intervenções específicas voltadas para escolas ou infraestrutura da vizinhança.`;
+Com base nisso, recomendo direcionar as ações comunitárias e de assistência da UBS parceira para atender os indivíduos em situação de risco identificados no nosso motor de geoprocessamento.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -260,10 +297,16 @@ export async function POST(req: NextRequest) {
     try {
       // 4. Implementação do RAG dinâmica: intercepta a busca e altera os parâmetros enviados à instrução
       const contextoRAG = buscarChuncksRelevantes(message, 2);
-      const dynamicInstruction = getSystemInstruction(context, contextoRAG);
-      const historyForAPI = [...dynamicInstruction, ...historyFromDB];
+      const systemInstruction = getSystemInstruction(context, contextoRAG);
+      const historyForAPI = [...historyFromDB];
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ 
+        model: 'gemini-1.5-flash',
+        systemInstruction: {
+          role: "system",
+          parts: [{ text: systemInstruction }]
+        }
+      });
       const chat = model.startChat({ history: historyForAPI });
 
       const result = await chat.sendMessage(message);
@@ -272,8 +315,7 @@ export async function POST(req: NextRequest) {
       if (isKvConfigured) {
         try {
           const updatedHistory = await chat.getHistory();
-          const cleanHistory = updatedHistory.slice(2);
-          await kv.set(sessionId, cleanHistory);
+          await kv.set(sessionId, updatedHistory);
         } catch (kvErr) {
           console.warn("Vercel KV write failed:", kvErr);
         }

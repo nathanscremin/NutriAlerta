@@ -31,17 +31,31 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Função para encontrar ficheiros em caminhos alternativos do projeto
+def localizacao_arquivo(nome_arquivo):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    caminhos_busca = [
+        nome_arquivo,  # Diretório de execução atual
+        os.path.join(script_dir, nome_arquivo),  # Mesmo diretório do script
+        os.path.join(script_dir, "..", nome_arquivo),  # Diretório pai do script
+        os.path.join(script_dir, "..", "project", "csv", nome_arquivo),  # project/csv/ do diretório pai
+        os.path.join(script_dir, "csv", nome_arquivo),  # project/csv relativo ao diretório
+        os.path.join("project", "csv", nome_arquivo),  # project/csv relativo ao diretório de execução
+        os.path.join("csv", nome_arquivo),  # csv relativo ao diretório de execução
+    ]
+    for p in caminhos_busca:
+        if os.path.exists(p):
+            return p
+    return nome_arquivo  # Fallback caso não seja encontrado
+
 @st.cache_data
 def carregar_dados():
-    # Caminhos para os arquivos CSV
-    base_path = "csv"
-    
     try:
-        df_mercados = pd.read_csv(os.path.join(base_path, 'mercados_gerais_rio_claro.csv'))
-        df_esporte = pd.read_csv(os.path.join(base_path, 'esporte_lazer_rio_claro.csv'))
-        df_ambiente = pd.read_csv(os.path.join(base_path, 'ambiente_alimentar_rio_claro.csv'))
+        df_mercados = pd.read_csv(localizacao_arquivo('mercados_gerais_rio_claro.csv'))
+        df_esporte = pd.read_csv(localizacao_arquivo('esporte_lazer_rio_claro.csv'))
+        df_ambiente = pd.read_csv(localizacao_arquivo('ambiente_alimentar_rio_claro.csv'))
     except FileNotFoundError:
-        st.error("Arquivos CSV não encontrados na pasta 'csv'. Verifique o diretório.")
+        st.error("Arquivos CSV não encontrados. Verifique o diretório.")
         return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     # Tratamento e Categorização
@@ -56,6 +70,7 @@ def carregar_dados():
     df_ambiente['categoria'] = 'Ambiente Obesogênico (Fast Food/Conv.)'
     df_ambiente['grupo'] = 'Fator de Risco'
     df_ambiente['color'] = [[231, 76, 60, 200]] * len(df_ambiente) # Vermelho
+    df_ambiente['peso'] = 1  # Adiciona coluna de peso com valor unitário para o mapa de calor pydeck
     
     df_completo = pd.concat([df_mercados, df_esporte, df_ambiente], ignore_index=True)
     
@@ -90,7 +105,7 @@ if not df_completo.empty:
             opacity=0.8,
             get_position=["lon", "lat"],
             aggregation="SUM",
-            get_weight="1",
+            get_weight="peso",
             radiusPixels=60,
         )
 
