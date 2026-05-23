@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Menu, Map, Users, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
+import { UserCircle, Menu, Map, School, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ export function NutriAlertaLogo({ className = "w-6 h-6 text-white" }: { classNam
 
 const navItems = [
   { id: 'map' as const, label: 'Mapa de Risco', icon: Map },
-  { id: 'schools' as const, label: 'Análise Escolar', icon: Users },
+  { id: 'schools' as const, label: 'Análise Escolar', icon: School },
   { id: 'comparison' as const, label: 'Comparador UBS', icon: Stethoscope },
   { id: 'consultant' as const, label: 'Consultor', icon: Bot },
 ];

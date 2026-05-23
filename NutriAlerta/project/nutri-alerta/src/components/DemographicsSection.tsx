@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getDemographicsForUbs, AgeGroupData } from '@/lib/demographics';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users2, Cake, Baby, HelpCircle, AlertCircle, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { Users2, ShieldCheck, TrendingUp, TrendingDown, HelpCircle, AlertCircle } from 'lucide-react';
 
 export default function DemographicsSection() {
   const { 
@@ -210,7 +210,7 @@ export default function DemographicsSection() {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
             <div className="flex items-baseline gap-1.5 mt-1">
               <h4 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{demoData.globalAvgAgeEut}</h4>
               <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
@@ -224,10 +224,10 @@ export default function DemographicsSection() {
             <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-full blur-xl" />
           </div>
           <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-500 border border-red-100/50 dark:border-red-900/50 shrink-0">
-            <Cake className="w-5 h-5" />
+            <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Obesidade</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Obesidade</span>
             <div className="flex items-baseline gap-1.5 mt-1">
               <h4 className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-tight">{demoData.globalAvgAgeObs}</h4>
               <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
@@ -241,13 +241,13 @@ export default function DemographicsSection() {
             <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl" />
           </div>
           <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 border border-amber-100/50 dark:border-amber-900/50 shrink-0">
-            <ArrowUpRight className="w-5 h-5" />
+            <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Sobrepeso</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Sobrepeso</span>
             <div className="flex items-baseline gap-1.5 mt-1">
               <h4 className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">{demoData.globalAvgAgeSob}</h4>
-              <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
+              <span className="text-[10px] font-semibold text-slate-555 dark:text-zinc-500">anos</span>
             </div>
           </div>
         </div>
@@ -258,13 +258,13 @@ export default function DemographicsSection() {
             <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl" />
           </div>
           <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100/50 dark:border-blue-900/50 shrink-0">
-            <Baby className="w-5 h-5" />
+            <TrendingDown className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-555 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
             <div className="flex items-baseline gap-1.5 mt-1">
               <h4 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">{demoData.globalAvgAgeDes}</h4>
-              <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
+              <span className="text-[10px] font-semibold text-slate-555 dark:text-zinc-500">anos</span>
             </div>
           </div>
         </div>
