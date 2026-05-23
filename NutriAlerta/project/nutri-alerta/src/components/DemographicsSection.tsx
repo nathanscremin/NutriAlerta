@@ -151,18 +151,25 @@ export default function DemographicsSection() {
 
   // Texto explicativo dinâmico baseado na faixa selecionada
   const groupInsightText = useMemo(() => {
+    if (!demoData || !demoData.ageGroups || demoData.ageGroups.length < 4) return "";
+    
+    const g0 = demoData.ageGroups[0];
+    const g1 = demoData.ageGroups[1];
+    const g2 = demoData.ageGroups[2];
+    const g3 = demoData.ageGroups[3];
+
     switch (activeGroupIndex) {
       case 0:
-        return "Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos têm 52% de predomínio em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida.";
+        return `Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos representam ${g0.desnutricao.pctMasculino}% do predomínio em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida (taxa de prevalência local de ${g0.desnutricao.rate.toFixed(2)}%).`;
       case 1:
-        return "Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com leve predomínio feminino para sobrepeso (52%).";
+        return `Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com predomínio de ${g1.sobrepeso.pctFeminino}% das meninas para sobrepeso (taxa de prevalência local de ${g1.sobrepeso.rate.toFixed(2)}%).`;
       case 2:
-        return "Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos (55% de prevalência).";
+        return `Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos com ${g2.obesidade.pctMasculino}% da prevalência (taxa de prevalência local de ${g2.obesidade.rate.toFixed(2)}%).`;
       case 3:
       default:
-        return "Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas (54%), impulsionada por fatores hormonais e fisiológicos do desenvolvimento.";
+        return `Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas com ${g3.sobrepeso.pctFeminino}% dos casos, impulsionada por fatores hormonais e fisiológicos do desenvolvimento (taxa de prevalência local de ${g3.sobrepeso.rate.toFixed(2)}%).`;
     }
-  }, [activeGroupIndex]);
+  }, [activeGroupIndex, demoData]);
 
   return (
     <div className="space-y-5 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 shadow-sm transition-colors duration-300">
