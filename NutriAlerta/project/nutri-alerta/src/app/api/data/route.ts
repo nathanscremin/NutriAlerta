@@ -84,6 +84,42 @@ function parseCSV(content: string) {
   });
 }
 
+// Robust Math Percentages Normalization to sum exactly to targetSum (default 100.00%)
+function normalizePercentages<T extends Record<string, any>>(
+  obj: T,
+  keys: Array<keyof T>,
+  targetSum: number = 100
+): T {
+  const result = { ...obj };
+  let sum = 0;
+  keys.forEach(k => {
+    sum += Number(result[k]) || 0;
+  });
+  if (sum === 0) return result;
+  
+  let newSum = 0;
+  keys.forEach(k => {
+    const val = Number(result[k]) || 0;
+    result[k] = Number(((val / sum) * targetSum).toFixed(2)) as any;
+    newSum += result[k] as number;
+  });
+  
+  const diff = Number((targetSum - newSum).toFixed(2));
+  if (diff !== 0 && keys.length > 0) {
+    let maxKey = keys[0];
+    let maxVal = Number(result[maxKey]) || 0;
+    keys.forEach(k => {
+      const val = Number(result[k]) || 0;
+      if (val > maxVal) {
+        maxVal = val;
+        maxKey = k;
+      }
+    });
+    result[maxKey] = Number((Number(result[maxKey] || 0) + diff).toFixed(2)) as any;
+  }
+  return result;
+}
+
 // Dynamic CSV Finder
 async function findCSVFile(filenames: string[]): Promise<string | null> {
   const cwd = process.cwd();
@@ -107,6 +143,7 @@ export async function GET(req: NextRequest) {
   try {
     const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
     const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
+    const demographicsPath = await findCSVFile(['NutriAlerta_Projecao_Demografica.json']);
 
     if (!obesityPath || !desnutricaoPath) {
       console.warn("CSV Files not found!");
@@ -114,6 +151,35 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "CSV files not found. Please upload them to project/csv/"
       });
+    }
+
+    let demographicData = null;
+    if (demographicsPath) {
+      try {
+        const demographicContent = await fs.readFile(demographicsPath, 'utf-8');
+        demographicData = JSON.parse(demographicContent);
+        if (demographicData) {
+          Object.keys(demographicData).forEach(key => {
+            const entry = demographicData[key];
+            if (entry && Array.isArray(entry.ageGroups)) {
+              entry.ageGroups.forEach((group: any) => {
+                const des = group.desnutricao?.rate || 0;
+                const sob = group.sobrepeso?.rate || 0;
+                const obs = group.obesidade?.rate || 0;
+                const eut = group.eutrofia?.rate || 0;
+                const rawObj = { desnutricao: des, sobrepeso: sob, obesidade: obs, eutrofia: eut };
+                const normalized = normalizePercentages(rawObj, ['desnutricao', 'sobrepeso', 'obesidade', 'eutrofia']);
+                if (group.desnutricao) group.desnutricao.rate = normalized.desnutricao;
+                if (group.sobrepeso) group.sobrepeso.rate = normalized.sobrepeso;
+                if (group.obesidade) group.obesidade.rate = normalized.obesidade;
+                if (group.eutrofia) group.eutrofia.rate = normalized.eutrofia;
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Error reading demographics JSON:", err);
+      }
     }
 
     const obesityContent = await fs.readFile(obesityPath, 'utf-8');
@@ -194,6 +260,24 @@ export async function GET(req: NextRequest) {
       rec.delta_desnutricao = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Desnutricao;
     });
 
+    // Normalizar Eutrofia, Sobrepeso, Obesidade, Desnutrição nas UBS para somar exatamente 100%
+    Object.keys(rawDataMap).forEach(year => {
+      Object.keys(rawDataMap[year]).forEach(ubsName => {
+        const rec = rawDataMap[year][ubsName] as any;
+        const rawObj = {
+          desnutricao: rec.desnutricao !== undefined ? rec.desnutricao : 2.62,
+          obesidade: rec.obesidade !== undefined ? rec.obesidade : 12.93,
+          sobrepeso: rec.sobrepeso !== undefined ? rec.sobrepeso : 15.2,
+          eutrofia: rec.eutrofia !== undefined ? rec.eutrofia : 61.55
+        };
+        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
+        rec.desnutricao = normalized.desnutricao;
+        rec.obesidade = normalized.obesidade;
+        rec.sobrepeso = normalized.sobrepeso;
+        rec.eutrofia = normalized.eutrofia;
+      });
+    });
+
     // Compute delta_sobrepeso and delta_eutrofia dynamically year-over-year
     const yearsSortedForDelta = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
     yearsSortedForDelta.forEach((yr, index) => {
@@ -254,18 +338,25 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      const avgObs = countObs > 0 ? Number((totalObs / countObs).toFixed(2)) : 0;
-      const avgDes = countDes > 0 ? Number((totalDes / countDes).toFixed(2)) : 0;
-      const avgSob = countSob > 0 ? Number((totalSob / countSob).toFixed(2)) : 0;
-      const avgEut = countEut > 0 ? Number((totalEut / countEut).toFixed(2)) : 61.5;
+      const rawObj = {
+        desnutricao: countDes > 0 ? totalDes / countDes : 2.62,
+        obesidade: countObs > 0 ? totalObs / countObs : 12.93,
+        sobrepeso: countSob > 0 ? totalSob / countSob : 15.2,
+        eutrofia: countEut > 0 ? totalEut / countEut : 61.5
+      };
+      const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
+      const des = normalized.desnutricao;
+      const obs = normalized.obesidade;
+      const sob = normalized.sobrepeso;
+      const eut = normalized.eutrofia;
 
       const isPrevisao = Number(yr) >= 2026;
       return {
         ano: yr + (isPrevisao ? ' ★' : ''),
-        desnutricao: avgDes,
-        obesidade: avgObs,
-        sobrepeso: avgSob,
-        eutrofia: avgEut,
+        desnutricao: des,
+        obesidade: obs,
+        sobrepeso: sob,
+        eutrofia: eut,
         isPrevisao
       };
     });
@@ -279,6 +370,24 @@ export async function GET(req: NextRequest) {
     // Deep clone schoolMetrics to avoid mutating cache
     const schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics));
     const schoolList = Object.values(schoolMetrics) as any[];
+
+    // Normalize school baselines to sum to exactly 100%
+    schoolList.forEach(school => {
+      Object.keys(school.anos).forEach(yr => {
+        const data = school.anos[yr];
+        const rawObj = {
+          desnutricao: data.desnutricao || 0,
+          obesidade: data.obesidade || 0,
+          sobrepeso: data.sobrepeso || 0,
+          eutrofia: data.eutrofia || 0
+        };
+        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
+        data.desnutricao = normalized.desnutricao;
+        data.obesidade = normalized.obesidade;
+        data.sobrepeso = normalized.sobrepeso;
+        data.eutrofia = normalized.eutrofia;
+      });
+    });
 
     // PROJECT SCHOOL METRICS FOR 2026 and 2027 BY APPLYING PARENT UBS MODEL TREND DELTAS
     schoolList.forEach(school => {
@@ -305,19 +414,17 @@ export async function GET(req: NextRequest) {
         const baseline = baselineYear ? school.anos[baselineYear] : { desnutricao: 3.0, obesidade: 10.0, sobrepeso: 15.0, eutrofia: 72.0, total_avaliados: 100 };
 
         // Apply deltas to baseline school rates
-        let des = Math.max(0, Math.min(100, (baseline.desnutricao || 0) + deltaDes));
-        let obs = Math.max(0, Math.min(100, (baseline.obesidade || 0) + deltaObs));
-        let sob = Math.max(0, Math.min(100, (baseline.sobrepeso || 0) + deltaSob));
-        let eut = Math.max(0, Math.min(100, (baseline.eutrofia || 0) + deltaEut));
-
-        // Normalize sum to 100%
-        const sum = des + obs + sob + eut;
-        if (sum > 0) {
-          des = Number(((des / sum) * 100).toFixed(2));
-          obs = Number(((obs / sum) * 100).toFixed(2));
-          sob = Number(((sob / sum) * 100).toFixed(2));
-          eut = Number(((eut / sum) * 100).toFixed(2));
-        }
+        const rawObj = {
+          desnutricao: Math.max(0, Math.min(100, (baseline.desnutricao || 0) + deltaDes)),
+          obesidade: Math.max(0, Math.min(100, (baseline.obesidade || 0) + deltaObs)),
+          sobrepeso: Math.max(0, Math.min(100, (baseline.sobrepeso || 0) + deltaSob)),
+          eutrofia: Math.max(0, Math.min(100, (baseline.eutrofia || 0) + deltaEut))
+        };
+        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
+        const des = normalized.desnutricao;
+        const obs = normalized.obesidade;
+        const sob = normalized.sobrepeso;
+        const eut = normalized.eutrofia;
 
         school.anos[targetYr] = {
           desnutricao: des,
@@ -449,25 +556,18 @@ export async function GET(req: NextRequest) {
         });
 
         if (sumAvaliados > 0) {
-          let des = Number((weightedDes / sumAvaliados).toFixed(2));
-          let obs = Number((weightedObs / sumAvaliados).toFixed(2));
-          let sob = Number((weightedSob / sumAvaliados).toFixed(2));
-          let eut = Number((weightedEut / sumAvaliados).toFixed(2));
-
-          // Normalização a 100%
-          const sum = des + obs + sob + eut;
-          if (sum > 0) {
-            des = Number(((des / sum) * 100).toFixed(2));
-            obs = Number(((obs / sum) * 100).toFixed(2));
-            sob = Number(((sob / sum) * 100).toFixed(2));
-            eut = Number(((eut / sum) * 100).toFixed(2));
-          }
-
+          const rawObj = {
+            desnutricao: weightedDes / sumAvaliados,
+            obesidade: weightedObs / sumAvaliados,
+            sobrepeso: weightedSob / sumAvaliados,
+            eutrofia: weightedEut / sumAvaliados
+          };
+          const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
           anos[yr] = {
-            desnutricao: des,
-            obesidade: obs,
-            sobrepeso: sob,
-            eutrofia: eut,
+            desnutricao: normalized.desnutricao,
+            obesidade: normalized.obesidade,
+            sobrepeso: normalized.sobrepeso,
+            eutrofia: normalized.eutrofia,
             total_avaliados: sumAvaliados
           };
         } else {
@@ -476,11 +576,18 @@ export async function GET(req: NextRequest) {
           const ubsData = rawDataMap[yr]?.[parentUbs] || rawDataMap[yr]?.[Object.keys(rawDataMap[yr])[0]];
           
           if (ubsData) {
-            anos[yr] = {
+            const rawObj = {
               desnutricao: ubsData.desnutricao || 0,
               obesidade: ubsData.obesidade || 0,
               sobrepeso: ubsData.sobrepeso || 0,
-              eutrofia: ubsData.eutrofia || 100,
+              eutrofia: ubsData.eutrofia || 100
+            };
+            const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
+            anos[yr] = {
+              desnutricao: normalized.desnutricao,
+              obesidade: normalized.obesidade,
+              sobrepeso: normalized.sobrepeso,
+              eutrofia: normalized.eutrofia,
               total_avaliados: 100
             };
           } else {
@@ -510,6 +617,7 @@ export async function GET(req: NextRequest) {
       regionalData: rawDataMap,
       schoolMetrics,
       bairroMetrics,
+      demographicData,
       yearsList: years
     });
   } catch (error: any) {

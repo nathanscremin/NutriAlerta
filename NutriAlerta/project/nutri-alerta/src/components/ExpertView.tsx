@@ -236,12 +236,40 @@ export default function ExpertView() {
       const afterSum = scaleDes + scaleObs + scaleSob;
       const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
       const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-      return {
-        ...d,
+      
+      const rawObj = {
         desnutricao: scaleDes,
         obesidade: scaleObs,
         sobrepeso: scaleSob,
         eutrofia: scaleEut
+      };
+      
+      const sum = rawObj.desnutricao + rawObj.sobrepeso + rawObj.obesidade + rawObj.eutrofia;
+      const norm = {
+        desnutricao: Number(((rawObj.desnutricao / sum) * 100).toFixed(2)),
+        sobrepeso: Number(((rawObj.sobrepeso / sum) * 100).toFixed(2)),
+        obesidade: Number(((rawObj.obesidade / sum) * 100).toFixed(2)),
+        eutrofia: Number(((rawObj.eutrofia / sum) * 100).toFixed(2))
+      };
+      const diff = Number((100 - (norm.desnutricao + norm.sobrepeso + norm.obesidade + norm.eutrofia)).toFixed(2));
+      if (diff !== 0) {
+        let maxK: keyof typeof norm = 'eutrofia';
+        let maxV = norm[maxK];
+        (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
+          if (norm[k] > maxV) {
+            maxV = norm[k];
+            maxK = k;
+          }
+        });
+        norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
+      }
+
+      return {
+        ...d,
+        desnutricao: norm.desnutricao,
+        obesidade: norm.obesidade,
+        sobrepeso: norm.sobrepeso,
+        eutrofia: norm.eutrofia
       };
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
@@ -437,39 +465,34 @@ export default function ExpertView() {
             tooltip="Quantidade total de indivíduos pesados e avaliados no Nutri for Schools na região selecionada."
           />
           <KpiCard
-            label={`${mainLabel} · ${anoSelecionado}`}
+            label={`Prevalência · ${mainLabel}`}
             value={`${mainValue}%`}
-            sub={`Média entre as UBS · Nutri for Schools real`}
-            trend={isAlta ? "up" : "down"}
-            trendLabel={`${Number(delta) > 0 ? '+' : ''}${delta} p.p. em 2027`}
+            sub={`Taxa registrada em ${anoSelecionado}`}
             accentColor={mainColor}
             bgColor={mainBg}
             borderColor={mainBorder}
-            tooltip="Percentual de prevalência registrado para este indicador nutricional em relação total avaliado."
-            invertTrendColor={isEut}
+            tooltip="Percentual de prevalência registrado para este indicador nutricional no ano selecionado."
           />
           <KpiCard
-            label={`Projeção ${mainLabel} · 2027`}
-            value={`${mainProj}%`}
-            sub="★ Modelo preditivo de Machine Learning"
+            label={`Tendência ${mainLabel} · 2027`}
+            value={`${Number(delta) > 0 ? '+' : ''}${delta} p.p.`}
+            sub={`Diferença projetada em relação a ${cleanYear}`}
             trend={isAlta ? "up" : "down"}
-            trendLabel={isAlta ? (isEut ? "melhora gradual" : "alta gradual") : (isEut ? "recuo leve" : "queda leve")}
-            accentColor={isEut ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}
-            bgColor={isEut ? "bg-emerald-50/20 dark:bg-emerald-950/20" : "bg-amber-50/20 dark:bg-amber-950/20"}
-            borderColor={isEut ? "border-emerald-200/60 dark:border-emerald-900/40" : "border-amber-200/60 dark:border-amber-900/40"}
-            tooltip="Previsão calculada por inteligência artificial para o ano de 2027 com base no histórico."
+            trendLabel={isAlta ? (isEut ? "Melhora prevista" : "Aceleração") : (isEut ? "Recuo previsto" : "Queda de risco")}
+            accentColor={isAlta ? (isEut ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-450") : (isEut ? "text-rose-600 dark:text-rose-450" : "text-emerald-600 dark:text-emerald-400")}
+            bgColor="bg-white dark:bg-[#1c1c1e]"
+            borderColor="border-slate-200 dark:border-[#2c2c2e]"
+            tooltip="Diferença esperada na prevalência em pontos percentuais (p.p.) de agora até 2027, estimada por IA."
             invertTrendColor={isEut}
           />
           <KpiCard
             label={`${isObs ? 'Desnutrição' : 'Obesidade'} · ${anoSelecionado}`}
             value={`${secondaryValue}%`}
-            sub="Outro indicador acompanhado · Nutri for Schools"
-            trend="neutral"
-            trendLabel="estável"
+            sub={`Indicador secundário em ${cleanYear}`}
             accentColor="text-slate-600 dark:text-zinc-300"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
-            tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado."
+            tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado de forma comparativa."
           />
         </div>
 

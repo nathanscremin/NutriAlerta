@@ -79,33 +79,33 @@ Presente em todas as telas de dados. Seções de cima para baixo:
 5. RESUMO MUNICIPAL (DADOS GERAIS RIO CLARO): Cards compactos mostrando:
    - Peso Adequado, Obesidade, Sobrepeso e Desnutrição médios do município.
    - Total de Pacientes Avaliados (ex: 45.2K) e UBS Monitoradas (18).
-6. TEMA: Interruptor "Modo Escuro" no rodapé da barra lateral.
 
 [VISUALIZAÇÕES DA ABA: MAPA DE RISCO]
 A tela é dividida horizontalmente em três grandes seções roláveis:
 1. SEÇÃO DE CARDS (KPIs - Topo da página):
-   - Card "Avaliados": Mostra o volume bruto de indivíduos pesados na região e ano ativos.
-   - Card "Prevalência do Indicador": Exibe o percentual do indicador selecionado (ex: Obesidade 12.93%) com uma tag de tendência comparativa para 2027 (ex: +1.28 p.p. em 2027).
-   - Card "Projeção 2027": Exibe a taxa futura prevista pelo modelo de Machine Learning (ex: 14.21% com tag "alta gradual").
-   - Card "Indicador Secundário": Exibe a taxa da métrica oposta para comparação imediata (ex: Desnutrição 2.62%).
+   - Card "Avaliados": Mostra o volume dinâmico acumulado de indivíduos pesados na região e ano selecionados.
+   - Card "Prevalência do Indicador": Exibe o percentual do indicador selecionado (ex: Obesidade 12.93%) registrado no ano ativo.
+   - Card "Tendência / Delta Preditivo p.p.": Exibe a variação futura acumulada prevista pelo modelo de Machine Learning (regressão Random Forest) até o ano de 2027 (ex: +0.32 p.p. em 2027) com badge colorido reativo.
+   - Card "Indicador Secundário": Exibe a taxa correspondente ao indicador de prevalência oposto/secundário (ex: Desnutrição 2.62%).
 2. BLOCO CENTRAL (MAPA + DISTRIBUIÇÃO):
    - À Esquerda: Mapa Coroplético Interativo de Rio Claro, dividindo o território por distritos de saúde/bairros coloridos em tons de risco (Verde = Baixo, Amarelo = Médio, Vermelho = Alto). Mostra marcadores geográficos das UBSs e POIs. Possui controles de zoom (+/-) e uma tag flutuante indicando o bairro selecionado (ex: 📍 UBS Wenzel).
-   - À Direita: Gráfico de Rosca "Distribuição Nutricional" detalhando o percentual exato do município dividido em: Peso Adequado (Verde), Sobrepeso (Laranja), Obesidade (Vermelho), Magreza (Azul) e Obesidade Grave (Roxo).
+   - À Direita: Gráfico de Rosca "Distribuição Nutricional" detalhando o percentual exato do município dividido em: Peso Adequado (Verde), Sobrepeso (Laranja), Obesidade (Vermelho), Magreza (Azul).
 3. BLOCO INFERIOR (SÉRIE TEMPORAL + RANKING):
-   - Gráfico de Linhas "Evolução Histórica e Projeção": Linhas contínuas mostram as taxas reais de 2009 a 2025. Uma linha vertical pontilhada separa o histórico real da área de Projeção (2026–2027), destacada com um fundo sutil cor de laranja.
+   - Gráfico de Linhas "Evolução Histórica e Projeção": Linhas contínuas mostram as taxas reais de 2009 a 2025. Uma linha vertical pontilhada separa o histórico real da área de Projeção (2026–2027), destacada com um fundo sutil.
    - Gráfico de Barras Horizontais "Top 5 UBS · Aceleração de Risco": Lista as 5 unidades com o maior aumento percentual (Delta ano a ano) no indicador selecionado. Se o usuário clicou em um bairro no mapa, a barra daquela UBS fica destacada na cor amarela/teal para fácil localização no ranking.
-4. RODAPÉ: Seção "Análise de Conflito Urbano — Infraestrutura Alimentar", exibindo a contagem de comércios alimentares da cidade, o percentual de infraestrutura obesogênica e um gráfico comparativo de estabelecimentos saudáveis vs de risco.
+4. RODAPÉ: Seção "Análise de Conflito Urbano — Infraestrutura Alimentar", exibindo a comércios alimentares da cidade, o percentual de infraestrutura obesogênica e um gráfico comparativo de estabelecimentos saudáveis vs de risco.
 
 [VISUALIZAÇÕES DA ABA: ANÁLISE ESCOLAR]
-Focada em filtros de ciclos de vida e dados demográficos.
+Focada em quebras demográficas e dados epidemiológicos por faixas etárias baseadas em Machine Learning.
 1. ABAS DE FAIXAS ETÁRIAS (Topo da tela): Permite alternar os dados entre 4 grupos:
    - "Primeira Infância" (6 meses a 2 anos)
    - "Pré-escolares" (3 a 5 anos)
    - "Escolares" (6 a 11 anos)
    - "Adolescentes" (12 a 18 anos)
 2. COMPONENTES VISUAIS PRINCIPAIS:
-   - Painel Esquerdo "Prevalência por Gênero": Gráfico de colunas verticais duplas separando a métrica ativa entre Meninos (Azul) e Meninas (Rosa).
-   - Painel Direito "Insight Automático Baseado em IA": Caixa de texto descritiva que gera um resumo textual com os principais desvios, alertas e padrões epidemiológicos identificados especificamente para a faixa etária e o bairro selecionados.
+   - Cards de Idade Média Global por indicador nutricional.
+   - Barra de Progresso Dupla "Distribuição por Gênero": Mostra o percentual de prevalência de cada indicador (Peso Adequado, Desnutrição, Sobrepeso, Obesidade) detalhado entre Meninos (Azul) e Meninas (Vermelho) com alertas de predomínio.
+   - Painel de "Insight Nutricional - Faixa Ativa": Caixa de texto com insights automáticos gerados com base em predições epidemiológicas reais extraídas do arquivo JSON de projeções demográficas por faixa geradas pela IA (\`NutriAlerta_Projecao_Demografica.json\`). resumo textual com os principais desvios, alertas e padrões epidemiológicos identificados especificamente para a faixa etária e o bairro selecionados.
 
 [VISUALIZAÇÕES DA ABA: COMPARADOR UBS]
 Permite a auditoria visual cruzada entre duas regiões diferentes.

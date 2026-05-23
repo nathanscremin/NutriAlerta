@@ -8,7 +8,7 @@ import { GitCompare, MapPin, TrendingUp, Users, ArrowUpRight, ArrowDownRight, Sh
 import { motion } from 'framer-motion';
 
 export default function UbsComparisonSection() {
-  const { regionalData, temporalData, yearsList, darkMode, indicador, setIndicador, selectedBairro } = useAppStore();
+  const { regionalData, temporalData, yearsList, darkMode, indicador, setIndicador, selectedBairro, schoolMetrics } = useAppStore();
 
   // Estado para controle de montagem no cliente (SSR Hydration Guard)
   const [mounted, setMounted] = useState(false);
@@ -99,10 +99,13 @@ export default function UbsComparisonSection() {
     }
 
     // Alunos avaliados
-    let total = 350;
-    if (record && typeof record.total_avaliados === 'number') {
-      total = record.total_avaliados;
-    }
+    let ubsTotal = 0;
+    Object.values(schoolMetrics || {}).forEach((sch: any) => {
+      if (sch.regiao_ubs === ubsName && sch.anos?.[cleanYear]?.total_avaliados) {
+        ubsTotal += sch.anos[cleanYear].total_avaliados;
+      }
+    });
+    const total = ubsTotal || (record?.total_avaliados || 350);
 
     return { obs, des, sob, eut, total };
   };

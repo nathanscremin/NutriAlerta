@@ -716,6 +716,18 @@ export default function UnifiedSchoolPortal() {
             )}
           </div>
 
+          {/* Epidemiological Dashboard Link (Redirects to port 3000) */}
+          <a
+            href="http://localhost:3000"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-teal-500/10 hover:from-indigo-500/20 hover:to-teal-500/20 border border-indigo-500/20 rounded-xl transition-all text-[10px] font-black text-indigo-700 dark:text-indigo-300 shadow-sm cursor-pointer"
+            title="Ir para o Portal de Gestão NutriAlerta (Análise Epidemiológica)"
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+            <span>Painel Epidemiológico</span>
+          </a>
+
           {/* Current School/Admin Badge */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-teal-500/5 dark:bg-teal-500/10 border border-teal-500/10 dark:border-teal-500/20 rounded-xl">
             {isSuperAdmin ? (

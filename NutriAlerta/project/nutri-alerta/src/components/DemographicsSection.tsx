@@ -16,6 +16,7 @@ export default function DemographicsSection() {
     regionalData, 
     schoolMetrics,
     bairroMetrics,
+    demographicData,
     darkMode 
   } = useAppStore();
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(2); // Padrão: Escolares (6 a 11 anos)
@@ -96,14 +97,20 @@ export default function DemographicsSection() {
         : analysisLevel === 'ubs' 
           ? selectedUbs 
           : 'Geral';
+    
+    const key = `${focusName || 'Geral'}-${cleanYear}`;
+    if (demographicData && demographicData[key]) {
+      return demographicData[key];
+    }
+    
     return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut);
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates]);
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates, demographicData]);
 
   const activeGroup = demoData.ageGroups[activeGroupIndex];
 
 
   // Helper para renderizar a barra de progresso de gênero
-  const renderGenderBar = (label: string, male: number, female: number, badgeBg: string) => {
+  const renderGenderBar = (label: string, rate: number, male: number, female: number, badgeBg: string) => {
     const isMaleGreater = male > female;
     const diff = Math.abs(male - female);
     
@@ -111,9 +118,12 @@ export default function DemographicsSection() {
       <div className="space-y-2 bg-slate-50/50 dark:bg-zinc-800/30 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/40">
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="text-slate-700 dark:text-zinc-300 font-semibold">{label}</span>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeBg} border`}>
-            {diff <= 1 ? "Equilibrado" : isMaleGreater ? "Meninos +Prevalente" : "Meninas +Prevalente"}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black text-slate-800 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded border dark:border-zinc-700/60">{rate.toFixed(2)}%</span>
+            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${badgeBg} border`}>
+              {diff <= 1 ? "Equilibrado" : isMaleGreater ? "Meninos +" : "Meninas +"}
+            </span>
+          </div>
         </div>
 
         {/* Barra de Progresso Dupla */}
@@ -306,6 +316,47 @@ export default function DemographicsSection() {
         </div>
       </div>
 
+      {/* Mini-Dashboard de Prevalência da Faixa Etária Ativa */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`metrics-${activeGroupIndex}`}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2"
+        >
+          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Peso Adequado</span>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{activeGroup.eutrofia.rate.toFixed(2)}%</h4>
+              <span className="text-[9px] text-slate-550 dark:text-zinc-500 font-semibold">da faixa</span>
+            </div>
+          </div>
+          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Desnutrição</span>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <h4 className="text-xl font-black text-blue-600 dark:text-blue-400">{activeGroup.desnutricao.rate.toFixed(2)}%</h4>
+              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
+            </div>
+          </div>
+          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Sobrepeso</span>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <h4 className="text-xl font-black text-amber-600 dark:text-amber-400">{activeGroup.sobrepeso.rate.toFixed(2)}%</h4>
+              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
+            </div>
+          </div>
+          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+            <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider">Obesidade</span>
+            <div className="flex items-baseline gap-1 mt-1.5">
+              <h4 className="text-xl font-black text-rose-600 dark:text-rose-450">{activeGroup.obesidade.rate.toFixed(2)}%</h4>
+              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
       {/* Painel Reativo de Gêneros da Faixa Etária Ativa */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -318,24 +369,28 @@ export default function DemographicsSection() {
         >
           {renderGenderBar(
             "Peso Adequado",
+            activeGroup.eutrofia.rate,
             activeGroup.eutrofia.pctMasculino,
             activeGroup.eutrofia.pctFeminino,
             "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/40"
           )}
           {renderGenderBar(
             "Magreza / Desnutrição",
+            activeGroup.desnutricao.rate,
             activeGroup.desnutricao.pctMasculino,
             activeGroup.desnutricao.pctFeminino,
             "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/40"
           )}
           {renderGenderBar(
             "Sobrepeso",
+            activeGroup.sobrepeso.rate,
             activeGroup.sobrepeso.pctMasculino,
             activeGroup.sobrepeso.pctFeminino,
             "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/40"
           )}
           {renderGenderBar(
             "Obesidade",
+            activeGroup.obesidade.rate,
             activeGroup.obesidade.pctMasculino,
             activeGroup.obesidade.pctFeminino,
             "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/40"

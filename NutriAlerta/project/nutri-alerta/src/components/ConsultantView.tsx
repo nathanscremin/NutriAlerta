@@ -265,7 +265,41 @@ export default function ConsultantView() {
       const afterSum = scaleDes + scaleObs + scaleSob;
       const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
       const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-      return { ...d, desnutricao: scaleDes, obesidade: scaleObs, sobrepeso: scaleSob, eutrofia: scaleEut };
+      
+      const rawObj = {
+        desnutricao: scaleDes,
+        obesidade: scaleObs,
+        sobrepeso: scaleSob,
+        eutrofia: scaleEut
+      };
+      
+      const sum = rawObj.desnutricao + rawObj.sobrepeso + rawObj.obesidade + rawObj.eutrofia;
+      const norm = {
+        desnutricao: Number(((rawObj.desnutricao / sum) * 100).toFixed(2)),
+        sobrepeso: Number(((rawObj.sobrepeso / sum) * 100).toFixed(2)),
+        obesidade: Number(((rawObj.obesidade / sum) * 100).toFixed(2)),
+        eutrofia: Number(((rawObj.eutrofia / sum) * 100).toFixed(2))
+      };
+      const diff = Number((100 - (norm.desnutricao + norm.sobrepeso + norm.obesidade + norm.eutrofia)).toFixed(2));
+      if (diff !== 0) {
+        let maxK: keyof typeof norm = 'eutrofia';
+        let maxV = norm[maxK];
+        (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
+          if (norm[k] > maxV) {
+            maxV = norm[k];
+            maxK = k;
+          }
+        });
+        norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
+      }
+
+      return {
+        ...d,
+        desnutricao: norm.desnutricao,
+        obesidade: norm.obesidade,
+        sobrepeso: norm.sobrepeso,
+        eutrofia: norm.eutrofia
+      };
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
 

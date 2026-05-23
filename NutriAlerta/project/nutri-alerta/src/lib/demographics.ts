@@ -183,8 +183,46 @@ export function getDemographicsForUbs(
 
   const groups = [faixa1, faixa2, faixa3, faixa4];
 
-  // Completar porcentagem feminina
+  // Normalizar prevalências dentro de cada grupo para somar exatamente 100%
   groups.forEach(g => {
+    const rawObj = {
+      desnutricao: g.desnutricao.rate,
+      sobrepeso: g.sobrepeso.rate,
+      obesidade: g.obesidade.rate,
+      eutrofia: g.eutrofia.rate
+    };
+    
+    // Robust normalizer function
+    const normalizeLocal = (obj: typeof rawObj, target = 100) => {
+      let sum = obj.desnutricao + obj.sobrepeso + obj.obesidade + obj.eutrofia;
+      if (sum === 0) return obj;
+      const res = {
+        desnutricao: Number(((obj.desnutricao / sum) * target).toFixed(2)),
+        sobrepeso: Number(((obj.sobrepeso / sum) * target).toFixed(2)),
+        obesidade: Number(((obj.obesidade / sum) * target).toFixed(2)),
+        eutrofia: Number(((obj.eutrofia / sum) * target).toFixed(2))
+      };
+      const diff = Number((target - (res.desnutricao + res.sobrepeso + res.obesidade + res.eutrofia)).toFixed(2));
+      if (diff !== 0) {
+        let maxK: keyof typeof res = 'eutrofia';
+        let maxV = res[maxK];
+        (Object.keys(res) as Array<keyof typeof res>).forEach(k => {
+          if (res[k] > maxV) {
+            maxV = res[k];
+            maxK = k;
+          }
+        });
+        res[maxK] = Number((res[maxK] + diff).toFixed(2));
+      }
+      return res;
+    };
+
+    const norm = normalizeLocal(rawObj);
+    g.desnutricao.rate = norm.desnutricao;
+    g.sobrepeso.rate = norm.sobrepeso;
+    g.obesidade.rate = norm.obesidade;
+    g.eutrofia.rate = norm.eutrofia;
+
     g.desnutricao.pctFeminino = 100 - g.desnutricao.pctMasculino;
     g.sobrepeso.pctFeminino = 100 - g.sobrepeso.pctMasculino;
     g.obesidade.pctFeminino = 100 - g.obesidade.pctMasculino;

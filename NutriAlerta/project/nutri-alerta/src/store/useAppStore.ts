@@ -55,6 +55,7 @@ interface AppState {
   regionalData: Record<string, Record<string, any>>;
   schoolMetrics: Record<string, any>;
   bairroMetrics: Record<string, any>;
+  demographicData: Record<string, any> | null;
   yearsList: string[];
   loading: boolean;
   error: string | null;
@@ -204,6 +205,7 @@ export const useAppStore = create<AppState>()(
       regionalData: {},
       schoolMetrics: {},
       bairroMetrics: {},
+      demographicData: null,
       yearsList: [],
       loading: false,
       error: null,
@@ -219,6 +221,7 @@ export const useAppStore = create<AppState>()(
               regionalData: data.regionalData,
               schoolMetrics: data.schoolMetrics,
               bairroMetrics: data.bairroMetrics,
+              demographicData: data.demographicData,
               yearsList: data.temporalData.map((d: any) => d.ano),
               loading: false
             });
