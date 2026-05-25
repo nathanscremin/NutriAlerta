@@ -181,9 +181,6 @@ export default function Sidebar() {
         }
       });
       avaliados = totalSchoolAvaliados || 0;
-      if (avaliados === 0) {
-        avaliados = anoSelecionado.includes('2025') ? 45200 : anoSelecionado.includes('2024') ? 41100 : 38500;
-      }
       subUnitLabel = "UBS monitoradas";
       subUnitValue = String(ubsList.length);
     }

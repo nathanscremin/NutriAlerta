@@ -419,7 +419,7 @@ export default function UbsComparisonSection() {
               Evolução Temporal Comparativa: % {indicatorConfig.label}
             </h4>
             <p className="text-[9px] text-slate-400 dark:text-zinc-500 font-semibold mt-0.5">
-              Comparação histórica real (2018–2025) e projeções preditivas <span className="text-amber-500 font-bold">★</span> (2026–2027)
+              Comparação histórica real (2010–2025) e projeções preditivas <span className="text-amber-500 font-bold">★</span> (2026–2027)
             </p>
           </div>
 

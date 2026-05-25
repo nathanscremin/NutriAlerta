@@ -59,10 +59,10 @@ function KpiCard({
         <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-[0.06] -mr-6 -mt-6 bg-teal-500`} />
       </div>
       
-      <div className="text-[10px] text-slate-450 dark:text-zinc-450 uppercase tracking-widest mb-2.5 font-bold flex items-center justify-between relative z-10">
+      <div className="text-[10px] text-slate-700 dark:text-zinc-200 uppercase tracking-widest mb-2.5 font-bold flex items-center justify-between relative z-10">
         <span>{label}</span>
         {tooltip && (
-          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7]">
+          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-600 dark:text-zinc-200 hover:text-slate-800 dark:hover:text-[#f5f5f7]">
             <Info className="w-3.5 h-3.5 animate-pulse" />
             <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700">
               {tooltip}
@@ -79,7 +79,7 @@ function KpiCard({
           </div>
         )}
       </div>
-      <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-2.5 leading-relaxed font-semibold relative z-10">{sub}</p>
+      <p className="text-[10px] text-slate-700 dark:text-zinc-200 mt-2.5 leading-relaxed font-semibold relative z-10">{sub}</p>
     </div>
   );
 }
@@ -379,13 +379,7 @@ export default function ExpertView() {
         })
         .sort((a, b) => b.delta - a.delta)
         .slice(0, 5)
-    : [
-        { name: 'Chervezon', delta: 2.1 },
-        { name: 'Vila Cristina', delta: 1.8 },
-        { name: 'Wenzel', delta: 1.5 },
-        { name: 'Bela Vista', delta: 1.2 },
-        { name: 'Mãe Preta', delta: 0.9 }
-      ];
+    : [];
 
   const sumAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;
@@ -396,8 +390,8 @@ export default function ExpertView() {
     });
     return totalSchoolAvaliados;
   }, [schoolMetrics, cleanYear]);
-  
-  let avaliadosVal = sumAvaliados > 0 ? sumAvaliados : (anoSelecionado === '2025' ? 45200 : anoSelecionado === '2024' ? 41100 : 38500);
+
+  let avaliadosVal = sumAvaliados || 0;
   let avaliadosSub = "Total acumulado nas 18 UBS de Rio Claro";
 
   if (analysisLevel === 'ubs') {
@@ -408,21 +402,21 @@ export default function ExpertView() {
         ubsTotal += sch.anos[cleanYear].total_avaliados;
       }
     });
-    avaliadosVal = ubsTotal || (record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 2200);
+    avaliadosVal = ubsTotal || (record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 0);
     avaliadosSub = `Total de indivíduos avaliados na UBS ${selectedUbs?.replace('UBS ', '').replace('USF ', '')}`;
   } else if (analysisLevel === 'bairro') {
     const record = selectedBairroName ? bairroMetrics[selectedBairroName]?.anos[cleanYear] : null;
-    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 250;
+    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 0;
     avaliadosSub = `Total de indivíduos avaliados no Bairro ${selectedBairroName}`;
   } else if (analysisLevel === 'escola') {
     const record = selectedSchoolName ? schoolMetrics[selectedSchoolName]?.anos[cleanYear] : null;
-    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 120;
+    avaliadosVal = record && typeof record.total_avaliados === 'number' ? record.total_avaliados : 0;
     avaliadosSub = `Alunos avaliados individualmente na Escola ${selectedSchoolName}`;
   }
 
-  const avaliadosStr = avaliadosVal >= 1000 
-    ? `${(avaliadosVal / 1000).toFixed(1)}K` 
-    : String(avaliadosVal);
+  const avaliadosStr = typeof avaliadosVal === 'number' && avaliadosVal > 0
+    ? (avaliadosVal >= 1000 ? `${(avaliadosVal / 1000).toFixed(1)}K` : String(avaliadosVal))
+    : 'N/D';
 
   // Compute dynamic distribution averages for selected year
   let eutrofiaAvg = Number(dadosAno.eutrofia.toFixed(1));

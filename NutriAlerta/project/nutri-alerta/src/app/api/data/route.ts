@@ -446,58 +446,131 @@ type SourceMeta = {
   lastUpdated: string;
 };
 
+const TEMPORAL_YEAR_MIN = 2010;
+const TEMPORAL_YEAR_MAX = 2027;
+
+function getTemporalYearRange() {
+  return Array.from({ length: TEMPORAL_YEAR_MAX - TEMPORAL_YEAR_MIN + 1 }, (_, index) => TEMPORAL_YEAR_MIN + index);
+}
+
+function formatTemporalYear(year: number) {
+  return year >= 2026 ? `${year} ★` : String(year);
+}
+
+function buildDefaultTemporalEntry(year: number) {
+  return {
+    ano: formatTemporalYear(year),
+    desnutricao: 2.62,
+    obesidade: 12.93,
+    sobrepeso: 15.2,
+    eutrofia: 61.55,
+    isPrevisao: year >= 2026
+  };
+}
+
 function createDefaultTemporalData() {
-  return [
-    { ano: '2025', desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 61.55, isPrevisao: false },
-    { ano: '2026 ★', desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 61.55, isPrevisao: true },
-    { ano: '2027 ★', desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 61.55, isPrevisao: true }
-  ];
+  return getTemporalYearRange().map(buildDefaultTemporalEntry);
+}
+
+function computeTrendForecast(history: Array<{ year: number; value: number }>, targetYear: number) {
+  if (history.length === 0) return 0;
+  if (history.length === 1) return history[0].value;
+
+  const xs = history.map((entry) => entry.year);
+  const ys = history.map((entry) => entry.value);
+  const meanX = xs.reduce((sum, value) => sum + value, 0) / xs.length;
+  const meanY = ys.reduce((sum, value) => sum + value, 0) / ys.length;
+
+  const denominator = xs.reduce((sum, value) => sum + Math.pow(value - meanX, 2), 0);
+  if (denominator === 0) {
+    return ys[ys.length - 1];
+  }
+
+  const slope = xs.reduce((sum, value, index) => sum + (value - meanX) * (ys[index] - meanY), 0) / denominator;
+  const intercept = meanY - slope * meanX;
+
+  return intercept + slope * targetYear;
+}
+
+function averageTemporalMetrics(records: Array<Record<string, any>>) {
+  if (records.length === 0) return null;
+
+  const avg = records.reduce((acc: any, record: any) => {
+    acc.desnutricao += Number(record.desnutricao || 0);
+    acc.obesidade += Number(record.obesidade || 0);
+    acc.sobrepeso += Number(record.sobrepeso || 0);
+    acc.eutrofia += Number(record.eutrofia || 0);
+    return acc;
+  }, { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 });
+
+  return normalizePercentages(
+    {
+      desnutricao: avg.desnutricao / records.length,
+      obesidade: avg.obesidade / records.length,
+      sobrepeso: avg.sobrepeso / records.length,
+      eutrofia: avg.eutrofia / records.length
+    },
+    ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+  );
 }
 
 function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<string, any>>) {
-  const years = Object.keys(regionalData).sort((a, b) => Number(a) - Number(b));
-  if (years.length === 0) {
-    return createDefaultTemporalData();
-  }
+  const temporalYearRange = getTemporalYearRange();
+  const seriesByYear: Record<number, { desnutricao: number; obesidade: number; sobrepeso: number; eutrofia: number }> = {};
 
-  return years.map((year) => {
-    const ubsRecords = Object.values(regionalData[year] || {});
-    if (ubsRecords.length === 0) {
-      return {
-        ano: Number(year) >= 2026 ? `${year} ★` : year,
-        desnutricao: 2.62,
-        obesidade: 12.93,
-        sobrepeso: 15.2,
-        eutrofia: 61.55,
-        isPrevisao: Number(year) >= 2026
+  temporalYearRange.forEach((year) => {
+    const records = Object.values(regionalData[String(year)] || {});
+    const averaged = averageTemporalMetrics(records);
+
+    if (averaged) {
+      seriesByYear[year] = {
+        desnutricao: Number(averaged.desnutricao.toFixed(2)),
+        obesidade: Number(averaged.obesidade.toFixed(2)),
+        sobrepeso: Number(averaged.sobrepeso.toFixed(2)),
+        eutrofia: Number(averaged.eutrofia.toFixed(2))
       };
     }
+  });
 
-    const avg = ubsRecords.reduce((acc: any, record: any) => {
-      acc.desnutricao += Number(record.desnutricao || 0);
-      acc.obesidade += Number(record.obesidade || 0);
-      acc.sobrepeso += Number(record.sobrepeso || 0);
-      acc.eutrofia += Number(record.eutrofia || 0);
-      return acc;
-    }, { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 });
+  const predictedSeries = { ...seriesByYear };
 
-    const normalized = normalizePercentages(
-      {
-        desnutricao: avg.desnutricao / ubsRecords.length,
-        obesidade: avg.obesidade / ubsRecords.length,
-        sobrepeso: avg.sobrepeso / ubsRecords.length,
-        eutrofia: avg.eutrofia / ubsRecords.length
-      },
-      ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
-    );
+  for (const year of temporalYearRange) {
+    if (predictedSeries[year]) {
+      continue;
+    }
+
+    if (year <= 2025) {
+      predictedSeries[year] = buildDefaultTemporalEntry(year);
+      continue;
+    }
+
+    const metrics = ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+    const filledValues = {} as Record<(typeof metrics)[number], number>;
+
+    metrics.forEach((metric) => {
+      const history = Object.entries(predictedSeries)
+        .map(([entryYear, values]) => ({
+          year: Number(entryYear),
+          value: Number(values[metric])
+        }))
+        .sort((a, b) => a.year - b.year);
+
+      filledValues[metric] = Number(computeTrendForecast(history, year).toFixed(2));
+    });
+
+    predictedSeries[year] = filledValues;
+  }
+
+  return temporalYearRange.map((year) => {
+    const values = predictedSeries[year] || buildDefaultTemporalEntry(year);
 
     return {
-      ano: Number(year) >= 2026 ? `${year} ★` : year,
-      desnutricao: normalized.desnutricao,
-      obesidade: normalized.obesidade,
-      sobrepeso: normalized.sobrepeso,
-      eutrofia: normalized.eutrofia,
-      isPrevisao: Number(year) >= 2026
+      ano: formatTemporalYear(year),
+      desnutricao: Number(values.desnutricao.toFixed(2)),
+      obesidade: Number(values.obesidade.toFixed(2)),
+      sobrepeso: Number(values.sobrepeso.toFixed(2)),
+      eutrofia: Number(values.eutrofia.toFixed(2)),
+      isPrevisao: year >= 2026
     };
   });
 }
@@ -553,6 +626,33 @@ function buildRegionalDataFromSchoolMetrics(schoolMetrics: Record<string, any>) 
   });
 
   return regionalData;
+}
+
+function attachRegionalDeltaMetrics(regionalData: Record<string, Record<string, any>>) {
+  const years = Object.keys(regionalData)
+    .map((year) => Number(year))
+    .filter((year) => Number.isFinite(year))
+    .sort((a, b) => a - b);
+
+  years.forEach((year) => {
+    const currentYearKey = String(year);
+    const previousYearKey = String(year - 1);
+    const currentRecords = regionalData[currentYearKey] || {};
+
+    Object.entries(currentRecords).forEach(([ubsName, record]) => {
+      const previousRecord = regionalData[previousYearKey]?.[ubsName];
+      const getDelta = (metricKey: keyof typeof record) => {
+        const currentValue = Number(record?.[metricKey] ?? 0);
+        const previousValue = Number(previousRecord?.[metricKey] ?? currentValue);
+        return Number((currentValue - previousValue).toFixed(2));
+      };
+
+      record.delta_desnutricao = getDelta('desnutricao');
+      record.delta_obesidade = getDelta('obesidade');
+      record.delta_sobrepeso = getDelta('sobrepeso');
+      record.delta_eutrofia = getDelta('eutrofia');
+    });
+  });
 }
 
 function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>, regionalData: Record<string, Record<string, any>>) {
@@ -622,6 +722,56 @@ function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>,
   });
 
   return bairroMetrics;
+}
+
+function projectSchoolMetricsForward(schoolMetrics: Record<string, any>, targetYears = [2026, 2027]) {
+  const projectedSchoolMetrics = JSON.parse(JSON.stringify(schoolMetrics || {}));
+  const metricKeys = ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+
+  Object.values(projectedSchoolMetrics).forEach((school: any) => {
+    if (!school?.anos) return;
+
+    const orderedYears = Object.keys(school.anos)
+      .map((year) => Number(year))
+      .filter((year) => Number.isFinite(year))
+      .sort((a, b) => a - b);
+
+    if (orderedYears.length === 0) return;
+
+    targetYears.forEach((targetYear) => {
+      if (school.anos[String(targetYear)]) return;
+
+      const historyByMetric = metricKeys.reduce((acc, metric) => {
+        acc[metric] = orderedYears.map((year) => ({
+          year,
+          value: Number(school.anos[String(year)]?.[metric] || 0)
+        }));
+        return acc;
+      }, {} as Record<(typeof metricKeys)[number], Array<{ year: number; value: number }>>);
+
+      const predictedMetrics = metricKeys.reduce((acc, metric) => {
+        const forecast = computeTrendForecast(historyByMetric[metric], targetYear);
+        acc[metric] = Number(Math.max(0, Math.min(100, forecast)).toFixed(2));
+        return acc;
+      }, {} as Record<(typeof metricKeys)[number], number>);
+
+      const totalHistory = orderedYears.map((year) => ({
+        year,
+        value: Number(school.anos[String(year)]?.total_avaliados || 0)
+      }));
+      const totalForecast = totalHistory.length > 0
+        ? Math.max(0, Math.round(computeTrendForecast(totalHistory, targetYear)))
+        : 0;
+
+      const normalizedMetrics = normalizePercentages(predictedMetrics, [...metricKeys]);
+      school.anos[String(targetYear)] = {
+        ...normalizedMetrics,
+        total_avaliados: totalForecast
+      };
+    });
+  });
+
+  return projectedSchoolMetrics;
 }
 
 async function loadLocalCsvFallback(cwd: string) {
@@ -699,6 +849,8 @@ async function loadLocalCsvFallback(cwd: string) {
       rec.eutrofia = normalized.eutrofia;
     });
   });
+
+  attachRegionalDeltaMetrics(regionalData);
 
   return {
     regionalData,
@@ -804,7 +956,10 @@ export async function GET(req: NextRequest) {
           });
         });
 
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+
         regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         temporalData = buildTemporalDataFromRegionalData(regionalData);
         yearsList = temporalData.map((entry) => entry.ano);
@@ -829,7 +984,9 @@ export async function GET(req: NextRequest) {
       }
 
       if (Object.keys(schoolMetrics).length > 0) {
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
         regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         temporalData = buildTemporalDataFromRegionalData(regionalData);
         yearsList = temporalData.map((entry) => entry.ano);

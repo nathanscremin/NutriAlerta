@@ -8,13 +8,12 @@ import ExpertView from '@/components/ExpertView';
 import ConsultantView from '@/components/ConsultantView';
 import DemographicsSection from '@/components/DemographicsSection';
 import UbsComparisonSection from '@/components/UbsComparisonSection';
-import DataEntrySection from '@/components/DataEntrySection';
 import ChatbotWidget from '@/components/ChatbotWidget';
 import { useAppStore } from '@/store/useAppStore';
 import { AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
-  const { viewMode, initializeData, darkMode } = useAppStore();
+  const { viewMode, initializeData, darkMode, setViewMode } = useAppStore();
   const [authorized, setAuthorized] = useState(false);
   const router = useRouter();
 
@@ -35,6 +34,12 @@ export default function Dashboard() {
       initializeData();
     }
   }, [initializeData, authorized]);
+
+  useEffect(() => {
+    if (viewMode === 'data-entry') {
+      setViewMode('map');
+    }
+  }, [viewMode, setViewMode]);
 
   // Sync dark class on HTML element
   useEffect(() => {
@@ -76,7 +81,6 @@ export default function Dashboard() {
                 <UbsComparisonSection />
               </div>
             )}
-            {viewMode === 'data-entry' && <DataEntrySection key="data-entry" />}
             {viewMode === 'consultant' && <ConsultantView key="consultant" />}
           </AnimatePresence>
         </main>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Menu, Map, School, Stethoscope, Bot, LogOut, Sun, Moon, Database } from 'lucide-react';
+import { UserCircle, Menu, Map, School, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -24,7 +24,6 @@ const navItems = [
   { id: 'map' as const, label: 'Mapa de Risco', icon: Map },
   { id: 'schools' as const, label: 'Análise Escolar', icon: School },
   { id: 'comparison' as const, label: 'Comparador UBS', icon: Stethoscope },
-  { id: 'data-entry' as const, label: 'Entrada de Dados (UBS)', icon: Database },
   { id: 'consultant' as const, label: 'Consultor', icon: Bot },
 ];
 
@@ -61,7 +60,8 @@ export default function Header() {
     await supabase.auth.signOut();
     router.push('/login');
   };
-  return (
+
+  return (
     <header className="h-16 bg-white/90 dark:bg-[#0c0d10]/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-[#1f2229]/65 px-6 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 relative shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
       {/* Dynamic Top-Premium Accent Bar */}
       <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-teal-600 via-teal-500 to-emerald-400 opacity-90" />
