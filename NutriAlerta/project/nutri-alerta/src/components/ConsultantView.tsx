@@ -319,10 +319,24 @@ export default function ConsultantView() {
   if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
 
-  const valorIndicador = indicador === 'desnutricao' ? dadosAno.desnutricao
-    : indicador === 'sobrepeso' ? dadosAno.sobrepeso
-    : indicador === 'eutrofia' ? dadosAno.eutrofia
-    : dadosAno.obesidade;
+  const cleanYr = anoSelecionado.replace('★', '').trim();
+
+  let valorIndicador = 0;
+  if (analysisLevel === 'ubs' && selectedUbs) {
+  const ubsData = regionalData[cleanYr]?.[selectedUbs];
+  valorIndicador = ubsData?.[indicador as keyof typeof ubsData] as number ?? 0;
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+  const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
+  valorIndicador = bData?.[indicador] ?? 0;
+    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+  const sData = (schoolMetrics as any)[selectedSchoolName]?.anos?.[cleanYr];
+  valorIndicador = sData?.[indicador] ?? 0;
+    } else {
+  const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
+  valorIndicador = (globalRec as any)?.[indicador] ?? 0;
+  }
+
+  valorIndicador = Number(valorIndicador.toFixed(2));
 
   const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
     : indicador === 'sobrepeso' ? 'Sobrepeso'
