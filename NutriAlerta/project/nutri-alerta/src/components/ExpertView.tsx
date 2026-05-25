@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// ── KPI Card com suporte a tema escuro e fix de tooltip cortado ─────────────────────────
+// ── KPI Card com suporte a tema escuro e visual premium ─────────────────────────
 function KpiCard({
   label, value, sub, trend, trendLabel, accentColor, bgColor, borderColor, tooltip, invertTrendColor
 }: {
@@ -43,27 +43,27 @@ function KpiCard({
   const isUpPositive = invertTrendColor;
   const trendColor = trend === 'up' 
     ? (isUpPositive
-      ? 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20'
-      : 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20')
+      ? 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20 border-emerald-100/40 dark:border-emerald-900/30'
+      : 'text-rose-600 bg-rose-50/40 dark:text-rose-400 dark:bg-rose-950/20 border-rose-100/40 dark:border-rose-900/30')
     : trend === 'down' 
       ? (isUpPositive
-        ? 'text-red-600 bg-red-50/40 dark:text-red-400 dark:bg-red-950/20'
-        : 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20')
-      : 'text-slate-500 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800';
+        ? 'text-rose-600 bg-rose-50/40 dark:text-rose-400 dark:bg-rose-950/20 border-rose-100/40 dark:border-rose-900/30'
+        : 'text-emerald-600 bg-emerald-50/40 dark:text-emerald-400 dark:bg-emerald-950/20 border-emerald-100/40 dark:border-emerald-900/30')
+      : 'text-slate-500 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800 border-slate-200/50 dark:border-zinc-700/50';
 
   return (
-    <div className={`relative rounded-2xl p-5 border bg-white dark:bg-[#1c1c1e] ${borderColor} dark:border-[#2c2c2e] group transition-all hover:shadow-md`}>
-      {/* Container de máscara absoluta para a bolha desfocada (evita cortar o tooltip) */}
+    <div className="relative rounded-2xl p-5 border border-slate-200/70 dark:border-zinc-900/70 bg-white dark:bg-[#121316]/90 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
+      {/* Decorative glassmorphism blur top-right */}
       <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-10 -mr-8 -mt-8 ${accentColor.replace('text-', 'bg-')}`} />
+        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-[0.06] -mr-6 -mt-6 bg-teal-500`} />
       </div>
       
-      <div className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-2 font-black flex items-center justify-between relative z-10">
+      <div className="text-[10px] text-slate-450 dark:text-zinc-450 uppercase tracking-widest mb-2.5 font-bold flex items-center justify-between relative z-10">
         <span>{label}</span>
         {tooltip && (
-          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300">
-            <Info className="w-3.5 h-3.5" />
-            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-medium normal-case tracking-normal leading-normal border dark:border-zinc-700">
+          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7]">
+            <Info className="w-3.5 h-3.5 animate-pulse" />
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700">
               {tooltip}
             </div>
           </div>
@@ -71,14 +71,14 @@ function KpiCard({
       </div>
 
       <div className="flex items-end justify-between relative z-10">
-        <h3 className={`text-4.5xl font-black tracking-tight tabular-nums ${accentColor} drop-shadow-sm`}>{value}</h3>
+        <h3 className={`text-3xl font-black tracking-tight tabular-nums ${accentColor} drop-shadow-sm`}>{value}</h3>
         {trend && (
-          <div className={`flex items-center gap-1 text-[10px] font-bold ${trendColor} px-2.5 py-1 rounded-lg border border-slate-200/50 dark:border-zinc-700/50 shadow-sm`}>
+          <div className={`flex items-center gap-1 text-[9px] font-black uppercase ${trendColor} px-2 py-0.5 rounded-md border shadow-sm`}>
             <TrendIcon className="w-3 h-3" />{trendLabel}
           </div>
         )}
       </div>
-      <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-2 leading-relaxed font-medium relative z-10">{sub}</p>
+      <p className="text-[10px] text-slate-500 dark:text-zinc-500 mt-2.5 leading-relaxed font-semibold relative z-10">{sub}</p>
     </div>
   );
 }
@@ -275,9 +275,29 @@ export default function ExpertView() {
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
 
   // Encontra os dados do ano selecionado
+  const cleanYear = anoSelecionado.replace('★', '').trim();
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   // Pega a projeção de 2027
   const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
+
+  const isPrevisao = anoSelecionado.includes('★');
+
+  // Dynamic header title based on current selection level
+  const displayTitle = React.useMemo(() => {
+    if (analysisLevel === 'municipio') {
+      return 'Rio Claro — Painel Epidemiológico';
+    }
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      return `${selectedUbs} — Painel Epidemiológico`;
+    }
+    if (analysisLevel === 'bairro' && selectedBairroName) {
+      return `Bairro ${selectedBairroName} — Painel Epidemiológico`;
+    }
+    if (analysisLevel === 'escola' && selectedSchoolName) {
+      return `${selectedSchoolName} — Painel Epidemiológico`;
+    }
+    return 'Rio Claro — Painel Epidemiológico';
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
 
   // Configuração baseada no indicador selecionado
   const isObs = indicador === 'obesidade';
@@ -285,11 +305,82 @@ export default function ExpertView() {
   const isSob = indicador === 'sobrepeso';
   const isEut = indicador === 'eutrofia';
 
+  // Dynamic situation colors matching the active indicator
+  const situationStyles = React.useMemo(() => {
+    if (isEut) {
+      return {
+        text: 'text-emerald-700 dark:text-emerald-400',
+        bg: 'bg-emerald-50/50 dark:bg-emerald-950/20',
+        border: 'border-emerald-100 dark:border-emerald-900/40',
+        bullet: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+      };
+    }
+    if (isDes) {
+      return {
+        text: 'text-blue-700 dark:text-blue-400',
+        bg: 'bg-blue-50/50 dark:bg-blue-950/20',
+        border: 'border-blue-100 dark:border-blue-900/40',
+        bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+      };
+    }
+    if (isSob) {
+      return {
+        text: 'text-amber-700 dark:text-amber-400',
+        bg: 'bg-amber-50/50 dark:bg-amber-950/20',
+        border: 'border-amber-100 dark:border-amber-900/40',
+        bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+      };
+    }
+    // Default / Obesidade
+    return {
+      text: 'text-rose-700 dark:text-rose-455',
+      bg: 'bg-rose-50/50 dark:bg-rose-955/20',
+      border: 'border-rose-100 dark:border-rose-900/40',
+      bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+    };
+  }, [isEut, isDes, isSob]);
+
   const mainValue = Number((isObs ? dadosAno.obesidade : isDes ? dadosAno.desnutricao : isSob ? dadosAno.sobrepeso || 0 : dadosAno.eutrofia || 0).toFixed(2));
   const mainProj = Number((isObs ? dadosProj.obesidade : isDes ? dadosProj.desnutricao : isSob ? dadosProj.sobrepeso || 0 : dadosProj.eutrofia || 0).toFixed(2));
-  const secondaryValue = Number((isDes ? dadosAno.obesidade : dadosAno.desnutricao).toFixed(2));
+
+  // Mapping of primary indicator to secondary indicator label & value (resolves issue #3)
+  let secondaryLabel = 'Obesidade';
+  let secondaryValue = dadosAno.obesidade;
+
+  if (isEut) {
+    secondaryLabel = 'Sobrepeso';
+    secondaryValue = dadosAno.sobrepeso;
+  } else if (isObs) {
+    secondaryLabel = 'Desnutrição';
+    secondaryValue = dadosAno.desnutricao;
+  } else if (isDes) {
+    secondaryLabel = 'Obesidade';
+    secondaryValue = dadosAno.obesidade;
+  } else if (isSob) {
+    secondaryLabel = 'Obesidade';
+    secondaryValue = dadosAno.obesidade;
+  }
+
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
+
+  // Determina o próximo ano para cálculo de crescimento relativo
+  const isEndYear = cleanYear === '2027';
+  const targetYear = isEndYear ? '2027' : (parseInt(cleanYear, 10) + 1).toString();
+  const baseYear = isEndYear ? '2026' : cleanYear;
+
+  // Busca os registros correspondentes na série temporal para base e target
+  const baseRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === baseYear) || dadosAno;
+  const targetRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === targetYear) || dadosProj;
+
+  // Valores principais para crescimento
+  const mainBaseValue = Number(isObs ? baseRecord.obesidade : isDes ? baseRecord.desnutricao : isSob ? baseRecord.sobrepeso || 0 : baseRecord.eutrofia || 0);
+  const mainTargetValue = Number(isObs ? targetRecord.obesidade : isDes ? targetRecord.desnutricao : isSob ? targetRecord.sobrepeso || 0 : targetRecord.eutrofia || 0);
+
+  // Crescimento relativo em %
+  const growthPercent = mainBaseValue > 0 
+    ? (((mainTargetValue - mainBaseValue) / mainBaseValue) * 100).toFixed(2)
+    : "0.00";
 
   const mainColor = isEut
     ? 'text-emerald-600 dark:text-emerald-400'
@@ -323,7 +414,6 @@ export default function ExpertView() {
         ? 'Sobrepeso' 
         : 'Obesidade';
 
-  const cleanYear = anoSelecionado.replace('★', '').trim();
   // Compute dynamic ranking from loaded regional data
   const currentYearRegions = regionalData && regionalData[cleanYear] 
     ? Object.values(regionalData[cleanYear]) 
@@ -436,9 +526,9 @@ export default function ExpertView() {
             </button>
           )}
           <div>
-             <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">Rio Claro — Painel Epidemiológico</h2>
+             <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">{displayTitle}</h2>
              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 font-medium">
-               Nutri for Schools · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado} · Nível: {
+               NutriAlerta · Faixa Etária: 0 a 18 anos (Consolidado) · Filtro Ativo: {anoSelecionado} · Nível: {
                   analysisLevel === 'municipio' ? 'Geral (Rio Claro)' :
                   analysisLevel === 'ubs' ? (selectedUbs ? `UBS ${selectedUbs.replace('UBS ', '').replace('USF ', '')}` : 'UBS (nenhuma selecionada)') :
                   analysisLevel === 'bairro' ? (selectedBairroName ? `Bairro ${selectedBairroName}` : 'Bairro (nenhum selecionado)') :
@@ -447,9 +537,9 @@ export default function ExpertView() {
              </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 rounded-lg px-3 py-2 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(13,148,136,0.5)] animate-pulse" />
-          LIVE DATA: Nutri for Schools 2025
+        <div className={`flex items-center gap-2 text-[10px] ${situationStyles.text} ${situationStyles.bg} border ${situationStyles.border} rounded-lg px-3 py-2 shadow-sm font-black`}>
+          <span className={`w-2 h-2 rounded-full ${situationStyles.bullet} animate-pulse`} />
+          {isPrevisao ? `★ PREVISÃO DE IA: ${cleanYear}` : `DADO REAL: ${cleanYear}`}
         </div>
       </div>
 
@@ -462,7 +552,7 @@ export default function ExpertView() {
             accentColor="text-slate-800 dark:text-zinc-200"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
-            tooltip="Quantidade total de indivíduos pesados e avaliados no Nutri for Schools na região selecionada."
+            tooltip="Quantidade total de indivíduos pesados e avaliados no NutriAlerta na região selecionada."
           />
           <KpiCard
             label={`Prevalência · ${mainLabel}`}
@@ -474,22 +564,24 @@ export default function ExpertView() {
             tooltip="Percentual de prevalência registrado para este indicador nutricional no ano selecionado."
           />
           <KpiCard
-            label={`Tendência ${mainLabel} · 2027`}
-            value={`${Number(delta) > 0 ? '+' : ''}${delta} p.p.`}
-            sub={`Diferença projetada em relação a ${cleanYear}`}
-            trend={isAlta ? "up" : "down"}
-            trendLabel={isAlta ? (isEut ? "Melhora prevista" : "Aceleração") : (isEut ? "Recuo previsto" : "Queda de risco")}
-            accentColor={isAlta ? (isEut ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-450") : (isEut ? "text-rose-600 dark:text-rose-450" : "text-emerald-600 dark:text-emerald-400")}
+            label={`Projeção Próximo Ano · ${isEndYear ? '2026 → 2027' : `${baseYear} → ${targetYear}`}`}
+            value={`${mainTargetValue.toFixed(2)}%`}
+            sub={isEndYear ? `Prevalência na reta final da projeção` : `Prevalência estimada para ${targetYear}`}
+            trend={Number(growthPercent) > 0 ? "up" : Number(growthPercent) < 0 ? "down" : "neutral"}
+            trendLabel={`${Number(growthPercent) > 0 ? '+' : ''}${growthPercent}%`}
+            accentColor={Number(growthPercent) > 0 
+              ? (isEut ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-455") 
+              : (isEut ? "text-rose-600 dark:text-rose-455" : "text-emerald-600 dark:text-emerald-400")}
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
-            tooltip="Diferença esperada na prevalência em pontos percentuais (p.p.) de agora até 2027, estimada por IA."
+            tooltip="Prevalência percentual (%) estimada pela IA para a qual o indicador caminha no próximo período."
             invertTrendColor={isEut}
           />
           <KpiCard
-            label={`${isObs ? 'Desnutrição' : 'Obesidade'} · ${anoSelecionado}`}
-            value={`${secondaryValue}%`}
+            label={`${secondaryLabel} · ${anoSelecionado}`}
+            value={`${secondaryValue.toFixed(2)}%`}
             sub={`Indicador secundário em ${cleanYear}`}
-            accentColor="text-slate-600 dark:text-zinc-300"
+            accentColor="text-slate-650 dark:text-zinc-350"
             bgColor="bg-white dark:bg-[#1c1c1e]"
             borderColor="border-slate-200 dark:border-[#2c2c2e]"
             tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado de forma comparativa."
@@ -749,24 +841,32 @@ export default function ExpertView() {
             </div>
 
             {/* Banner de Simulação de Impacto */}
-            <div className="pt-3 border-t border-slate-100 dark:border-zinc-900/60 mt-2">
-              <span className="text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-2.5 block">
+            <div className="pt-3 border-t border-slate-100/60 dark:border-zinc-900/40 mt-2 relative">
+              <span className="text-[9px] font-black text-slate-400 dark:text-zinc-550 uppercase tracking-widest leading-none mb-3 block">
                 Simulação de Impacto no Território
               </span>
               
               {activePoiTypes.includes('Alimentação - Restaurante/Fast-food') ? (
-                <div className="p-3 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/60 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-700 dark:text-rose-450 font-semibold leading-relaxed flex items-start gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
-                  <span>
-                    <strong>Cenário Passivo:</strong> O livre provimento de fast-food e mercados sem hortifruti nas periferias projeta elevação de <strong>+12% na taxa de obesidade infantil</strong> para o ciclo preditivo de 2027.
-                  </span>
+                <div className="relative mt-1">
+                  {/* Visual Anchor Arrow pointing to the ranking bar chart */}
+                  <div className="absolute -top-1 left-8 w-2 h-2 rotate-45 bg-rose-50 dark:bg-[#1a131b] border-t border-l border-rose-100/40 dark:border-rose-900/40 z-10" />
+                  <div className="p-3 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100/60 dark:border-rose-900/40 rounded-xl text-[10px] text-rose-700 dark:text-rose-450 font-semibold leading-relaxed flex items-start gap-2 shadow-sm relative z-0">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500 dark:text-rose-400" />
+                    <span>
+                      <strong>Cenário Passivo:</strong> O livre provimento de fast-food e mercados sem hortifruti nas periferias projeta elevação de <strong>+12% na taxa de obesidade infantil</strong> para o ciclo preditivo de 2027.
+                    </span>
+                  </div>
                 </div>
               ) : (
-                <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100/60 dark:border-emerald-900/40 rounded-xl text-[10px] text-emerald-700 dark:text-emerald-450 font-semibold leading-relaxed flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
-                  <span>
-                    <strong>Cenário Interventivo Ativo:</strong> A simulação de intervenção regulatória (restrição espacial de estabelecimentos de fast-food) projeta <strong>redução real de -12% na curva de obesidade infantil</strong> projetada para 2027.
-                  </span>
+                <div className="relative mt-1">
+                  {/* Visual Anchor Arrow pointing to the ranking bar chart */}
+                  <div className="absolute -top-1 left-8 w-2 h-2 rotate-45 bg-emerald-50 dark:bg-[#121c17] border-t border-l border-emerald-100/40 dark:border-emerald-900/40 z-10" />
+                  <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100/60 dark:border-emerald-900/40 rounded-xl text-[10px] text-emerald-700 dark:text-emerald-450 font-semibold leading-relaxed flex items-start gap-2 shadow-sm relative z-0">
+                    <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
+                    <span>
+                      <strong>Cenário Interventivo Ativo:</strong> A simulação de intervenção regulatória (restrição espacial de estabelecimentos de fast-food) projeta <strong>redução real de -12% na curva de obesidade infantil</strong> projetada para 2027.
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -782,7 +882,7 @@ export default function ExpertView() {
             <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium">
               Destaque para: <span className="text-slate-800 dark:text-zinc-200 font-bold">{mainLabel}</span> &nbsp;·&nbsp;
               {analysisLevel !== 'municipio' ? <span className="text-slate-600 dark:text-zinc-300 font-bold">{analysisLevel === 'ubs' ? selectedUbs : analysisLevel === 'bairro' ? selectedBairroName : selectedSchoolName} &nbsp;·&nbsp;</span> : null}
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">★ Projeção Preditiva 2026–2027</span>
+              <span className={`${situationStyles.text} font-semibold animate-pulse`}>★ Projeção Preditiva 2026–2027</span>
             </p>
           </div>
           <div className="h-[260px] w-full relative">

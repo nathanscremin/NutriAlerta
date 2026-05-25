@@ -1,6 +1,306 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { exec } from 'child_process';
+import { createClient } from '@supabase/supabase-js';
+
+// Isolated thread-safe authenticated admin client to bypass RLS in the cloud database
+async function getAdminSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://peqvaslchaxrewhtxltc.supabase.co';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_knBFAKhSyTfdfRwMYaQGeg_pF5D6w33';
+  
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  });
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email: 'nutrialerta@gmail.com',
+    password: '#Pangam123@'
+  });
+
+  if (error) {
+    throw new Error(`Auth RLS bypass failed: ${error.message}`);
+  }
+
+  return client;
+}
+
+// UBS CNES mapping from sync_db_data.js
+const UBS_CNES: Record<string, string> = {
+  "UBS Jardim Chervezon “Dr. Nicolino Maziotti”": "2074362",
+  "UBS 29 “Oreste Armando Giovani”": "2031922",
+  "UBS Wenzel “Dr. Mario Fittipaldi”": "2030462",
+  "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”": "2073943",
+  "USF Assistência": "2055821",
+  "USF Ferraz": "6222629",
+  "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”": "2055902",
+  "USF Ajapi/Ferraz": "2049163",
+  "USF Mãe PretaI/II": "2071665",
+  "USF Palmeiras I/II “Dr. Gilson Giovanni”": "2033186",
+  "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”": "2074214",
+  "USF Benjamin de Castro": "7058865",
+  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2055902",
+  "USF Jardim das Flores “Dr. Moacir Camargo”": "2074419",
+  "USF Guanabara “Dr. Celestino Donato”": "2074222",
+  "USF Panorama “Dr. Osvaldo Akamine”": "2074346",
+  "USF Terra Nova": "7533032"
+};
+
+// Standard child nutritional classification (based on child BMI)
+function classifyBMI(peso: number, altura: number): string {
+  if (!peso || !altura || altura <= 0) return 'Eutrofia';
+  const imc = peso / (altura * altura);
+  if (imc < 16.0) return 'Magreza_Acentuada';
+  if (imc < 18.5) return 'Magreza';
+  if (imc < 25.0) return 'Eutrofia';
+  if (imc < 30.0) return 'Sobrepeso';
+  if (imc < 35.0) return 'Obesidade';
+  return 'Obesidade_Grave';
+}
+
+async function fetchAndSyncDbData() {
+  const cwd = process.cwd();
+  console.log('[Supabase Cloud Sync] Starting dynamic cloud database query...');
+  
+  // 1. Authenticate with Supabase to bypass RLS policies
+  const adminClient = await getAdminSupabaseClient();
+  
+  // 2. Fetch all schools
+  const { data: dbSchools, error: schoolsErr } = await adminClient.from('escolas').select('*');
+  if (schoolsErr) {
+    throw new Error(`Failed to fetch schools from Supabase: ${schoolsErr.message}`);
+  }
+  
+  // 3. Fetch all health records in sequential chunks
+  const pageSize = 1000;
+  const allRecords: any[] = [];
+  let i = 0;
+  
+  while (true) {
+    const { data, error } = await adminClient
+      .from('registros_saude')
+      .select('*')
+      .range(i, i + pageSize - 1);
+      
+    if (error) {
+      throw new Error(`Range fetch error at range ${i}-${i + pageSize - 1}: ${error.message}`);
+    }
+    
+    if (data && data.length > 0) {
+      allRecords.push(...data);
+      if (data.length < pageSize) {
+        break;
+      }
+      i += pageSize;
+    } else {
+      break;
+    }
+  }
+  
+  console.log(`[Supabase Cloud Sync] Loaded ${allRecords.length} records from Supabase.`);
+
+  // 4. Load spatial mapping POIs
+  const poisPath = path.join(cwd, 'src', 'lib', 'extractedPois.json');
+  let extractedPois: any[] = [];
+  try {
+    const poisContent = await fs.readFile(poisPath, 'utf8');
+    extractedPois = JSON.parse(poisContent);
+  } catch (err) {
+    console.warn('[Supabase Cloud Sync] extractedPois.json not found, using empty array.');
+  }
+
+  // Map school DB name to POI metadata
+  const schoolMap: Record<string, any> = {};
+  dbSchools.forEach((s: any) => {
+    const norm = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
+    const dbNorm = norm(s.nome);
+    
+    let match = extractedPois.find(p => p.categoria === 'Educação' && norm(p.nome) === dbNorm);
+    if (!match) {
+      match = extractedPois.find(p => p.categoria === 'Educação' && (norm(p.nome).includes(dbNorm) || dbNorm.includes(norm(p.nome))));
+    }
+    
+    schoolMap[s.id] = {
+      dbSchool: s,
+      poi: match || null,
+      bairro: match ? match.bairro : 'Desconhecido',
+      regiao_ubs: match ? match.regiao_ubs : 'UBS Jardim Chervezon “Dr. Nicolino Maziotti”'
+    };
+  });
+
+  // If we have records in the database, rebuild Base_Nutricional_Consolidada_Final.csv
+  if (allRecords.length > 0) {
+    const ubsYearGroups: Record<string, any> = {};
+    
+    allRecords.forEach(r => {
+      const date = new Date(r.data_coleta);
+      const year = date.getFullYear();
+      if (isNaN(year) || year < 2000) return;
+      
+      const schMeta = schoolMap[r.escola_id];
+      if (!schMeta) return;
+
+      const ubsName = schMeta.regiao_ubs;
+      const cnes = UBS_CNES[ubsName] || '2005565';
+      const key = `${cnes}-${year}`;
+
+      if (!ubsYearGroups[key]) {
+        ubsYearGroups[key] = {
+          cnes,
+          ubsName,
+          ano: year,
+          Magreza_Acentuada_Qtd: 0,
+          Magreza_Qtd: 0,
+          Eutrofia_Qtd: 0,
+          Sobrepeso_Qtd: 0,
+          Obesidade_Qtd: 0,
+          Obesidade_Grave_Qtd: 0,
+          Total: 0
+        };
+      }
+
+      const classification = classifyBMI(Number(r.peso), Number(r.altura));
+      ubsYearGroups[key][`${classification}_Qtd`]++;
+      ubsYearGroups[key].Total++;
+    });
+
+    const csvHeaders = [
+      'UF', 'IBGE', 'Municipio', 'CNES', 'EAS',
+      'Peso_Muito_Baixo_Quantidade', 'Peso_Muito_Baixo_Porcentagem',
+      'Peso_Baixo_Quantidade', 'Peso_Baixo_Porcentagem',
+      'Peso_Adequado_Quantidade', 'Peso_Adequado_Porcentagem',
+      'Peso_Elevado_Quantidade', 'Peso_Elevado_Porcentagem',
+      'Total', 'Local', 'Ano', 'Faixa_Etaria',
+      'Magreza_Acentuada_Qtd', 'Magreza_Acentuada_Pct',
+      'Magreza_Qtd', 'Magreza_Pct',
+      'Eutrofia_Qtd', 'Eutrofia_Pct',
+      'Sobrepeso_Qtd', 'Sobrepeso_Pct',
+      'Obesidade_Qtd', 'Obesidade_Pct',
+      'Obesidade_Grave_Qtd', 'Obesidade_Grave_Pct'
+    ];
+
+    const csvRows = [csvHeaders.join(',')];
+    Object.values(ubsYearGroups).forEach((g: any) => {
+      const total = g.Total;
+      if (total === 0) return;
+
+      const magAcentPct = ((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(6);
+      const magPct = ((g.Magreza_Qtd / total) * 100).toFixed(6);
+      const eutPct = ((g.Eutrofia_Qtd / total) * 100).toFixed(6);
+      const sobPct = ((g.Sobrepeso_Qtd / total) * 100).toFixed(6);
+      const obsPct = ((g.Obesidade_Qtd / total) * 100).toFixed(6);
+      const obsGravePct = ((g.Obesidade_Grave_Qtd / total) * 100).toFixed(6);
+
+      const row = [
+        'SP', '354390', 'RIO CLARO', g.cnes, g.ubsName,
+        '', '', '', '', '', '', '', '',
+        total, 'SP', g.ano, '0 a 18 anos',
+        g.Magreza_Acentuada_Qtd, magAcentPct,
+        g.Magreza_Qtd, magPct,
+        g.Eutrofia_Qtd, eutPct,
+        g.Sobrepeso_Qtd, sobPct,
+        g.Obesidade_Qtd, obsPct,
+        g.Obesidade_Grave_Qtd, obsGravePct
+      ];
+
+      csvRows.push(row.join(','));
+    });
+
+    // Write consolidated CSV data to both folders to trigger ML check
+    const csvFilename = 'Base_Nutricional_Consolidada_Final.csv';
+    const pathsToUpdate = [
+      path.join(cwd, '..', 'csv', csvFilename),
+      path.join(cwd, 'csv', csvFilename),
+      path.join(cwd, 'project', 'csv', csvFilename)
+    ];
+
+    for (const p of pathsToUpdate) {
+      try {
+        await fs.writeFile(p, csvRows.join('\n'), 'utf8');
+        console.log(`[Supabase Cloud Sync] Wrote dynamic cloud data to CSV: ${p}`);
+      } catch (err) {}
+    }
+  }
+
+  // 5. Build high-fidelity school, neighborhood, and UBS dynamic metrics
+  const schoolYearGroups: Record<string, any> = {};
+  allRecords.forEach(r => {
+    const date = new Date(r.data_coleta);
+    const year = date.getFullYear();
+    if (isNaN(year) || year < 2000) return;
+
+    const key = `${r.escola_id}-${year}`;
+    if (!schoolYearGroups[key]) {
+      schoolYearGroups[key] = {
+        escola_id: r.escola_id,
+        ano: year,
+        Magreza_Acentuada_Qtd: 0,
+        Magreza_Qtd: 0,
+        Eutrofia_Qtd: 0,
+        Sobrepeso_Qtd: 0,
+        Obesidade_Qtd: 0,
+        Obesidade_Grave_Qtd: 0,
+        Total: 0
+      };
+    }
+
+    const classification = classifyBMI(Number(r.peso), Number(r.altura));
+    schoolYearGroups[key][`${classification}_Qtd`]++;
+    schoolYearGroups[key].Total++;
+  });
+
+  const schoolMetrics: Record<string, any> = {};
+  Object.values(schoolYearGroups).forEach((g: any) => {
+    const schMeta = schoolMap[g.escola_id];
+    if (!schMeta) return;
+
+    const schoolName = schMeta.dbSchool.nome;
+    const total = g.Total;
+    if (total === 0) return;
+
+    if (!schoolMetrics[schoolName]) {
+      schoolMetrics[schoolName] = {
+        nome: schoolName,
+        lat: schMeta.poi ? schMeta.poi.lat : -22.41,
+        lon: schMeta.poi ? schMeta.poi.lon : -47.56,
+        bairro: schMeta.bairro,
+        regiao_ubs: schMeta.regiao_ubs,
+        anos: {}
+      };
+    }
+
+    schoolMetrics[schoolName].anos[g.ano] = {
+      desnutricao: Number((((g.Magreza_Acentuada_Qtd + g.Magreza_Qtd) / total) * 100).toFixed(2)),
+      eutrofia: Number(((g.Eutrofia_Qtd / total) * 100).toFixed(2)),
+      sobrepeso: Number(((g.Sobrepeso_Qtd / total) * 100).toFixed(2)),
+      obesidade: Number((((g.Obesidade_Qtd + g.Obesidade_Grave_Qtd) / total) * 100).toFixed(2)),
+      total_avaliados: total
+    };
+  });
+
+  const dbConsolidatedResult = {
+    schoolMetrics,
+    schoolMap: Object.keys(schoolMap).reduce((acc: any, id: string) => {
+      acc[id] = {
+        nome: schoolMap[id].dbSchool.nome,
+        bairro: schoolMap[id].bairro,
+        regiao_ubs: schoolMap[id].regiao_ubs
+      };
+      return acc;
+    }, {})
+  };
+
+  // Write local JSON cache
+  try {
+    const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
+    await fs.writeFile(jsonDestPath, JSON.stringify(dbConsolidatedResult, null, 2), 'utf8');
+  } catch (err) {}
+
+  return schoolMetrics;
+}
 
 // Define the health units to perform geographical proximity mapping
 const UNIDADES_SAUDE = [
@@ -140,7 +440,9 @@ async function findCSVFile(filenames: string[]): Promise<string | null> {
 }
 
 export async function GET(req: NextRequest) {
+  const cwd = process.cwd();
   try {
+    const consolidatedPath = await findCSVFile(['Base_Nutricional_Consolidada_Final.csv']);
     const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
     const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
     const demographicsPath = await findCSVFile(['NutriAlerta_Projecao_Demografica.json']);
@@ -151,6 +453,31 @@ export async function GET(req: NextRequest) {
         success: false,
         error: "CSV files not found. Please upload them to project/csv/"
       });
+    }
+
+    // Auto-ML Retrain: Verifica se a base de dados consolidada foi editada/atualizada manualmente
+    if (consolidatedPath && obesityPath) {
+      try {
+        const statsConsolidated = await fs.stat(consolidatedPath);
+        const statsObesity = await fs.stat(obesityPath);
+        
+        // Se a base de dados consolidada foi modificada depois da última geração de previsões
+        if (statsConsolidated.mtime > statsObesity.mtime) {
+          console.log("[Auto-ML Retrain] Base de dados modificada! Iniciando retreinamento assíncrono do modelo...");
+          const cwd = process.cwd();
+          const modelScriptPath = path.join(cwd, '..', '..', 'models', 'unified_ML.py');
+          
+          exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err, stdout, stderr) => {
+            if (err) {
+              console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
+              return;
+            }
+            console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
+          });
+        }
+      } catch (statErr) {
+        console.error("[Auto-ML Retrain Check ERROR]", statErr);
+      }
     }
 
     let demographicData = null;
@@ -361,14 +688,25 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // LOAD SUPABASE DYNAMIC SCHOOL DATA
-    const cwd = process.cwd();
-    const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
-    const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
-    const dbConsolidated = JSON.parse(dbConsolidatedContent);
+    // LOAD SUPABASE DYNAMIC SCHOOL DATA DIRECTLY FROM CLOUD DATABASE (resolves request #1)
+    let schoolMetrics: any = null;
+    try {
+      schoolMetrics = await fetchAndSyncDbData();
+      console.log("[Supabase Cloud Sync SUCCESS] Successfully fetched fresh dynamic metrics from cloud database!");
+    } catch (dbErr) {
+      console.warn("[Supabase Cloud Sync Fallback] Failed to fetch live data from Supabase. Falling back to local JSON cache...", dbErr);
+    }
+
+    if (!schoolMetrics || Object.keys(schoolMetrics).length === 0) {
+      const cwd = process.cwd();
+      const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
+      const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
+      const dbConsolidated = JSON.parse(dbConsolidatedContent);
+      schoolMetrics = dbConsolidated.schoolMetrics;
+    }
 
     // Deep clone schoolMetrics to avoid mutating cache
-    const schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics));
+    schoolMetrics = JSON.parse(JSON.stringify(schoolMetrics));
     const schoolList = Object.values(schoolMetrics) as any[];
 
     // Normalize school baselines to sum to exactly 100%

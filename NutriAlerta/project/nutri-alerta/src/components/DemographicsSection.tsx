@@ -219,69 +219,69 @@ export default function DemographicsSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card Peso Adequado */}
-        <div className="bg-slate-50/50 dark:bg-zinc-800/20 border border-slate-100 dark:border-[#2c2c2e] rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
           <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl" />
+            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/[0.04] rounded-full blur-xl" />
           </div>
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 border border-emerald-100/50 dark:border-emerald-900/50 shrink-0">
+          <div className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100/40 dark:border-emerald-900/35 shrink-0 shadow-sm">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <h4 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{demoData.globalAvgAgeEut}</h4>
-              <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeEut}</h4>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
             </div>
           </div>
         </div>
 
         {/* Card Obesidade */}
-        <div className="bg-slate-50/50 dark:bg-zinc-800/20 border border-slate-100 dark:border-[#2c2c2e] rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
           <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/5 rounded-full blur-xl" />
+            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/[0.04] rounded-full blur-xl" />
           </div>
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-500 border border-red-100/50 dark:border-red-900/50 shrink-0">
+          <div className="p-3 rounded-xl bg-red-50/50 dark:bg-red-955/20 text-red-650 dark:text-red-400 border border-red-100/40 dark:border-red-900/35 shrink-0 shadow-sm">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Obesidade</span>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <h4 className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-tight">{demoData.globalAvgAgeObs}</h4>
-              <span className="text-[10px] font-semibold text-slate-550 dark:text-zinc-500">anos</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeObs}</h4>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
             </div>
           </div>
         </div>
 
         {/* Card Sobrepeso */}
-        <div className="bg-slate-50/50 dark:bg-zinc-800/20 border border-slate-100 dark:border-[#2c2c2e] rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
           <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl" />
+            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/[0.04] rounded-full blur-xl" />
           </div>
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-500 border border-amber-100/50 dark:border-amber-900/50 shrink-0">
+          <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-955/20 text-amber-650 dark:text-amber-400 border border-amber-100/40 dark:border-amber-900/35 shrink-0 shadow-sm">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Sobrepeso</span>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <h4 className="text-2xl font-bold text-amber-600 dark:text-amber-400 tracking-tight">{demoData.globalAvgAgeSob}</h4>
-              <span className="text-[10px] font-semibold text-slate-555 dark:text-zinc-500">anos</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeSob}</h4>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
             </div>
           </div>
         </div>
 
         {/* Card Desnutrição */}
-        <div className="bg-slate-50/50 dark:bg-zinc-800/20 border border-slate-100 dark:border-[#2c2c2e] rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
           <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl" />
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/[0.04] rounded-full blur-xl" />
           </div>
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-500 border border-blue-100/50 dark:border-blue-900/50 shrink-0">
+          <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-955/20 text-blue-650 dark:text-blue-450 border border-blue-100/40 dark:border-blue-900/35 shrink-0 shadow-sm">
             <TrendingDown className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-555 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <h4 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">{demoData.globalAvgAgeDes}</h4>
-              <span className="text-[10px] font-semibold text-slate-555 dark:text-zinc-500">anos</span>
+            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeDes}</h4>
+              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function DemographicsSection() {
         <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-2.5">
           Escolha a Faixa Etária Escolar para Detalhar:
         </span>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200/50 dark:border-zinc-800/60 p-1.5 rounded-2xl">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/60 dark:border-zinc-800/80 p-1.5 rounded-2xl">
           {demoData.ageGroups.map((group, index) => {
             const isActive = activeGroupIndex === index;
             return (
@@ -302,12 +302,12 @@ export default function DemographicsSection() {
                 onClick={() => setActiveGroupIndex(index)}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all border duration-300 cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-600 dark:bg-indigo-600 border-indigo-700/40 text-white shadow-md'
-                    : 'bg-white dark:bg-zinc-855 border-slate-100 dark:border-[#2c2c2e] text-slate-600 dark:text-zinc-350 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                    ? 'bg-indigo-650 dark:bg-indigo-600 border-indigo-700/40 text-white shadow-md'
+                    : 'bg-white dark:bg-[#121316] border-slate-200/50 dark:border-[#1f2229]/65 text-slate-650 dark:text-zinc-350 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
                 }`}
               >
                 <span className="text-[11px] font-bold">{group.label}</span>
-                <span className={`text-[9px] mt-0.5 font-semibold ${isActive ? 'text-indigo-100' : 'text-slate-450 dark:text-zinc-500'}`}>
+                <span className={`text-[9px] mt-0.5 font-semibold ${isActive ? 'text-indigo-100' : 'text-slate-450 dark:text-zinc-550'}`}>
                   {group.sub}
                 </span>
               </button>
@@ -326,28 +326,28 @@ export default function DemographicsSection() {
           transition={{ duration: 0.2 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2"
         >
-          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Peso Adequado</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{activeGroup.eutrofia.rate.toFixed(2)}%</h4>
               <span className="text-[9px] text-slate-550 dark:text-zinc-500 font-semibold">da faixa</span>
             </div>
           </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
             <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Desnutrição</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <h4 className="text-xl font-black text-blue-600 dark:text-blue-400">{activeGroup.desnutricao.rate.toFixed(2)}%</h4>
               <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
             </div>
           </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Sobrepeso</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <h4 className="text-xl font-black text-amber-600 dark:text-amber-400">{activeGroup.sobrepeso.rate.toFixed(2)}%</h4>
               <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
             </div>
           </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-150 dark:border-zinc-800/40 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
+          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
             <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider">Obesidade</span>
             <div className="flex items-baseline gap-1 mt-1.5">
               <h4 className="text-xl font-black text-rose-600 dark:text-rose-450">{activeGroup.obesidade.rate.toFixed(2)}%</h4>
@@ -372,38 +372,43 @@ export default function DemographicsSection() {
             activeGroup.eutrofia.rate,
             activeGroup.eutrofia.pctMasculino,
             activeGroup.eutrofia.pctFeminino,
-            "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/40"
+            "bg-emerald-50/50 dark:bg-emerald-950/15 text-emerald-700 dark:text-emerald-400 border-emerald-100/40 dark:border-emerald-900/30"
           )}
           {renderGenderBar(
             "Magreza / Desnutrição",
             activeGroup.desnutricao.rate,
             activeGroup.desnutricao.pctMasculino,
             activeGroup.desnutricao.pctFeminino,
-            "bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-900/40"
+            "bg-blue-50/50 dark:bg-blue-955/15 text-blue-700 dark:text-blue-450 border-blue-100/40 dark:border-blue-900/30"
           )}
           {renderGenderBar(
             "Sobrepeso",
             activeGroup.sobrepeso.rate,
             activeGroup.sobrepeso.pctMasculino,
             activeGroup.sobrepeso.pctFeminino,
-            "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/40"
+            "bg-amber-50/50 dark:bg-amber-955/15 text-amber-700 dark:text-amber-400 border-amber-100/40 dark:border-amber-900/30"
           )}
           {renderGenderBar(
             "Obesidade",
             activeGroup.obesidade.rate,
             activeGroup.obesidade.pctMasculino,
             activeGroup.obesidade.pctFeminino,
-            "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/40"
+            "bg-red-50/50 dark:bg-red-955/15 text-red-700 dark:text-red-405 border-red-100/40 dark:border-red-900/30"
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Bloco de Insight Epidemiológico */}
-      <div className="bg-indigo-50/50 dark:bg-[#1a1a2e]/30 border border-indigo-100/50 dark:border-indigo-900/40 p-4 rounded-xl flex gap-3 items-start leading-relaxed font-semibold transition-all">
-        <AlertCircle className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-        <div className="text-[10px] text-indigo-850 dark:text-indigo-300 space-y-1">
-          <p className="font-bold uppercase tracking-wider">Insight Nutricional - Faixa Ativa</p>
-          <p className="text-slate-600 dark:text-zinc-300 font-medium leading-normal">{groupInsightText}</p>
+      {/* Bloco de Insight Epidemiológico Ancorado */}
+      <div className="relative mt-4">
+        {/* Visual Anchor Arrow pointing upwards towards the active gender bar */}
+        <div className="absolute -top-1.5 left-24 w-3.5 h-3.5 rotate-45 border-t border-l border-indigo-150/40 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-[#111124] z-10" />
+        
+        <div className="bg-indigo-50/60 dark:bg-indigo-955/10 border border-indigo-150/45 dark:border-indigo-900/40 p-4 rounded-xl flex gap-3 items-start leading-relaxed font-semibold transition-all relative z-0 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
+          <AlertCircle className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
+          <div className="text-[10px] text-indigo-900 dark:text-indigo-300 space-y-1">
+            <p className="font-black uppercase tracking-wider">Insight Nutricional - Faixa Ativa</p>
+            <p className="text-slate-600 dark:text-zinc-350 font-semibold leading-normal">{groupInsightText}</p>
+          </div>
         </div>
       </div>
 

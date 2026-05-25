@@ -45,6 +45,23 @@
   --color-sidebar-border: var(--sidebar-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom Palette for Ultra-High Fidelity BI Theme and Contrast */
+  --color-slate-450: #7f8ea3;
+  --color-slate-550: #556579;
+  --color-zinc-450: #888897;
+  --color-zinc-555: #4a4a54;
+  --color-zinc-550: #5e5e6c;
+  --color-blue-450: #4dabf7;
+  --color-blue-955: #0a1f35;
+  --color-red-450: #f86d6d;
+  --color-red-955: #3b0c0c;
+  --color-amber-450: #fcc43c;
+  --color-amber-955: #382405;
+  --color-emerald-450: #2ecf96;
+  --color-emerald-955: #062f1a;
+  --color-rose-450: #f7637b;
+  --color-rose-955: #330810;
 }
 
 body {

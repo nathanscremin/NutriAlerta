@@ -450,14 +450,13 @@ export default function ConsultantView() {
     return totalAvaliados >= 1000 ? `${(totalAvaliados / 1000).toFixed(1)}K` : String(totalAvaliados);
   }, [totalAvaliados]);
 
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden p-6 gap-6 bg-background transition-colors duration-300"
+      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden p-6 gap-6 bg-slate-50/30 dark:bg-zinc-950/20 transition-colors duration-300"
     >
       {/* Left: Chatbot */}
       <div className="w-[60%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
@@ -465,13 +464,13 @@ export default function ConsultantView() {
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="flex items-center gap-3">
-            <div className="bg-teal-50 dark:bg-teal-950/40 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shadow-sm">
-              <Sparkles className="w-6 h-6 text-teal-600 dark:text-teal-500" />
+            <div className="bg-teal-50/60 dark:bg-teal-955/20 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/50 flex items-center justify-center shadow-sm">
+              <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-500" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-2">
+              <h2 className="text-sm font-black text-slate-850 dark:text-[#f5f5f7] flex items-center gap-1.5">
                 NutriBot
-                <Sparkles className="w-5 h-5 text-amber-500" />
+                <Sparkles className="w-4 h-4 text-amber-500" />
               </h2>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">NutriBot de Apoio à Decisão Epidemiológica · Rio Claro</p>
             </div>
@@ -479,10 +478,10 @@ export default function ConsultantView() {
           
           {/* Signal / Active Context Pill */}
           <div className="flex flex-wrap items-center gap-2 md:ml-auto">
-            <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full border flex items-center gap-1 ${
+            <div className={`text-[9.5px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 ${
               analysisLevel !== 'municipio' 
-                ? 'text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-100 dark:border-teal-900/60 font-bold' 
-                : 'text-slate-550 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-[#2c2c2e]'
+                ? 'text-teal-700 dark:text-teal-400 bg-teal-50/80 dark:bg-teal-955/20 border-teal-100 dark:border-teal-900/60 font-bold' 
+                : 'text-slate-550 dark:text-zinc-450 bg-slate-100/50 dark:bg-zinc-800 border-slate-200/60 dark:border-zinc-800'
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${analysisLevel !== 'municipio' ? 'bg-teal-500 animate-pulse' : 'bg-slate-400'}`} />
               Sinal: {
@@ -491,22 +490,22 @@ export default function ConsultantView() {
                 analysisLevel === 'ubs' ? `UBS: ${selectedUbs}` : 'Rio Claro (Geral)'
               }
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-3 py-1.5 rounded-full border border-teal-100 dark:border-teal-900/60">
-              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-teal-750 dark:text-teal-400 bg-teal-50/80 dark:bg-teal-955/20 px-2.5 py-1.5 rounded-xl border border-teal-100 dark:border-teal-900/60 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
               Online
             </div>
             <button
               onClick={clearConversation}
               disabled={clearing || loading}
               title="Apagar histórico local"
-              className="p-1.5 rounded-full text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm transition-colors cursor-pointer disabled:opacity-40"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-zinc-850 border border-slate-200 dark:border-zinc-800 shadow-sm transition-all cursor-pointer disabled:opacity-40"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* Indicator Toggle */}
-          <div className="flex items-center bg-slate-100 dark:bg-zinc-800 border border-slate-200/60 dark:border-zinc-700/60 rounded-xl p-0.5 gap-0.5 shadow-inner md:ml-auto">
+          <div className="flex items-center bg-slate-100/60 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl p-0.5 gap-0.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] md:ml-auto">
             {[
               { id: 'obesidade', label: 'Obesidade' },
               { id: 'desnutricao', label: 'Desnutrição' },
@@ -516,10 +515,10 @@ export default function ConsultantView() {
               <button
                 key={id}
                 onClick={() => setIndicador(id)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-300 cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300 cursor-pointer ${
                   indicador === id
-                    ? 'bg-teal-600 text-white shadow-md'
-                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/40 dark:hover:bg-zinc-700/40'
+                    ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-sm'
+                    : 'text-slate-550 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
                 }`}
               >
                 {label}
@@ -533,22 +532,22 @@ export default function ConsultantView() {
           {messages.map((msg, i) => (
             msg.role === 'bot' ? (
               <div key={i} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-teal-50/80 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 shadow-sm">
                   <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
                 </div>
-                <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
-                  <div className="text-sm text-slate-700 dark:text-zinc-200 leading-relaxed font-semibold whitespace-pre-wrap">
+                <div className="bg-slate-50/50 dark:bg-zinc-900/30 border border-slate-200/60 dark:border-[#2c2c2e]/60 p-5 rounded-2xl rounded-tl-sm max-w-[85%] shadow-sm">
+                  <div className="text-xs text-slate-700 dark:text-zinc-250 leading-relaxed font-semibold whitespace-pre-wrap prose prose-sm dark:prose-invert">
                     <ReactMarkdown>{msg.text}</ReactMarkdown>
                   </div>
                 </div>
               </div>
             ) : (
               <div key={i} className="flex gap-4 flex-row-reverse">
-                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] flex items-center justify-center shrink-0 mt-1">
-                  <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400">EU</span>
+                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                  <span className="text-[9px] font-black text-slate-500 dark:text-zinc-400">EU</span>
                 </div>
-                <div className="bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 p-5 rounded-2xl rounded-tr-sm max-w-[80%]">
-                  <p className="text-sm text-teal-800 dark:text-teal-300 leading-relaxed font-bold">{msg.text}</p>
+                <div className="bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 px-5 rounded-2xl rounded-tr-sm max-w-[80%] shadow-md shadow-teal-500/5">
+                  <p className="text-xs text-white leading-relaxed font-bold">{msg.text}</p>
                 </div>
               </div>
             )
@@ -556,14 +555,14 @@ export default function ConsultantView() {
 
           {loading && (
             <div className="flex gap-4">
-              <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/40 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-teal-50/80 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 shadow-sm">
                 <Bot className="w-4 h-4 text-teal-600 dark:text-teal-500" />
               </div>
-              <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-[#2c2c2e] px-5 py-4 rounded-2xl rounded-tl-sm flex items-center gap-2.5 shadow-sm">
+              <div className="bg-slate-50/50 dark:bg-zinc-900/30 border border-slate-200/60 dark:border-[#2c2c2e]/60 px-5 py-4 rounded-2xl rounded-tl-sm flex items-center gap-2.5 shadow-sm">
                 {[0, 150, 300].map(d => (
-                  <div key={d} className="w-2 h-2 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                  <div key={d} className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
                 ))}
-                <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500 ml-2 tracking-wide">Analisando correlações...</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 ml-2 tracking-wide uppercase">Analisando correlações...</span>
               </div>
             </div>
           )}
@@ -580,17 +579,17 @@ export default function ConsultantView() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Faça uma pergunta sobre os dados epidemiológicos..."
-              className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl py-4 pl-5 pr-14 text-sm font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-sm"
+              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-2xl py-3.5 pl-5 pr-14 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder:text-slate-400 dark:placeholder:text-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
             />
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-teal-600 hover:bg-teal-700 disabled:opacity-40 rounded-lg flex items-center justify-center transition-colors shadow-sm cursor-pointer"
+              className="absolute right-2 top-2 bottom-2 aspect-square bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 disabled:opacity-40 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer active:scale-95 text-white"
             >
-              <Send className="w-5 h-5 text-white" />
+              <Send className="w-4 h-4 text-white" />
             </button>
           </div>
-          <p className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 mt-3 text-center uppercase">
+          <p className="text-[9px] font-black tracking-widest text-slate-400 dark:text-zinc-500 mt-3 text-center uppercase">
             IA baseada nos dados reais Nutri for Schools/CNES de Rio Claro
           </p>
         </div>
@@ -601,30 +600,30 @@ export default function ConsultantView() {
         
         {/* Level Tabs */}
         <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-          <div className="flex bg-slate-200/50 dark:bg-zinc-850 p-1 rounded-xl">
+          <div className="flex bg-slate-200/40 dark:bg-zinc-850 p-1 rounded-xl">
             {[
-                            { id: 'municipio', label: 'Geral', icon: Globe },
-                            { id: 'ubs', label: 'UBS', icon: Hospital },
-                            { id: 'bairro', label: 'Bairro', icon: Home },
-                            { id: 'escola', label: 'Escola', icon: School }
+              { id: 'municipio', label: 'Geral', icon: Globe },
+              { id: 'ubs', label: 'UBS', icon: Hospital },
+              { id: 'bairro', label: 'Bairro', icon: Home },
+              { id: 'escola', label: 'Escola', icon: School }
             ].map((lvl) => {
               const Icon = lvl.icon;
               return (
-              <button
-                key={lvl.id}
-                onClick={() => {
-                  setAnalysisLevel(lvl.id as any);
-                  setSearchQuery('');
-                }}
-                className={`flex-1 flex flex-col items-center py-1.5 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer ${
-                  analysisLevel === lvl.id
-                    ? 'bg-white dark:bg-zinc-800 text-teal-650 dark:text-teal-400 shadow-sm'
-                    : 'text-slate-550 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/30 dark:hover:bg-zinc-800/20'
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 mb-0.5 ${analysisLevel === lvl.id ? 'text-teal-600 dark:text-teal-400' : 'text-slate-400 dark:text-zinc-500'}`} />
-                {lvl.label}
-              </button>
+                <button
+                  key={lvl.id}
+                  onClick={() => {
+                    setAnalysisLevel(lvl.id as any);
+                    setSearchQuery('');
+                  }}
+                  className={`flex-1 flex flex-col items-center py-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-350 cursor-pointer ${
+                    analysisLevel === lvl.id
+                      ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-400 shadow-sm'
+                      : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 mb-1 ${analysisLevel === lvl.id ? 'text-teal-655 dark:text-teal-400' : 'text-slate-405 dark:text-zinc-500'}`} />
+                  {lvl.label}
+                </button>
               );
             })}
           </div>
@@ -632,7 +631,7 @@ export default function ConsultantView() {
 
         {/* List Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
-          <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] tracking-wide uppercase font-sans">
+          <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] tracking-wider uppercase">
             {analysisLevel === 'municipio' && 'Todo o Município'}
             {analysisLevel === 'ubs' && 'Unidades de Saúde (UBS/USF)'}
             {analysisLevel === 'bairro' && 'Setores e Bairros'}
@@ -642,12 +641,12 @@ export default function ConsultantView() {
             {analysisLevel === 'municipio' && 'Visão consolidada de Rio Claro (Ano: ' + cleanYear + ')'}
             {analysisLevel === 'ubs' && 'Selecione uma UBS para cruzar os dados no chatbot (Ano: ' + cleanYear + ')'}
             {analysisLevel === 'bairro' && 'Selecione um bairro censitário monitorado (Ano: ' + cleanYear + ')'}
-            {analysisLevel === 'escola' && 'Selecione uma das 88 escolas analisadas (Ano: ' + cleanYear + ')'}
+            {analysisLevel === 'escola' && 'Selecione uma das escolas analisadas (Ano: ' + cleanYear + ')'}
           </p>
           
           {analysisLevel !== 'municipio' && (
             <div className="relative mt-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450 dark:text-zinc-500" />
               <input
                 type="text"
                 value={searchQuery}
@@ -656,35 +655,35 @@ export default function ConsultantView() {
                   analysisLevel === 'ubs' ? "Pesquisar UBS/USF..." :
                   analysisLevel === 'bairro' ? "Pesquisar Bairro..." : "Pesquisar Escola..."
                 }
-                className="w-full bg-white dark:bg-zinc-800 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-colors"
+                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
               />
             </div>
           )}
         </div>
 
         {/* List content */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800/80 scrollbar-thin">
           
           {analysisLevel === 'municipio' && (
             <div
               onClick={() => {
                 setAnalysisLevel('municipio');
               }}
-              className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600`}
+              className="p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]"
             >
-              <div className="p-2 rounded-xl border shrink-0 bg-teal-100/50 border-teal-200/50 text-teal-700">
+              <div className="p-2 rounded-xl border border-teal-200/50 dark:border-teal-905/65 shrink-0 bg-teal-50/60 dark:bg-teal-955/20 text-teal-600 dark:text-teal-400 shadow-sm">
                 <Globe className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
                   <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
                     {geralBadge.label}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
-                  <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{geralVal}%</strong></span>
-                  <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">{totalAvaliadosStr}</strong></span>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
+                  <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{geralVal}%</strong></span>
+                  <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliadosStr}</strong></span>
                 </div>
               </div>
             </div>
@@ -708,7 +707,7 @@ export default function ConsultantView() {
                   const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
                   const beforeSum = dDes + dObs + dSob;
                   const afterSum = scaleDes + scaleObs + scaleSob;
-              finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+                  finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
                 } else {
                   const multiplier = indicador === 'desnutricao' ? multDes : multObs;
                   finalVal = Number((val * multiplier).toFixed(2));
@@ -737,25 +736,29 @@ export default function ConsultantView() {
                         setSelection('ubs', ubs.nome, null, null);
                       }
                     }}
-                    className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
+                    className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
-                        : 'hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-950/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
+                        : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl border shrink-0 ${isSelected ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-550'}`}>
+                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
+                      isSelected 
+                        ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
+                        : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
+                    }`}>
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">{ubs.nome.replace('UBS ', '').replace('USF ', '')}</h4>
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
                           {badge.label}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
-                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{finalVal}%</strong></span>
-                        <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-300">{totalAvaliados}</strong></span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
+                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
+                        <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliados}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -816,25 +819,29 @@ export default function ConsultantView() {
                         setSelection('bairro', b.parentUbs || null, b.nome, null);
                       }
                     }}
-                    className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
+                    className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
-                        : 'hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
+                        : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl border shrink-0 ${isSelected ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-550'}`}>
+                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
+                      isSelected 
+                        ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
+                        : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
+                    }`}>
                       <MapPin className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{b.nome}</h4>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">{b.nome}</h4>
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
                           {badge.label}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
-                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{finalVal}%</strong></span>
-                        <span className="truncate">UBS: <strong className="text-slate-700 dark:text-zinc-300">{b.parentUbs.replace('UBS ', '').replace('USF ', '')}</strong></span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
+                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
+                        <span className="truncate">UBS: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{b.parentUbs.replace('UBS ', '').replace('USF ', '')}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -903,25 +910,29 @@ export default function ConsultantView() {
                         setSelection('escola', parentUbs || null, s.bairro || null, s.nome);
                       }
                     }}
-                    className={`p-4 flex items-start gap-3 cursor-pointer transition-all duration-150 relative ${
+                    className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-teal-50/55 dark:bg-teal-950/20 border-l-4 border-l-teal-600' 
-                        : 'hover:bg-slate-50/60 dark:hover:bg-zinc-800/40 border-l-4 border-l-transparent'
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
+                        : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl border shrink-0 ${isSelected ? 'bg-teal-100/50 border-teal-200/50 text-teal-700' : 'bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-550'}`}>
+                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
+                      isSelected 
+                        ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
+                        : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
+                    }`}>
                       <MapPin className="w-4 h-4 text-blue-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] truncate">{s.nome}</h4>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">{s.nome}</h4>
                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
                           {badge.label}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-semibold">
-                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-300">{finalVal}%</strong></span>
-                        <span className="truncate">UBS: <strong className="text-slate-700 dark:text-zinc-300">{parentUbs.replace('UBS ', '').replace('USF ', '')}</strong></span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
+                        <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
+                        <span className="truncate">UBS: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{parentUbs.replace('UBS ', '').replace('USF ', '')}</strong></span>
                       </div>
                     </div>
                   </div>

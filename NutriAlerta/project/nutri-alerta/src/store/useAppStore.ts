@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 
-type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant';
+type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant' | 'data-entry';
 
 export type PoiType = 'UBS' | 'Pronto-Atendimento' | 'Saúde Mental' | 'Vigilância Sanitária' | 'Educação' | 'Esporte e Lazer' | 'Alimentação - Restaurante/Fast-food' | 'Alimentação - Mercado';
 
@@ -13,6 +13,11 @@ interface AppState {
   setViewMode: (mode: ViewMode) => void;
   selectedBairro: string | null;
   setSelectedBairro: (bairro: string | null) => void;
+
+  // Offline Cache for Resilient Data Entry
+  offlineQueue: Array<any>;
+  addToOfflineQueue: (patient: any) => void;
+  clearOfflineQueue: () => void;
 
   // Hierarchical analysis states
   analysisLevel: AnalysisLevel;
@@ -200,6 +205,13 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       setSidebarCollapsed: (val) => set({ sidebarCollapsed: val }),
 
+      // Offline Cache for Resilient Data Entry
+      offlineQueue: [],
+      addToOfflineQueue: (patient) => set((state) => ({
+        offlineQueue: [...state.offlineQueue, patient]
+      })),
+      clearOfflineQueue: () => set({ offlineQueue: [] }),
+
       // Initial State Hydration with Database (no mock fallback)
       temporalData: [],
       regionalData: {},
@@ -246,6 +258,7 @@ export const useAppStore = create<AppState>()(
         anoSelecionado: state.anoSelecionado,
         indicador: state.indicador,
         activePoiTypes: state.activePoiTypes,
+        offlineQueue: state.offlineQueue,
       }),
     }
   )
