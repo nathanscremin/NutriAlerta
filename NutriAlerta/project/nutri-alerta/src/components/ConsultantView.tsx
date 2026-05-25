@@ -371,7 +371,7 @@ export default function ConsultantView() {
     `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
   );
 
-}, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
+}, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
   
   async function sendMessage() {
     const text = input.trim();
