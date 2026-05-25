@@ -62,6 +62,54 @@ const getChoroplethColor = (value: number, indicator: string) => {
   }
 };
 
+const indicatorLabels = {
+  desnutricao: 'Desnutrição',
+  sobrepeso: 'Sobrepeso',
+  obesidade: 'Obesidade',
+  eutrofia: 'Peso Adequado',
+  global: 'Visão Global'
+} as const;
+
+const getIndicatorLegend = (indicator: string) => {
+  if (indicator === 'desnutricao') {
+    return [
+      ['< 1,5%', '#dbeafe'],
+      ['1,5% – 2,5%', '#93c5fd'],
+      ['2,5% – 3,5%', '#3b82f6'],
+      ['3,5% – 4,5%', '#1d4ed8'],
+      ['≥ 4,5%', '#1e3a8a']
+    ];
+  }
+
+  if (indicator === 'eutrofia') {
+    return [
+      ['< 55%', '#d1fae5'],
+      ['55% – 60%', '#6ee7b7'],
+      ['60% – 65%', '#10b981'],
+      ['65% – 70%', '#047857'],
+      ['≥ 70%', '#064e3b']
+    ];
+  }
+
+  if (indicator === 'sobrepeso') {
+    return [
+      ['< 12%', '#fef3c7'],
+      ['12% – 15%', '#fcd34d'],
+      ['15% – 18%', '#f59e0b'],
+      ['18% – 21%', '#b45309'],
+      ['≥ 21%', '#78350f']
+    ];
+  }
+
+  return [
+    ['< 7%', '#fee2e2'],
+    ['7% – 10%', '#fca5a5'],
+    ['10% – 13%', '#ef4444'],
+    ['13% – 16%', '#b91c1c'],
+    ['≥ 16%', '#7f1d1d']
+  ];
+};
+
 function MapController() {
   const map = useMap();
   const { 
@@ -210,13 +258,15 @@ export default function RiskMap() {
       const activeSchool = ALL_POIS.find(p => p.nome === selectedSchoolName);
       isActive = !!(activeSchool && activeSchool.bairro && nomeReal === activeSchool.bairro);
     }
+
+    const hasSelectedScope = Boolean(selectedBairroName || selectedUbs || selectedSchoolName);
     
     return {
       fillColor,
       weight: isActive ? 2.5 : 1,
       opacity: 0.9,
       color: isActive ? '#0d9488' : (darkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(15, 23, 42, 0.1)'),
-      fillOpacity: (selectedBairroName || selectedUbs) ? (isActive ? 0.8 : 0.25) : 0.6,
+      fillOpacity: hasSelectedScope ? (isActive ? 0.8 : 0.25) : 0.6,
     };
   };
 
@@ -363,6 +413,15 @@ export default function RiskMap() {
   if (!mounted) return null;
 
   const mapBackground = darkMode ? '#1c1c1e' : '#f8fafc';
+  const activeIndicatorLabel = indicatorLabels[indicador as keyof typeof indicatorLabels] || indicatorLabels.obesidade;
+  const scopeLabel = analysisLevel === 'escola'
+    ? (selectedSchoolName || 'Escola')
+    : analysisLevel === 'bairro'
+      ? (selectedBairroName || 'Bairro')
+      : analysisLevel === 'ubs'
+        ? (selectedUbs || 'UBS')
+        : 'Rio Claro';
+  const indicatorLegend = getIndicatorLegend(indicador);
 
   return (
     <>
@@ -382,7 +441,23 @@ export default function RiskMap() {
         .custom-glass-tooltip::before { display: none !important; }
         .leaflet-container { background: ${mapBackground} !important; }
       `}</style>
-      <div className="h-full w-full">
+      <div className="h-full w-full relative">
+        <div className="absolute bottom-4 right-4 z-[1000] pointer-events-none">
+          <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/80 bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400 mb-2">Legenda · {activeIndicatorLabel}</div>
+            <div className="space-y-1.5">
+              {indicatorLegend.map(([label, color]) => (
+                <div key={label} className="flex items-center gap-2 text-[10px] font-semibold text-slate-700 dark:text-zinc-300">
+                  <span className="w-3 h-3 rounded-sm border border-white/60" style={{ backgroundColor: color }} />
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 pt-2 border-t border-slate-100 dark:border-zinc-800/70 text-[10px] text-slate-500 dark:text-zinc-400">
+              Escopo: <span className="font-bold text-slate-700 dark:text-zinc-200">{scopeLabel}</span>
+            </div>
+          </div>
+        </div>
         <MapContainer
           center={[-22.405, -47.555]}
           zoom={13}

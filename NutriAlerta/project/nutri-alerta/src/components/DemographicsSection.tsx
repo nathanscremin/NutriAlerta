@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { getDemographicsForUbs, AgeGroupData } from '@/lib/demographics';
+import { getDemographicsForUbs } from '@/lib/demographics';
+import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users2, ShieldCheck, TrendingUp, TrendingDown, HelpCircle, AlertCircle } from 'lucide-react';
 
@@ -25,66 +26,23 @@ export default function DemographicsSection() {
 
   // Encontra os baselines dinâmicos de taxas
   const rates = useMemo(() => {
-    // 1. Get the global record for this cleanYear
-    const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 58 };
-    const globalDes = globalRec.desnutricao;
-    const globalObs = globalRec.obesidade;
-    const globalSob = (globalRec as any).sobrepeso || 15.2;
-    const globalEut = (globalRec as any).eutrofia || 58;
-
-    let pDes = globalDes;
-    let pObs = globalObs;
-    let pSob = globalSob;
-    let pEut = globalEut;
-
-    if (analysisLevel === 'municipio') {
-      // Just keep global values
-    } else if (analysisLevel === 'ubs') {
-      const ubsName = selectedUbs;
-      const yrRecord = ubsName ? regionalData[cleanYear]?.[ubsName] : null;
-      pDes = yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalDes;
-      pObs = yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalObs;
-      pSob = yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : globalSob;
-      pEut = yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : globalEut;
-    } else if (analysisLevel === 'bairro') {
-      const bMetric = selectedBairroName ? bairroMetrics[selectedBairroName] : null;
-      const bYearData = bMetric?.anos?.[cleanYear];
-      if (bYearData) {
-        pDes = bYearData.desnutricao;
-        pObs = bYearData.obesidade;
-        pSob = bYearData.sobrepeso;
-        pEut = bYearData.eutrofia;
-      } else {
-        const parentUbs = bMetric?.regiao_ubs || selectedUbs;
-        const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
-        pDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
-        pObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
-        pSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
-        pEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
-      }
-    } else if (analysisLevel === 'escola') {
-      const sMetric = selectedSchoolName ? schoolMetrics[selectedSchoolName] : null;
-      const sYearData = sMetric?.anos?.[cleanYear];
-      if (sYearData) {
-        pDes = sYearData.desnutricao;
-        pObs = sYearData.obesidade;
-        pSob = sYearData.sobrepeso;
-        pEut = sYearData.eutrofia;
-      } else {
-        const parentUbs = sMetric?.regiao_ubs || selectedUbs;
-        const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
-        pDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
-        pObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
-        pSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
-        pEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
-      }
-    }
+    const scoped = getScopedNutritionMetrics({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics
+    });
 
     return {
-      des: Number(pDes.toFixed(2)),
-      obs: Number(pObs.toFixed(2)),
-      sob: Number(pSob.toFixed(2)),
-      eut: Number(pEut.toFixed(2))
+      des: Number(scoped.desnutricao.toFixed(2)),
+      obs: Number(scoped.obesidade.toFixed(2)),
+      sob: Number(scoped.sobrepeso.toFixed(2)),
+      eut: Number(scoped.eutrofia.toFixed(2))
     };
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 

@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getDemographicsForUbs } from '@/lib/demographics';
+import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ReferenceLine, Legend } from 'recharts';
 import { GitCompare, MapPin, TrendingUp, Users, ArrowUpRight, ArrowDownRight, ShieldCheck, ChevronDown, Check } from 'lucide-react';
@@ -60,54 +61,34 @@ export default function UbsComparisonSection() {
   // Encontra taxas reais ou fallbacks
   const getUbsStatsForYear = (ubsName: string, year: string) => {
     const cleanYear = year.replace('★', '').trim();
-    const record = regionalData[cleanYear]?.[ubsName];
-    
-    // Obesidade
-    let obs = 12.9;
-    if (record && typeof record.obesidade === 'number') {
-      obs = record.obesidade;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) obs = yearRec.obesidade;
-    }
+    const metrics = getScopedNutritionMetrics({
+      analysisLevel: 'ubs',
+      selectedUbs: ubsName,
+      selectedBairroName: null,
+      selectedSchoolName: null,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics: schoolMetrics || {},
+      bairroMetrics: {}
+    });
 
-    // Desnutrição
-    let des = 2.6;
-    if (record && typeof record.desnutricao === 'number') {
-      des = record.desnutricao;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) des = yearRec.desnutricao;
-    }
-
-    // Sobrepeso
-    let sob = 18.0;
-    if (record && typeof record.sobrepeso === 'number') {
-      sob = record.sobrepeso;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).sobrepeso === 'number') sob = (yearRec as any).sobrepeso;
-    }
-
-    // Peso Adequado (Eutrofia)
-    let eut = 61.55;
-    if (record && typeof record.eutrofia === 'number') {
-      eut = record.eutrofia;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).eutrofia === 'number') eut = (yearRec as any).eutrofia;
-    }
-
-    // Alunos avaliados
     let ubsTotal = 0;
     Object.values(schoolMetrics || {}).forEach((sch: any) => {
       if (sch.regiao_ubs === ubsName && sch.anos?.[cleanYear]?.total_avaliados) {
         ubsTotal += sch.anos[cleanYear].total_avaliados;
       }
     });
-    const total = ubsTotal || (record?.total_avaliados || 350);
 
-    return { obs, des, sob, eut, total };
+    const total = ubsTotal || 350;
+
+    return {
+      obs: metrics.obesidade,
+      des: metrics.desnutricao,
+      sob: metrics.sobrepeso,
+      eut: metrics.eutrofia,
+      total
+    };
   };
 
   // Último ano histórico consolidado (geralmente 2025)

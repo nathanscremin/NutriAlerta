@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
 import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
+import { buildScopedTemporalSeries } from '@/lib/metricSelectors';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -158,75 +159,17 @@ export default function ExpertView() {
 
   // Dado temporal reativo com suporte a análise hierárquica multinível e efeitos das camadas de POIs
   const activeTemporalData = React.useMemo(() => {
-
-    let baseSource: Array<{
-      ano: string;
-      desnutricao: number;
-      obesidade: number;
-      sobrepeso: number;
-      eutrofia: number;
-      isPrevisao: boolean;
-    }> = [];
-
-    if (analysisLevel === 'municipio') {
-      baseSource = temporalData.map(d => ({
-        ano: d.ano,
-        desnutricao: d.desnutricao,
-        obesidade: d.obesidade,
-        sobrepeso: (d as any).sobrepeso || 15.2,
-        eutrofia: d.eutrofia || 58,
-        isPrevisao: d.isPrevisao
-      }));
-    } else if (analysisLevel === 'ubs') {
-      const ubsName = selectedUbs;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const yrRecord = ubsName ? regionalData[cleanYr]?.[ubsName] : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-        return {
-          ano: yr,
-          desnutricao: yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalRec.desnutricao,
-          obesidade: yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalRec.obesidade,
-          sobrepeso: yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 15.2,
-          eutrofia: yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : (globalRec as any).eutrofia || 58,
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    } else if (analysisLevel === 'bairro') {
-      const bName = selectedBairroName;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
-        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-        
-        return {
-          ano: yr,
-          desnutricao: bairroRecord && typeof bairroRecord.desnutricao === 'number' ? bairroRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
-          obesidade: bairroRecord && typeof bairroRecord.obesidade === 'number' ? bairroRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
-          sobrepeso: bairroRecord && typeof bairroRecord.sobrepeso === 'number' ? bairroRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 15.2),
-          eutrofia: bairroRecord && typeof bairroRecord.eutrofia === 'number' ? bairroRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 58),
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    } else if (analysisLevel === 'escola') {
-      const schoolName = selectedSchoolName;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
-        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-
-        return {
-          ano: yr,
-          desnutricao: schoolRecord && typeof schoolRecord.desnutricao === 'number' ? schoolRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
-          obesidade: schoolRecord && typeof schoolRecord.obesidade === 'number' ? schoolRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
-          sobrepeso: schoolRecord && typeof schoolRecord.sobrepeso === 'number' ? schoolRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 15.2),
-          eutrofia: schoolRecord && typeof schoolRecord.eutrofia === 'number' ? schoolRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 58),
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    }
+    const baseSource = buildScopedTemporalSeries({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      yearsList,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics
+    });
 
     return baseSource.map(d => {
       const scaleDes = Number((d.desnutricao * multDes).toFixed(2));

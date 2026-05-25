@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "python ../../models/unified_ML.py && next dev",
+    "dev": "node -e \"const { spawn } = require('child_process'); const py = spawn('python', ['../../models/unified_ML.py', '--watch'], { stdio: 'inherit' }); const next = spawn('next', ['dev'], { stdio: 'inherit' }); const finish = (code) => { py.kill(); next.kill(); process.exit(code ?? 1); }; py.on('exit', finish); next.on('exit', finish);\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

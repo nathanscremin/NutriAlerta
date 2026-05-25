@@ -62,6 +62,12 @@ interface AppState {
   bairroMetrics: Record<string, any>;
   demographicData: Record<string, any> | null;
   yearsList: string[];
+  sourceMeta: {
+    source: 'supabase' | 'local-json' | 'local-csv';
+    fallbackReason: string | null;
+    artifacts: string[];
+    lastUpdated: string | null;
+  };
   loading: boolean;
   error: string | null;
   initializeData: () => Promise<void>;
@@ -219,6 +225,12 @@ export const useAppStore = create<AppState>()(
       bairroMetrics: {},
       demographicData: null,
       yearsList: [],
+      sourceMeta: {
+        source: 'supabase',
+        fallbackReason: null,
+        artifacts: ['registros_saude'],
+        lastUpdated: null
+      },
       loading: false,
       error: null,
 
@@ -235,6 +247,12 @@ export const useAppStore = create<AppState>()(
               bairroMetrics: data.bairroMetrics,
               demographicData: data.demographicData,
               yearsList: data.temporalData.map((d: any) => d.ano),
+              sourceMeta: data.sourceMeta || {
+                source: 'supabase',
+                fallbackReason: null,
+                artifacts: ['registros_saude'],
+                lastUpdated: null
+              },
               loading: false
             });
           } else {

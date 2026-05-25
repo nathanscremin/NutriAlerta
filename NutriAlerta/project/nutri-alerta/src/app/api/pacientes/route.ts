@@ -353,7 +353,7 @@ export async function POST(req: NextRequest) {
           .select('id');
 
         if (insertErr) {
-          console.error("[Supabase Cloud Insert ERROR] Falha ao inserir registro_saude na nuvem:", insertErr.message);
+          console.error("[Supabase Cloud Insert ERROR] Falha ao inserir registros_saude na nuvem:", insertErr.message);
         } else {
           console.log("[Supabase Cloud Insert SUCCESS] Registro salvo na nuvem com ID:", insertResult?.[0]?.id);
           savedToCloud = true;
