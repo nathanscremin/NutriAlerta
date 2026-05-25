@@ -313,12 +313,16 @@ export default function ConsultantView() {
   const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
   if (prevContextRef.current === '') {
-    prevContextRef.current = contextKey;
     return;
   }
   if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
-
+  prevContextRef.current = contextKey;
+    
+  console.log(
+  'DEBUG regionalData:', JSON.stringify(regionalData[anoSelecionado.replace('★','').trim()]?.[selectedUbs ?? ''])
+  );
+    
   const cleanYr = anoSelecionado.replace('★', '').trim();
 
   let valorIndicador = 0;
