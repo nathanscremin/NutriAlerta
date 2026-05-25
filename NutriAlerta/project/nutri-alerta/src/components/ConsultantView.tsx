@@ -315,6 +315,64 @@ export default function ConsultantView() {
     saveMessages(messages);
   }, [messages]);
 
+  const prevContextRef = useRef<string>('');
+
+  useEffect(() => {
+  const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
+  
+  // Ignora o mount inicial
+  if (prevContextRef.current === '') {
+    prevContextRef.current = contextKey;
+    return;
+  }
+  
+  // Ignora se o contexto não mudou
+  if (prevContextRef.current === contextKey) return;
+  prevContextRef.current = contextKey;
+
+  // Monta a mensagem proativa baseada no nível
+  const valorIndicador = indicador === 'desnutricao' ? dadosAno.desnutricao
+    : indicador === 'sobrepeso' ? dadosAno.sobrepeso
+    : indicador === 'eutrofia' ? dadosAno.eutrofia
+    : dadosAno.obesidade;
+
+  const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
+    : indicador === 'sobrepeso' ? 'Sobrepeso'
+    : indicador === 'eutrofia' ? 'Peso Adequado'
+    : 'Obesidade';
+
+  const badge = getRiskBadge(valorIndicador, indicador);
+
+  let scopeLabel = '';
+  let proactiveQuestion = '';
+
+  if (analysisLevel === 'municipio') {
+    scopeLabel = 'Rio Claro (Geral)';
+    proactiveQuestion = 'Quer uma análise da situação nutricional do município ou uma comparação entre UBSs?';
+  } else if (analysisLevel === 'ubs' && selectedUbs) {
+    scopeLabel = selectedUbs;
+    proactiveQuestion = badge.label.includes('Alto') || badge.label.includes('Médio')
+      ? 'Quer que eu analise as causas ou sugira intervenções prioritárias para essa unidade?'
+      : 'Quer comparar essa UBS com a média municipal ou explorar os bairros de abrangência?';
+  } else if (analysisLevel === 'bairro' && selectedBairroName) {
+    scopeLabel = selectedBairroName;
+    proactiveQuestion = 'Quer analisar o perfil nutricional deste bairro ou ver as escolas vinculadas?';
+  } else if (analysisLevel === 'escola' && selectedSchoolName) {
+    scopeLabel = selectedSchoolName;
+    proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de intervenção no ambiente escolar?';
+  } else {
+    return; // Nível sem seleção — não emite mensagem
+  }
+
+  const autoMsg: Message = {
+    role: 'bot',
+    text: `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
+  };
+
+  setMessages(prev => [...prev, autoMsg]);
+
+}, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
+  
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
