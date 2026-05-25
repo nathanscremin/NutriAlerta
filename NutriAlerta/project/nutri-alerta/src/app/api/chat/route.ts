@@ -301,7 +301,7 @@ export async function POST(req: NextRequest) {
       const historyForAPI = [...historyFromDB];
 
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         systemInstruction: {
           role: "system",
           parts: [{ text: systemInstruction }]
