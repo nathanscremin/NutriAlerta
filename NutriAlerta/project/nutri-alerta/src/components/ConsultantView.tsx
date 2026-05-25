@@ -315,22 +315,19 @@ export default function ConsultantView() {
     saveMessages(messages);
   }, [messages]);
 
+  const [pendingContext, setPendingContext] = useState<string | null>(null);
   const prevContextRef = useRef<string>('');
 
   useEffect(() => {
   const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
-  
-  // Ignora o mount inicial
+
   if (prevContextRef.current === '') {
     prevContextRef.current = contextKey;
     return;
   }
-  
-  // Ignora se o contexto não mudou
   if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
 
-  // Monta a mensagem proativa baseada no nível
   const valorIndicador = indicador === 'desnutricao' ? dadosAno.desnutricao
     : indicador === 'sobrepeso' ? dadosAno.sobrepeso
     : indicador === 'eutrofia' ? dadosAno.eutrofia
@@ -361,15 +358,13 @@ export default function ConsultantView() {
     scopeLabel = selectedSchoolName;
     proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de intervenção no ambiente escolar?';
   } else {
-    return; // Nível sem seleção — não emite mensagem
+    setPendingContext(null);
+    return;
   }
 
-  const autoMsg: Message = {
-    role: 'bot',
-    text: `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
-  };
-
-  setMessages(prev => [...prev, autoMsg]);
+  setPendingContext(
+    `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
+  );
 
 }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
   
