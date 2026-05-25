@@ -313,6 +313,7 @@ export default function ConsultantView() {
   const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
   if (prevContextRef.current === '') {
+    prevContextRef.current = contextKey;
     return;
   }
   if (prevContextRef.current === contextKey) return;
@@ -647,9 +648,7 @@ export default function ConsultantView() {
               </div>
             </div>
           )}
-          
-<div ref={bottomRef} />
-          <div ref={bottomRef} />
+               <div ref={bottomRef} />
         </div>
 
         <div className="p-5 border-t border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
