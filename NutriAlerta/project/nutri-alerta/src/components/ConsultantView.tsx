@@ -319,9 +319,9 @@ export default function ConsultantView() {
   if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
     
-  console.log(
-  'DEBUG regionalData:', JSON.stringify(regionalData[anoSelecionado.replace('★','').trim()]?.[selectedUbs ?? ''])
-  );
+  console.log('DEBUG keys regionalData:', JSON.stringify(Object.keys(regionalData)));
+  console.log('DEBUG anoSelecionado:', anoSelecionado);
+  console.log('DEBUG cleanYr:', anoSelecionado.replace('★', '').trim());
     
   const cleanYr = anoSelecionado.replace('★', '').trim();
 
