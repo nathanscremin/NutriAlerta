@@ -47,6 +47,223 @@ def obter_caminho_salvamento(nome_arquivo):
             return p
     return nome_arquivo
 
+def sincronizar_dados_supabase():
+    print("\nA verificar ligação com o Supabase para coleta de dados em tempo real...")
+    supabase_url = 'https://peqvaslchaxrewhtxltc.supabase.co'
+    anon_key = 'sb_publishable_knBFAKhSyTfdfRwMYaQGeg_pF5D6w33'
+    email = 'nutrialerta@gmail.com'
+    password = '#Pangam123@'
+    
+    # Mapeamento CNES das UBS correspondente à API do Next.js
+    UBS_CNES = {
+        "UBS Jardim Chervezon “Dr. Nicolino Maziotti”": "2074362",
+        "UBS 29 “Oreste Armando Giovani”": "2031922",
+        "UBS Wenzel “Dr. Mario Fittipaldi”": "2030462",
+        "UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”": "2073943",
+        "USF Assistência": "2055821",
+        "USF Ferraz": "6222629",
+        "USF Nosso Teto/Boa Vista “Dr. Antonio R.M. Santomauro”": "2055902",
+        "USF Ajapi/Ferraz": "2049163",
+        "USF Mãe PretaI/II": "2071665",
+        "USF Palmeiras I/II “Dr. Gilson Giovanni”": "2033186",
+        "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”": "2074214",
+        "USF Benjamin de Castro": "7058865",
+        "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2055902",
+        "USF Jardim das Flores “Dr. Moacir Camargo”": "2074419",
+        "USF Guanabara “Dr. Celestino Donato”": "2074222",
+        "USF Panorama “Dr. Osvaldo Akamine”": "2074346",
+        "USF Terra Nova": "7533032"
+    }
+
+    def classificar_imc(peso, altura):
+        if not peso or not altura or altura <= 0:
+            return 'Eutrofia'
+        imc = peso / (altura * altura)
+        if imc < 16.0: return 'Magreza_Acentuada'
+        if imc < 18.5: return 'Magreza'
+        if imc < 25.0: return 'Eutrofia'
+        if imc < 30.0: return 'Sobrepeso'
+        if imc < 35.0: return 'Obesidade'
+        return 'Obesidade_Grave'
+
+    try:
+        # 1. Login no Supabase para obter o JWT bypassando as RLS
+        login_url = f"{supabase_url}/auth/v1/token?grant_type=password"
+        headers = {
+            "apikey": anon_key,
+            "Content-Type": "application/json"
+        }
+        body = {
+            "email": email,
+            "password": password
+        }
+        r = requests.post(login_url, headers=headers, json=body, timeout=10)
+        r.raise_for_status()
+        token = r.json().get("access_token")
+        
+        # 2. Buscar as escolas cadastradas
+        headers_req = {
+            "apikey": anon_key,
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+        r_escolas = requests.get(f"{supabase_url}/rest/v1/escolas?select=*", headers=headers_req, timeout=10)
+        r_escolas.raise_for_status()
+        db_schools = r_escolas.json()
+        
+        # 3. Buscar os registros de saúde sequencialmente
+        all_records = []
+        offset = 0
+        limit = 1000
+        while True:
+            headers_req["Range"] = f"{offset}-{offset + limit - 1}"
+            r_records = requests.get(f"{supabase_url}/rest/v1/registros_saude?select=*", headers=headers_req, timeout=10)
+            r_records.raise_for_status()
+            chunk = r_records.json()
+            if not chunk:
+                break
+            all_records.extend(chunk)
+            if len(chunk) < limit:
+                break
+            offset += limit
+            
+        print(f" -> Conexão Supabase OK! Encontrados {len(all_records)} registros na nuvem em tempo real.")
+        
+        if len(all_records) == 0:
+            print(" -> Sem registros dinâmicos na nuvem ainda. Usando dados locais como backup.")
+            return
+
+        # 4. Carregar o extraído do mapa POIs
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        pois_path = os.path.join(script_dir, "..", "project", "nutri-alerta", "src", "lib", "extractedPois.json")
+        extracted_pois = []
+        if os.path.exists(pois_path):
+            with open(pois_path, 'r', encoding='utf-8') as f:
+                extracted_pois = json.load(f)
+                
+        def norm(s):
+            import unicodedata
+            if not s: return ""
+            return "".join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn').upper().strip()
+
+        # Mapeamento do ID da escola para os metadados POI
+        school_map = {}
+        for s in db_schools:
+            db_norm = norm(s['nome'])
+            match = None
+            for p in extracted_pois:
+                if p.get('categoria') == 'Educação' and norm(p.get('nome')) == db_norm:
+                    match = p
+                    break
+            if not match:
+                for p in extracted_pois:
+                    p_norm = norm(p.get('nome'))
+                    if p.get('categoria') == 'Educação' and (db_norm in p_norm or p_norm in db_norm):
+                        match = p
+                        break
+            school_map[s['id']] = {
+                "nome": s['nome'],
+                "bairro": match['bairro'] if match else 'Desconhecido',
+                "regiao_ubs": match['regiao_ubs'] if match else 'UBS Jardim Chervezon “Dr. Nicolino Maziotti”'
+            }
+
+        # 5. Agrupar registros por UBS (CNES) e Ano
+        from datetime import datetime
+        ubs_year_groups = {}
+        for r in all_records:
+            try:
+                date_obj = datetime.fromisoformat(r['data_coleta'].replace('Z', '+00:00'))
+                year = date_obj.year
+            except Exception:
+                continue
+                
+            sch_meta = school_map.get(r['escola_id'])
+            if not sch_meta:
+                continue
+                
+            ubs_name = sch_meta["regiao_ubs"]
+            cnes = UBS_CNES.get(ubs_name, "2005565")
+            key = f"{cnes}-{year}"
+            
+            if key not in ubs_year_groups:
+                ubs_year_groups[key] = {
+                    "cnes": cnes,
+                    "ubsName": ubs_name,
+                    "ano": year,
+                    "Magreza_Acentuada_Qtd": 0,
+                    "Magreza_Qtd": 0,
+                    "Eutrofia_Qtd": 0,
+                    "Sobrepeso_Qtd": 0,
+                    "Obesidade_Qtd": 0,
+                    "Obesidade_Grave_Qtd": 0,
+                    "Total": 0
+                }
+                
+            classification = classificar_imc(float(r['peso']), float(r['altura']))
+            ubs_year_groups[key][f"{classification}_Qtd"] += 1
+            ubs_year_groups[key]["Total"] += 1
+
+        # 6. Reconstruir dados em formato CSV compatível
+        csv_headers = [
+            'UF', 'IBGE', 'Municipio', 'CNES', 'EAS',
+            'Peso_Muito_Baixo_Quantidade', 'Peso_Muito_Baixo_Porcentagem',
+            'Peso_Baixo_Quantidade', 'Peso_Baixo_Porcentagem',
+            'Peso_Adequado_Quantidade', 'Peso_Adequado_Porcentagem',
+            'Peso_Elevado_Quantidade', 'Peso_Elevado_Porcentagem',
+            'Total', 'Local', 'Ano', 'Faixa_Etaria',
+            'Magreza_Acentuada_Qtd', 'Magreza_Acentuada_Pct',
+            'Magreza_Qtd', 'Magreza_Pct',
+            'Eutrofia_Qtd', 'Eutrofia_Pct',
+            'Sobrepeso_Qtd', 'Sobrepeso_Pct',
+            'Obesidade_Qtd', 'Obesidade_Pct',
+            'Obesidade_Grave_Qtd', 'Obesidade_Grave_Pct'
+        ]
+        
+        csv_rows = [",".join(csv_headers)]
+        for g in ubs_year_groups.values():
+            total = g["Total"]
+            if total == 0: continue
+            
+            mag_acent_pct = f"{(g['Magreza_Acentuada_Qtd'] / total) * 100:.6f}"
+            mag_pct = f"{(g['Magreza_Qtd'] / total) * 100:.6f}"
+            eut_pct = f"{(g['Eutrofia_Qtd'] / total) * 100:.6f}"
+            sob_pct = f"{(g['Sobrepeso_Qtd'] / total) * 100:.6f}"
+            obs_pct = f"{(g['Obesidade_Qtd'] / total) * 100:.6f}"
+            obs_grave_pct = f"{(g['Obesidade_Grave_Qtd'] / total) * 100:.6f}"
+            
+            row = [
+                'SP', '354390', 'RIO CLARO', g["cnes"], g["ubsName"],
+                '', '', '', '', '', '', '', '',
+                str(total), 'SP', str(g["ano"]), '0 a 18 anos',
+                str(g["Magreza_Acentuada_Qtd"]), mag_acent_pct,
+                str(g["Magreza_Qtd"]), mag_pct,
+                str(g["Eutrofia_Qtd"]), eut_pct,
+                str(g["Sobrepeso_Qtd"]), sob_pct,
+                str(g["Obesidade_Qtd"]), obs_pct,
+                str(g["Obesidade_Grave_Qtd"]), obs_grave_pct
+            ]
+            csv_rows.append(",".join(row))
+            
+        csv_content_str = "\n".join(csv_rows)
+        csv_filename = "Base_Nutricional_Consolidada_Final.csv"
+        paths_to_update = [
+            os.path.join(script_dir, "..", "project", "csv", csv_filename),
+            os.path.join(script_dir, "..", "project", "nutri-alerta", "csv", csv_filename),
+            os.path.join(script_dir, "..", "..", "Nutri for Schools", "project", "csv", csv_filename)
+        ]
+        
+        for p in paths_to_update:
+            try:
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                with open(p, 'w', encoding='utf-8') as f:
+                    f.write(csv_content_str)
+                print(f" -> [OK] Base real-time Supabase gravada em: {p}")
+            except Exception:
+                pass
+                
+    except Exception as e:
+        print(f" -> Aviso: Falha ao coletar dados em tempo real do Supabase ({str(e)}). Usando CSV local existente.")
+
 # 1. Função Auxiliar: Mapeamento de Transporte Público
 def mapear_transporte_publico():
     print("A iniciar o mapeamento: Rede de Transporte Público via Overpass API...")
@@ -76,7 +293,8 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
     return 2 * asin(sqrt(sin((lat2 - lat1)/2)**2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1)/2)**2)) * 6371
 
-# 2. Carregar as Bases de Dados Locais
+# 2. Sincronizar com Supabase em tempo real e carregar as Bases de Dados Locais
+sincronizar_dados_supabase()
 print("\nA carregar os Dataframes unificados...")
 df_nutri = pd.read_csv(localizacao_arquivo("Base_Nutricional_Consolidada_Final.csv"))
 df_nutri = df_nutri[df_nutri['Faixa_Etaria'] == '0 a 18 anos']
@@ -854,7 +1072,6 @@ def salvar_json_demografico(dados_json):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     caminhos_salvamento = [
         os.path.join(script_dir, "..", "project", "csv", "NutriAlerta_Projecao_Demografica.json"),
-        os.path.join("project", "csv", "NutriAlerta_Projecao_Demografica.json"),
         os.path.join(script_dir, "..", "..", "Nutri for Schools", "project", "csv", "NutriAlerta_Projecao_Demografica.json"),
     ]
     for p in caminhos_salvamento:
