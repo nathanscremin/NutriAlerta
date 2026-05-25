@@ -85,8 +85,6 @@ export default function ConsultantView() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [clearing, setClearing] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const [pendingContext, setPendingContext] = useState<string | null>(null); // ← aqui
   const prevContextRef = useRef<string>('');                                 // ← aqui
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -310,8 +308,6 @@ export default function ConsultantView() {
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
-  const [pendingContext, setPendingContext] = useState<string | null>(null);
-  const prevContextRef = useRef<string>('');
 
   useEffect(() => {
   const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
@@ -638,7 +634,6 @@ export default function ConsultantView() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div className="p-5 border-t border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="relative">
             <input
