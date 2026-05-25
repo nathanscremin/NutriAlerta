@@ -85,6 +85,10 @@ export default function ConsultantView() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [pendingContext, setPendingContext] = useState<string | null>(null); // ← aqui
+  const prevContextRef = useRef<string>('');                                 // ← aqui
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Lista de Bairros Únicos extraídos do GeoJSON
@@ -306,15 +310,6 @@ export default function ConsultantView() {
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
-
   const [pendingContext, setPendingContext] = useState<string | null>(null);
   const prevContextRef = useRef<string>('');
 
@@ -373,8 +368,14 @@ export default function ConsultantView() {
     if (!text || loading) return;
 
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text }]);
-    setLoading(true);
+    const contextSnapshot = pendingContext;
+    setPendingContext(null);
+    setMessages(prev => [
+    ...prev,
+    ...(contextSnapshot ? [{ role: 'bot' as const, text: contextSnapshot }] : []),
+    { role: 'user' as const, text }
+    ]);
+  setLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
@@ -620,6 +621,20 @@ export default function ConsultantView() {
             </div>
           )}
 
+          {pendingContext && (
+            <div className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-teal-50/80 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 opacity-50">
+                <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
+            </div>
+            <div className="bg-slate-100/60 dark:bg-zinc-800/40 border border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[85%] opacity-60">
+              <ReactMarkdown className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                {pendingContext}
+              </ReactMarkdown>
+              </div>
+            </div>
+          )}
+          
+<div ref={bottomRef} />
           <div ref={bottomRef} />
         </div>
 
