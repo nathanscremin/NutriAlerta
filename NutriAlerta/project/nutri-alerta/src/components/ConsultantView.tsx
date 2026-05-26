@@ -291,7 +291,7 @@ export default function ConsultantView() {
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
-  useEffect(() => {
+useEffect(() => {
     const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
     if (prevContextRef.current === '') {
@@ -318,7 +318,7 @@ export default function ConsultantView() {
       const bMetric = bairroMetrics[selectedBairroName];
       const bYearData = bMetric?.anos?.[cleanYr];
       if (bYearData) {
-        valorIndicador = bYearData[indicador as keyof typeof bYearData] ?? 0;
+        valorIndicador = calcularValorEscalado(bYearData, indicador, multObs, multDes);
       } else {
         const ubsRecord = bMetric?.regiao_ubs ? regionalData[cleanYr]?.[bMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bMetric.regiao_ubs)] : null;
         valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
@@ -327,7 +327,6 @@ export default function ConsultantView() {
       const sMetric = schoolMetrics[selectedSchoolName];
       const sYearData = sMetric?.anos?.[cleanYr];
       if (sYearData) {
-        // Escala os dados brutos da escola de forma semelhante à lista
         valorIndicador = calcularValorEscalado(sYearData, indicador, multObs, multDes);
       } else {
         const ubsRecord = sMetric?.regiao_ubs ? regionalData[cleanYr]?.[sMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(sMetric.regiao_ubs)] : null;
@@ -335,7 +334,7 @@ export default function ConsultantView() {
       }
     } else {
       const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
-      valorIndicador = (globalRec as any)?.[indicador] ?? 0;
+      valorIndicador = calcularValorEscalado(globalRec, indicador, multObs, multDes);
     }
 
     valorIndicador = Number(valorIndicador.toFixed(2));
@@ -363,7 +362,7 @@ export default function ConsultantView() {
       proactiveQuestion = 'Quer analisar o perfil nutricional deste bairro ou ver as escolas vinculadas?';
     } else if (analysisLevel === 'escola' && selectedSchoolName) {
       scopeLabel = selectedSchoolName;
-      proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de intervenção no ambiente escolar?';
+      proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de invervenção no ambiente escolar?';
     } else {
       setPendingContext(null);
       return;
