@@ -107,10 +107,15 @@ if not exist "%PACKAGE%" (
 )
 
 if not exist "%NODE_MODULES%" (
-    echo [ERRO] Dependencias do projeto nao encontradas para %LABEL%:
-    echo        %NODE_MODULES%
-    echo        Execute "npm install" dentro do projeto antes de iniciar.
-    exit /b 1
+    echo [INFO] Dependencias do projeto nao encontradas para %LABEL%.
+    echo        Instalando dependencias em: %DIR%
+    pushd "%DIR%"
+    call npm install
+    popd
+    if errorlevel 1 (
+        echo [ERRO] Falha ao instalar dependencias para %LABEL%.
+        exit /b 1
+    )
 )
 
 if not exist "%ENV_FILE%" (
