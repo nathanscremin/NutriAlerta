@@ -316,35 +316,33 @@ export default function ConsultantView() {
   prevContextRef.current = contextKey;
   return;
 }
-  if (prevContextRef.current === contextKey) {
-  // Mesmo contexto — só roda se regionalData acabou de chegar
-  if (!regionalData || Object.keys(regionalData).length === 0) return;
-} else {
+  if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
-}
-
-  if (!regionalData || Object.keys(regionalData).length === 0) return;
-    
-  console.log('DEBUG keys regionalData:', JSON.stringify(Object.keys(regionalData)));
-  console.log('DEBUG anoSelecionado:', anoSelecionado);
-  console.log('DEBUG cleanYr:', anoSelecionado.replace('★', '').trim());
     
   const cleanYr = anoSelecionado.replace('★', '').trim();
 
-  let valorIndicador = 0;
-  if (analysisLevel === 'ubs' && selectedUbs) {
+let valorIndicador = 0;
+if (analysisLevel === 'ubs' && selectedUbs) {
   const ubsData = regionalData[cleanYr]?.[selectedUbs];
-  valorIndicador = ubsData?.[indicador as keyof typeof ubsData] as number ?? 0;
-    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+  if (ubsData) {
+    valorIndicador = ubsData[indicador as keyof typeof ubsData] as number ?? 0;
+  } else {
+    // Fallback: usa dadosAno que já foi calculado pelo activeTemporalData
+    valorIndicador = indicador === 'desnutricao' ? dadosAno.desnutricao
+      : indicador === 'sobrepeso' ? dadosAno.sobrepeso
+      : indicador === 'eutrofia' ? dadosAno.eutrofia
+      : dadosAno.obesidade;
+  }
+} else if (analysisLevel === 'bairro' && selectedBairroName) {
   const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
   valorIndicador = bData?.[indicador] ?? 0;
-    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+} else if (analysisLevel === 'escola' && selectedSchoolName) {
   const sData = (schoolMetrics as any)[selectedSchoolName]?.anos?.[cleanYr];
   valorIndicador = sData?.[indicador] ?? 0;
-    } else {
+} else {
   const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
   valorIndicador = (globalRec as any)?.[indicador] ?? 0;
-  }
+}
 
   valorIndicador = Number(valorIndicador.toFixed(2));
 
@@ -467,7 +465,6 @@ export default function ConsultantView() {
       sendMessage();
     }
   }
-
 
   // Métrica consolidada para a opção Geral
   let geralVal = 0;
