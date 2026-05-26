@@ -309,24 +309,46 @@ export default function ConsultantView() {
     const cleanYr = anoSelecionado.replace('★', '').trim();
 
     let valorIndicador = 0;
-if (analysisLevel === 'ubs' && selectedUbs) {
-  const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
-    const dadosAno = regionalData[ano];
-    if (!dadosAno) return null;
-    if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
-    if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
-    
-    const simplificar = (str: string) => 
-      str.toLowerCase().replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
-    const nomeSimplificado = simplificar(nomeUbs);
-    const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
-    return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
-  };
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
+        const dadosAno = regionalData[ano];
+        if (!dadosAno) return null;
+        if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
+        if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
+        
+        const simplificar = (str: string) => 
+          str.toLowerCase().replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        const nomeSimplificado = simplificar(nomeUbs);
+        const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
+        return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
+      };
 
-  const ubsData = encontrarRegistroSanitizado(cleanYr, selectedUbs);
-  valorIndicador = calcularValorEscalado(ubsData, indicador, multObs, multDes);
-}
+      const ubsData = encontrarRegistroSanitizado(cleanYr, selectedUbs);
+      valorIndicador = calcularValorEscalado(ubsData, indicador, multObs, multDes);
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      const bMetric = bairroMetrics[selectedBairroName];
+      const bYearData = bMetric?.anos?.[cleanYr];
+      if (bYearData) {
+        valorIndicador = calcularValorEscalado(bYearData, indicador, multObs, multDes);
+      } else {
+        const ubsRecord = bMetric?.regiao_ubs ? regionalData[cleanYr]?.[bMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bMetric.regiao_ubs)] : null;
+        valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
+      }
+    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+      const sMetric = schoolMetrics[selectedSchoolName];
+      const sYearData = sMetric?.anos?.[cleanYr];
+      if (sYearData) {
+        valorIndicador = calcularValorEscalado(sYearData, indicador, multObs, multDes);
+      } else {
+        const ubsRecord = sMetric?.regiao_ubs ? regionalData[cleanYr]?.[sMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(sMetric.regiao_ubs)] : null;
+        valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
+      }
+    } else {
+      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
+      valorIndicador = calcularValorEscalado(globalRec, indicador, multObs, multDes);
+    }
+
     valorIndicador = Number(valorIndicador.toFixed(2));
 
     const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
@@ -489,7 +511,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
   } else {
     geralVal = dadosAno.obesidade;
   }
-  const geralBadge = getRiskBadge(geralVal, indicador);
+  const geralBadge = getRiskBadge(geralVal, indicator);
 
   const totalAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;
@@ -750,35 +772,39 @@ if (analysisLevel === 'ubs' && selectedUbs) {
           {analysisLevel === 'ubs' && (
             <>
               {filteredUbs.map(ubs => {
-  const isSelected = selectedUbs === ubs.nome;
+                const isSelected = selectedUbs === ubs.nome;
 
-// Cria uma função de limpeza para buscar os dados mesmo com divergência de string
-  const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
-  const dadosAno = regionalData[ano];
-  if (!dadosAno) return null;
-  
-  // 1. Tentativa direta ou com aspas normais
-  if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
-  if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
-  
-  // 2. Busca profunda por aproximação de caracteres limpos (remover espaços, hifens e caixa)
-  const simplificar = (str: string) => 
-    str.toLowerCase()
-       .replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '')
-       .normalize("NFD")
-       .replace(/[\u0300-\u036f]/g, "");
+                const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
+                  const dadosAno = regionalData[ano];
+                  if (!dadosAno) return null;
+                  
+                  if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
+                  if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
+                  
+                  const simplificar = (str: string) => 
+                    str.toLowerCase()
+                       .replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '')
+                       .normalize("NFD")
+                       .replace(/[\u0300-\u036f]/g, "");
 
-  const nomeSimplificado = simplificar(nomeUbs);
-  const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
-  
-  return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
-};
+                  const nomeSimplificado = simplificar(nomeUbs);
+                  const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
+                  
+                  return chaveChaveEncontrada ? dadosAno[chaveEncontrada] : null;
+                };
 
-const ubsData = encontrarRegistroSanitizado(cleanYear, ubs.nome);
+                const ubsData = encontrarRegistroSanitizado(cleanYear, ubs.nome);
 
-// Calcula o valor real recuperado da memória do mock
-const finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
-const badge = getRiskBadge(finalVal, indicador);
+                const finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
+                const badge = getRiskBadge(finalVal, indicador);
+
+                let ubsTotalEvaluated = 0;
+                Object.values(schoolMetrics || {}).forEach((sch: any) => {
+                  if (sch.regiao_ubs === ubs.nome && sch.anos?.[cleanYear]?.total_avaliados) {
+                    ubsTotalEvaluated += sch.anos[cleanYear].total_avaliados;
+                  }
+                });
+                const totalAvaliadosUbs = ubsTotalEvaluated > 0 ? ubsTotalEvaluated : (ubsData?.total_avaliados || 1200);
 
                 return (
                   <div
