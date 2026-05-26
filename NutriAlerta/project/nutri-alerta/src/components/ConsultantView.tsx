@@ -380,7 +380,7 @@ useEffect(() => {
     prevContextRef.current = 'force-recalc';
   }, [regionalData]);
   
-  async function sendMessage() {
+async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
 
@@ -393,6 +393,24 @@ useEffect(() => {
       { role: 'user' as const, text }
     ]);
     setLoading(true);
+
+    const cleanYr = anoSelecionado.replace('★', '').trim();
+
+    // Isola e calcula o registro da região selecionada antes de enviar
+    let ubsRecordForChat = null;
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      ubsRecordForChat = regionalData[cleanYr]?.[selectedUbs] ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      ubsRecordForChat = bairroMetrics[selectedBairroName]?.anos?.[cleanYr];
+    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+      ubsRecordForChat = schoolMetrics[selectedSchoolName]?.anos?.[cleanYr];
+    }
+
+    // Passa pela mesma normalização de 100% das listagens
+    const chatDesnutricao = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'desnutricao', multObs, multDes) : dadosAno.desnutricao;
+    const chatObesidade    = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'obesidade', multObs, multDes) : dadosAno.obesidade;
+    const chatSobrepeso    = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'sobrepeso', multObs, multDes) : dadosAno.sobrepeso;
+    const chatEutrofia     = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'eutrofia', multObs, multDes) : dadosAno.eutrofia;
 
     try {
       const res = await fetch('/api/chat', {
@@ -418,16 +436,25 @@ useEffect(() => {
               regiaoUbs: analysisLevel === 'escola' ? (schoolsList.find(s => s.nome === selectedSchoolName)?.regiao_ubs ?? 'Não selecionada') :
                          analysisLevel === 'bairro' ? (uniqueBairrosList.find(b => b.nome === selectedBairroName)?.parentUbs ?? 'Não selecionada') :
                          'Não selecionada',
-              sobrepeso: dadosAno.sobrepeso,
-              eutrofia: dadosAno.eutrofia,
               ano: anoSelecionado,
               indicador,
-              obesidade: dadosAno.obesidade,
-              desnutricao: dadosAno.desnutricao,
+              sobrepeso: chatSobrepeso,
+              eutrofia: chatEutrofia,
+              obesidade: chatObesidade,
+              desnutricao: chatDesnutricao,
             }
           }
         })
       });
+
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: 'bot', text: data.response || data.error || 'Sem resposta.' }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'bot', text: 'Erro de conexão com a API.' }]);
+    }
+
+    setLoading(false);
+  }
 
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'bot', text: data.response || data.error || 'Sem resposta.' }]);
