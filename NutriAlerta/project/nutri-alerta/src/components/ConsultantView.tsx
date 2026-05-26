@@ -742,8 +742,7 @@ export default function ConsultantView() {
             <>
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
-                const ubsData = regionalData[cleanYear]?.[ubs.nome] ?? regionalData[cleanYear]?.[normalizeQuotes(ubs.nome)];
-                console.log('UBS lookup:', ubs.nome, '→', ubsData ? 'FOUND' : 'NOT FOUND');
+                const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
                 let val = ubsData ? ubsData[indicador] : (indicador === 'desnutricao' ? 2.62 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
 
                 let finalVal = 0;
