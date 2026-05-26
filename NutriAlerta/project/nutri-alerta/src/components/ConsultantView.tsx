@@ -322,8 +322,6 @@ export default function ConsultantView() {
   const cleanYr = anoSelecionado.replace('★', '').trim();
 
 let valorIndicador = 0;
-
-let valorIndicador = 0;
     
 // DEBUG 
 console.log('🔍 DEBUG contexto UBS:', {
