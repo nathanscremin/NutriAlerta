@@ -379,7 +379,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
     `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
   );
 
-}, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData, dadosAno]);
   
   async function sendMessage() {
     const text = input.trim();
