@@ -1,576 +1,575 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getDemographicsForUbs } from '@/lib/demographics';
+import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
-import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ReferenceLine, Legend } from 'recharts';
-import { GitCompare, MapPin, TrendingUp, Users, ArrowUpRight, ArrowDownRight, ShieldCheck, ChevronDown, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { MapPin, ChevronDown, Check, ArrowUpRight, ArrowDownRight, Minus, Users, TrendingUp, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
+
+// ─── Tipos ───────────────────────────────────────────────────────────────────
+
+interface UbsStats {
+  obs: number;
+  des: number;
+  sob: number;
+  eut: number;
+  total: number;
+}
+
+interface CompareTooltipProps {
+  active?: boolean;
+  payload?: Array<{ color: string; name: string; value: number; dataKey: string | number }>;
+  label?: string;
+}
+
+// ─── Configuração dos indicadores ────────────────────────────────────────────
+
+const INDICATORS = [
+  { id: 'eutrofia',    label: 'Peso Adequado', short: 'Eut.',   key: 'eut', color: '#0d9488', tailwind: 'teal' },
+  { id: 'obesidade',   label: 'Obesidade',      short: 'Obes.',  key: 'obs', color: '#f43f5e', tailwind: 'rose' },
+  { id: 'sobrepeso',   label: 'Sobrepeso',       short: 'Sob.',   key: 'sob', color: '#f59e0b', tailwind: 'amber' },
+  { id: 'desnutricao', label: 'Desnutrição',     short: 'Desn.',  key: 'des', color: '#3b82f6', tailwind: 'blue' },
+] as const;
+
+const INDICATOR_STYLES: Record<string, { bar: string; text: string; bg: string; border: string; glow: string }> = {
+  teal:  { bar: 'from-teal-500 to-teal-400',   text: 'text-teal-600 dark:text-teal-400',   bg: 'bg-teal-50 dark:bg-teal-950/30',   border: 'border-teal-200/60 dark:border-teal-800/40',  glow: '#0d9488' },
+  rose:  { bar: 'from-rose-500 to-rose-400',   text: 'text-rose-600 dark:text-rose-400',   bg: 'bg-rose-50 dark:bg-rose-950/30',   border: 'border-rose-200/60 dark:border-rose-800/40',  glow: '#f43f5e' },
+  amber: { bar: 'from-amber-500 to-amber-400', text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200/60 dark:border-amber-800/40',glow: '#f59e0b' },
+  blue:  { bar: 'from-blue-500 to-blue-400',   text: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-50 dark:bg-blue-950/30',   border: 'border-blue-200/60 dark:border-blue-800/40',  glow: '#3b82f6' },
+};
+
+// ─── Componentes auxiliares ───────────────────────────────────────────────────
+
+function UbsDropdown({
+  label,
+  value,
+  onChange,
+  list,
+  disabledItem,
+  accentClass,
+  pinColor,
+  open,
+  setOpen,
+  zIndex = 30,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  list: string[];
+  disabledItem: string;
+  accentClass: string;
+  pinColor: string;
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  zIndex?: number;
+}) {
+  return (
+    <div className={`relative`} style={{ zIndex }}>
+      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 mb-1.5">{label}</p>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl
+          bg-white dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800
+          hover:border-slate-300 dark:hover:border-zinc-700 transition-all duration-200
+          text-xs font-semibold text-slate-700 dark:text-zinc-200 shadow-sm cursor-pointer"
+      >
+        <span className="flex items-center gap-2 min-w-0">
+          <MapPin className={`w-3.5 h-3.5 shrink-0 ${pinColor}`} />
+          <span className="truncate">{value}</span>
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 mt-1.5 max-h-52 overflow-y-auto
+              bg-white dark:bg-[#111116] border border-slate-200 dark:border-zinc-800
+              rounded-xl shadow-2xl z-[600] scrollbar-thin"
+          >
+            {list.map(u => {
+              const isSelected = u === value;
+              const isDisabled = u === disabledItem;
+              return (
+                <button
+                  key={u}
+                  disabled={isDisabled}
+                  onClick={() => { onChange(u); setOpen(false); }}
+                  className={`w-full text-left px-3.5 py-2.5 text-[11px] font-semibold flex items-center justify-between gap-2
+                    border-b border-slate-100 dark:border-zinc-900/60 last:border-b-0 transition-colors
+                    ${isSelected ? `${accentClass}` : isDisabled
+                      ? 'opacity-35 cursor-not-allowed text-slate-400 dark:text-zinc-600 bg-slate-50 dark:bg-zinc-900/40'
+                      : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/60'
+                    }`}
+                >
+                  <span className="truncate">{u}</span>
+                  {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function AnimatedBar({ value, maxValue, colorClass }: { value: number; maxValue: number; colorClass: string }) {
+  const pct = maxValue > 0 ? Math.max(4, (value / maxValue) * 100) : 4;
+  return (
+    <div className="h-2 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.9, ease: 'easeOut' }}
+        className={`h-full bg-gradient-to-r ${colorClass} rounded-full`}
+      />
+    </div>
+  );
+}
+
+function DeltaBadge({ delta, lowerIsBetter = false }: { delta: number; lowerIsBetter?: boolean }) {
+  const isGood = lowerIsBetter ? delta < 0 : delta > 0;
+  const abs = Math.abs(delta);
+  if (abs < 0.05) return (
+    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500">
+      <Minus className="w-2.5 h-2.5" /> {abs.toFixed(1)}pp
+    </span>
+  );
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold ${isGood ? 'text-teal-600 dark:text-teal-400' : 'text-rose-500 dark:text-rose-400'}`}>
+      {isGood ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+      {abs.toFixed(1)}pp
+    </span>
+  );
+}
+
+function MetricRow({
+  label,
+  valueA,
+  valueB,
+  colorStyle,
+  lowerIsBetter = false,
+}: {
+  label: string;
+  valueA: number;
+  valueB: number;
+  colorStyle: { bar: string; text: string };
+  lowerIsBetter?: boolean;
+}) {
+  const maxVal = Math.max(valueA, valueB, 1);
+  const delta = valueA - valueB;
+  const aIsWinner = lowerIsBetter ? valueA < valueB : valueA > valueB;
+  const bIsWinner = lowerIsBetter ? valueB < valueA : valueB > valueA;
+
+  return (
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      {/* Side A */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-1">
+          <span className={`text-sm font-black ${colorStyle.text} font-mono`}>{valueA.toFixed(1)}%</span>
+          {aIsWinner && (
+            <span className="text-[8px] font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 px-1 py-0.5 rounded">
+              ▲
+            </span>
+          )}
+        </div>
+        <AnimatedBar value={valueA} maxValue={maxVal} colorClass={colorStyle.bar} />
+      </div>
+
+      {/* Label Central */}
+      <div className="text-center min-w-[72px]">
+        <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 leading-tight">{label}</p>
+        <DeltaBadge delta={delta} lowerIsBetter={lowerIsBetter} />
+      </div>
+
+      {/* Side B */}
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-1">
+          {bIsWinner && (
+            <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-1 py-0.5 rounded">
+              ▲
+            </span>
+          )}
+          <span className={`text-sm font-black ${colorStyle.text} font-mono ml-auto`}>{valueB.toFixed(1)}%</span>
+        </div>
+        <AnimatedBar value={valueB} maxValue={maxVal} colorClass={colorStyle.bar} />
+      </div>
+    </div>
+  );
+}
+
+function CompareTooltip({ active, payload, label }: CompareTooltipProps) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl p-3 shadow-xl text-xs">
+      <p className="text-slate-400 dark:text-zinc-500 mb-2 font-bold uppercase tracking-wider text-[10px]">{label}</p>
+      {payload.map(p => (
+        <div key={String(p.dataKey)} className="flex items-center justify-between gap-5 mb-1.5 last:mb-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
+            <span className="text-slate-600 dark:text-zinc-300 font-semibold truncate max-w-[120px]">
+              {String(p.name).replace(/^(UBS|USF)\s/, '')}
+            </span>
+          </div>
+          <span className="font-black text-slate-900 dark:text-zinc-100">{Number(p.value).toFixed(2)}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function UbsComparisonSection() {
-  const { regionalData, temporalData, yearsList, darkMode, indicador, setIndicador, selectedBairro, schoolMetrics } = useAppStore();
+  const { regionalData, temporalData, yearsList, darkMode, indicador, selectedBairro, schoolMetrics } = useAppStore();
 
-  // Estado para controle de montagem no cliente (SSR Hydration Guard)
   const [mounted, setMounted] = useState(false);
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  React.useEffect(() => { setMounted(true); }, []);
 
-  // Lista de todas as UBSs ordenadas
-  const ubsList = useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS')
+  const ubsList = useMemo(() =>
+    UNIDADES_SAUDE.filter(u => u.categoria === 'UBS')
       .map(u => u.nome)
-      .sort((a, b) => {
-        const nameA = a.replace('UBS ', '').replace('USF ', '');
-        const nameB = b.replace('UBS ', '').replace('USF ', '');
-        return nameA.localeCompare(nameB);
-      });
-  }, []);
+      .sort((a, b) => a.replace(/^(UBS|USF)\s/, '').localeCompare(b.replace(/^(UBS|USF)\s/, ''))),
+  []);
 
-  // Estados locais para seleção das duas UBSs
-  const [ubsA, setUbsA] = useState<string>("UBS Jardim Chervezon “Dr. Nicolino Maziotti”");
-  const [ubsB, setUbsB] = useState<string>("UBS Vila Cristina “Dr. Sílvio Arnaldo Piva”");
+  const [ubsA, setUbsA] = useState<string>('UBS Jardim Chervezon "Dr. Nicolino Maziotti"');
+  const [ubsB, setUbsB] = useState<string>('UBS Vila Cristina "Dr. Sílvio Arnaldo Piva"');
+  const [openA, setOpenA] = useState(false);
+  const [openB, setOpenB] = useState(false);
 
-  // Sincroniza a UBS A com a UBS/Bairro selecionado no mapa/sidebar globalmente
+  // Usa ref para evitar stale closure no effect do selectedBairro
+  const ubsARef = useRef(ubsA);
+  const ubsBRef = useRef(ubsB);
+  ubsARef.current = ubsA;
+  ubsBRef.current = ubsB;
+
   React.useEffect(() => {
     if (selectedBairro && ubsList.includes(selectedBairro)) {
-      if (selectedBairro === ubsB) {
-        // Se a UBS selecionada globalmente já for a UBS B, troca os lados
-        setUbsB(ubsA);
+      if (selectedBairro === ubsBRef.current) {
+        setUbsB(ubsARef.current);
         setUbsA(selectedBairro);
-      } else {
+      } else if (selectedBairro !== ubsARef.current) {
         setUbsA(selectedBairro);
       }
     }
   }, [selectedBairro, ubsList]);
 
-  // Mapeia o indicador ativo (se for o 'global', usamos 'obesidade' como padrão)
   const activeIndicator = useMemo(() => {
-    if (indicador === 'global') return 'obesidade';
-    if (indicador === 'desnutricao' || indicador === 'eutrofia' || indicador === 'sobrepeso' || indicador === 'obesidade') {
-      return indicador;
-    }
+    if (['desnutricao', 'eutrofia', 'sobrepeso', 'obesidade'].includes(indicador)) return indicador as 'desnutricao' | 'eutrofia' | 'sobrepeso' | 'obesidade';
     return 'obesidade';
   }, [indicador]);
 
-  // Dropdown states
-  const [openA, setOpenA] = useState(false);
-  const [openB, setOpenB] = useState(false);
+  const activeIndConfig = useMemo(() => INDICATORS.find(i => i.id === activeIndicator) ?? INDICATORS[1], [activeIndicator]);
 
-  // Encontra taxas reais ou fallbacks
-  const getUbsStatsForYear = (ubsName: string, year: string) => {
+  // getStats estabilizado com useCallback para evitar recriação a cada render
+  const getStats = useCallback((ubsName: string, year: string): UbsStats => {
     const cleanYear = year.replace('★', '').trim();
-    const record = regionalData[cleanYear]?.[ubsName];
-    
-    // Obesidade
-    let obs = 12.9;
-    if (record && typeof record.obesidade === 'number') {
-      obs = record.obesidade;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) obs = yearRec.obesidade;
-    }
-
-    // Desnutrição
-    let des = 2.6;
-    if (record && typeof record.desnutricao === 'number') {
-      des = record.desnutricao;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec) des = yearRec.desnutricao;
-    }
-
-    // Sobrepeso
-    let sob = 18.0;
-    if (record && typeof record.sobrepeso === 'number') {
-      sob = record.sobrepeso;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).sobrepeso === 'number') sob = (yearRec as any).sobrepeso;
-    }
-
-    // Peso Adequado (Eutrofia)
-    let eut = 61.55;
-    if (record && typeof record.eutrofia === 'number') {
-      eut = record.eutrofia;
-    } else {
-      const yearRec = temporalData.find(d => d.ano.replace('★', '').trim() === cleanYear);
-      if (yearRec && typeof (yearRec as any).eutrofia === 'number') eut = (yearRec as any).eutrofia;
-    }
-
-    // Alunos avaliados
+    const safeSchoolMetrics = schoolMetrics || {};
+    const metrics = getScopedNutritionMetrics({
+      analysisLevel: 'ubs',
+      selectedUbs: ubsName,
+      selectedBairroName: null,
+      selectedSchoolName: null,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics: safeSchoolMetrics,
+      bairroMetrics: {},
+    });
     let ubsTotal = 0;
-    Object.values(schoolMetrics || {}).forEach((sch: any) => {
+    Object.values(safeSchoolMetrics).forEach((sch: any) => {
       if (sch.regiao_ubs === ubsName && sch.anos?.[cleanYear]?.total_avaliados) {
         ubsTotal += sch.anos[cleanYear].total_avaliados;
       }
     });
-    const total = ubsTotal || (record?.total_avaliados || 350);
+    return { obs: metrics.obesidade, des: metrics.desnutricao, sob: metrics.sobrepeso, eut: metrics.eutrofia, total: ubsTotal || 350 };
+  }, [regionalData, temporalData, schoolMetrics]);
 
-    return { obs, des, sob, eut, total };
-  };
+  const statsA = useMemo(() => getStats(ubsA, '2025'), [getStats, ubsA]);
+  const statsB = useMemo(() => getStats(ubsB, '2025'), [getStats, ubsB]);
 
-  // Último ano histórico consolidado (geralmente 2025)
-  const statsA = useMemo(() => getUbsStatsForYear(ubsA, '2025'), [ubsA, regionalData, temporalData]);
-  const statsB = useMemo(() => getUbsStatsForYear(ubsB, '2025'), [ubsB, regionalData, temporalData]);
+  const demoA = useMemo(() => getDemographicsForUbs(ubsA, '2025', statsA.des, statsA.sob, statsA.obs, statsA.eut), [ubsA, statsA]);
+  const demoB = useMemo(() => getDemographicsForUbs(ubsB, '2025', statsB.des, statsB.sob, statsB.obs, statsB.eut), [ubsB, statsB]);
 
-  // Demográficos reativos por UBS baseados no ano de 2025
-  const demoA = useMemo(() => {
-    return getDemographicsForUbs(ubsA, '2025', statsA.des, statsA.sob, statsA.obs, statsA.eut);
-  }, [ubsA, statsA]);
-
-  const demoB = useMemo(() => {
-    return getDemographicsForUbs(ubsB, '2025', statsB.des, statsB.sob, statsB.obs, statsB.eut);
-  }, [ubsB, statsB]);
-
-  // Dados para o gráfico histórico
   const chartData = useMemo(() => {
+    const keyMap = { obesidade: 'obs', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
+    const k = keyMap[activeIndicator];
     return yearsList.map(yr => {
       const cleanYr = yr.replace('★', '').trim();
-      const sA = getUbsStatsForYear(ubsA, cleanYr);
-      const sB = getUbsStatsForYear(ubsB, cleanYr);
-
+      const sA = getStats(ubsA, cleanYr);
+      const sB = getStats(ubsB, cleanYr);
       return {
-        ano: yr,
-        [ubsA]: sA[activeIndicator === 'obesidade' ? 'obs' : activeIndicator === 'desnutricao' ? 'des' : activeIndicator === 'sobrepeso' ? 'sob' : 'eut'],
-        [ubsB]: sB[activeIndicator === 'obesidade' ? 'obs' : activeIndicator === 'desnutricao' ? 'des' : activeIndicator === 'sobrepeso' ? 'sob' : 'eut'],
-        isPrevisao: Number(cleanYr) >= 2026
+        ano: cleanYr,
+        A: Number((sA[k] as number).toFixed(2)),
+        B: Number((sB[k] as number).toFixed(2)),
+        isPrevisao: Number(cleanYr) >= 2026,
       };
     });
-  }, [ubsA, ubsB, yearsList, activeIndicator, regionalData, temporalData]);
+  }, [getStats, ubsA, ubsB, yearsList, activeIndicator]);
 
-  // Cores do indicador selecionado para o gráfico
-  const indicatorConfig = useMemo(() => {
-    switch (activeIndicator) {
-      case 'desnutricao':
-        return {
-          label: 'Desnutrição',
-          color: '#3b82f6',
-          bg: 'bg-blue-500/10 dark:bg-blue-500/20',
-          text: 'text-blue-600 dark:text-blue-400',
-          border: 'border-blue-200/50 dark:border-blue-900/40'
-        };
-      case 'sobrepeso':
-        return {
-          label: 'Sobrepeso',
-          color: '#f59e0b',
-          bg: 'bg-amber-500/10 dark:bg-amber-500/20',
-          text: 'text-amber-600 dark:text-amber-400',
-          border: 'border-amber-200/50 dark:border-amber-900/40'
-        };
-      case 'eutrofia':
-        return {
-          label: 'Peso Adequado',
-          color: '#10b981',
-          bg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
-          text: 'text-emerald-600 dark:text-emerald-400',
-          border: 'border-emerald-200/50 dark:border-emerald-900/40'
-        };
-      case 'obesidade':
-      default:
-        return {
-          label: 'Obesidade',
-          color: '#ef4444',
-          bg: 'bg-red-500/10 dark:bg-red-500/20',
-          text: 'text-red-600 dark:text-red-400',
-          border: 'border-red-200/50 dark:border-red-900/40'
-        };
-    }
-  }, [activeIndicator]);
+  // Valor principal do indicador ativo para o placar central
+  const activeKeyMap = { obesidade: 'obs', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
+  const activeKey = activeKeyMap[activeIndicator];
+  const valA = statsA[activeKey];
+  const valB = statsB[activeKey];
+  const diff = Math.abs(valA - valB);
+  const aLeads = activeIndicator === 'eutrofia' ? valA >= valB : valA <= valB;
 
   return (
-    <div className="space-y-6 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 shadow-sm transition-colors duration-300">
-      
-      {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 rounded-xl text-teal-600 dark:text-teal-400 shadow-inner">
-            <GitCompare className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-              Comparador Territorial de UBS
-            </h3>
-            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
-              Análise comparativa em tempo real entre duas unidades de atenção básica · Nutri for Schools 2025
-            </p>
+    <div className="space-y-5">
+
+      {/* ── Cabeçalho ── */}
+      <div className="flex items-center gap-2.5">
+        <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+        <div>
+          <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+            Comparador de Unidades de Saúde
+          </h3>
+          <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium mt-0.5">
+            Análise lado a lado entre duas UBS · Nutri for Schools 2025
+          </p>
+        </div>
+      </div>
+
+      {/* ── Seletores de UBS ── */}
+      <div
+        className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end"
+        onClick={() => { if (openA || openB) { setOpenA(false); setOpenB(false); } }}
+      >
+        <UbsDropdown
+          label="Unidade A"
+          value={ubsA}
+          onChange={setUbsA}
+          list={ubsList}
+          disabledItem={ubsB}
+          accentClass="bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400"
+          pinColor="text-teal-500"
+          open={openA}
+          setOpen={(v) => { setOpenA(v); if (v) setOpenB(false); }}
+          zIndex={40}
+        />
+
+        <div className="flex flex-col items-center justify-center pb-1.5 gap-0.5">
+          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 flex items-center justify-center">
+            <span className="text-[10px] font-black text-slate-400 dark:text-zinc-500">VS</span>
           </div>
         </div>
 
-        {/* Seletor de indicador interno */}
-        <div className="flex items-center gap-1 bg-slate-50 dark:bg-zinc-900 p-1 rounded-xl border border-slate-200/50 dark:border-zinc-800/80 self-start sm:self-center">
-          {[
-            { id: 'desnutricao', label: 'Desnutrição', activeClass: 'bg-blue-500 text-white' },
-            { id: 'eutrofia', label: 'Peso Adequado', activeClass: 'bg-emerald-500 text-white' },
-            { id: 'sobrepeso', label: 'Sobrepeso', activeClass: 'bg-amber-500 text-white' },
-            { id: 'obesidade', label: 'Obesidade', activeClass: 'bg-red-500 text-white' }
-          ].map(ind => (
-            <button
+        <UbsDropdown
+          label="Unidade B"
+          value={ubsB}
+          onChange={setUbsB}
+          list={ubsList}
+          disabledItem={ubsA}
+          accentClass="bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400"
+          pinColor="text-indigo-500"
+          open={openB}
+          setOpen={(v) => { setOpenB(v); if (v) setOpenA(false); }}
+          zIndex={39}
+        />
+      </div>
+
+      {/* ── Placar central do indicador ativo ── */}
+      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 overflow-hidden bg-white dark:bg-[#111116]">
+        {/* Barra de cor do indicador */}
+        <div className="h-1 w-full" style={{ background: activeIndConfig.color }} />
+
+        <div className="grid grid-cols-[1fr_auto_1fr]">
+          {/* Painel A */}
+          <div className={`p-5 flex flex-col items-center gap-2 border-r border-slate-100 dark:border-zinc-800/50 ${aLeads ? 'bg-teal-50/40 dark:bg-teal-950/10' : ''}`}>
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-teal-500 inline-block" /> Unidade A
+            </span>
+            <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
+              {valA.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-500">%</span>
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+              <Users className="w-3 h-3" /> {statsA.total} alunos
+            </span>
+            {aLeads && (
+              <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 rounded-full">
+                Melhor resultado
+              </span>
+            )}
+          </div>
+
+          {/* Centro: diferença */}
+          <div className="px-4 py-5 flex flex-col items-center justify-center gap-1 min-w-[80px]">
+            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Δ Diferença</p>
+            <span className="text-xl font-black font-mono" style={{ color: activeIndConfig.color }}>
+              {diff.toFixed(1)}<span className="text-xs">pp</span>
+            </span>
+            <p className="text-[8px] text-center font-bold text-slate-400 dark:text-zinc-600 leading-tight">
+              {activeIndConfig.label}
+            </p>
+          </div>
+
+          {/* Painel B */}
+          <div className={`p-5 flex flex-col items-center gap-2 border-l border-slate-100 dark:border-zinc-800/50 ${!aLeads ? 'bg-indigo-50/40 dark:bg-indigo-950/10' : ''}`}>
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Unidade B
+            </span>
+            <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
+              {valB.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-500">%</span>
+            </span>
+            <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+              <Users className="w-3 h-3" /> {statsB.total} alunos
+            </span>
+            {!aLeads && (
+              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/50 dark:border-indigo-800/40 px-2 py-0.5 rounded-full">
+                Melhor resultado
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Comparação linha a linha de todos os indicadores ── */}
+      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 space-y-4">
+        {/* Cabeçalho das colunas */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-2 border-b border-slate-100 dark:border-zinc-800/50">
+          <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Indicador</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 justify-end">
+            Unidade B <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />
+          </span>
+        </div>
+
+        {INDICATORS.map(ind => {
+          const styles = INDICATOR_STYLES[ind.tailwind];
+          const a = statsA[ind.key as keyof UbsStats] as number;
+          const b = statsB[ind.key as keyof UbsStats] as number;
+          return (
+            <MetricRow
               key={ind.id}
-              onClick={() => setIndicador(ind.id as "desnutricao" | "eutrofia" | "sobrepeso" | "obesidade")}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-                activeIndicator === ind.id 
-                  ? ind.activeClass + ' shadow-sm'
-                  : 'text-slate-500 dark:text-zinc-400 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
-              }`}
-            >
-              {ind.label}
-            </button>
-          ))}
+              label={ind.label}
+              valueA={a}
+              valueB={b}
+              colorStyle={styles}
+              lowerIsBetter={ind.id !== 'eutrofia'}
+            />
+          );
+        })}
+
+        {/* Linha separadora com dados de alunos */}
+        <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
+            <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{statsA.total}</span>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Total Alunos</span>
+          <div className="flex flex-col gap-0.5 items-end">
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
+            <span className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">{statsB.total}</span>
+          </div>
         </div>
       </div>
 
-      {/* Seletores de UBS (Dropdowns de alto padrão) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        {/* UBS A Selector */}
-        <div className="relative z-30">
-          <label className="text-[9px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
-            Selecione a Unidade de Saúde A:
-          </label>
-          <div className="relative">
-            <button
-              onClick={() => { setOpenA(!openA); setOpenB(false); }}
-              className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
-            >
-              <span className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                {ubsA}
-              </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-450 dark:text-zinc-500 transition-transform duration-300 ${openA ? 'rotate-180 text-teal-500' : ''}`} />
-            </button>
-
-            {openA && (
-              <div className="absolute left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white dark:bg-[#0c0d10] border border-slate-200 dark:border-[#2c2c2e] rounded-xl shadow-xl z-[500] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/40">
-                {ubsList.map(u => (
-                  <button
-                    key={u}
-                    disabled={u === ubsB}
-                    onClick={() => { setUbsA(u); setOpenA(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-[11px] font-bold transition-colors border-b border-slate-100 dark:border-[#2c2c2e] last:border-b-0 flex items-center justify-between ${
-                      ubsA === u
-                        ? 'bg-teal-50/40 dark:bg-teal-950/15 text-teal-600 dark:text-teal-400'
-                        : u === ubsB
-                          ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-zinc-900/50 text-slate-400'
-                          : 'text-slate-650 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                    }`}
-                  >
-                    {u}
-                    {ubsA === u && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* UBS B Selector */}
-        <div className="relative z-30">
-          <label className="text-[9px] font-black text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">
-            Selecione a Unidade de Saúde B:
-          </label>
-          <div className="relative">
-            <button
-              onClick={() => { setOpenB(!openB); setOpenA(false); }}
-              className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] flex items-center justify-between cursor-pointer hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
-            >
-              <span className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                {ubsB}
-              </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-455 dark:text-zinc-500 transition-transform duration-300 ${openB ? 'rotate-180 text-indigo-500' : ''}`} />
-            </button>
-
-            {openB && (
-              <div className="absolute left-0 right-0 mt-1.5 max-h-56 overflow-y-auto bg-white dark:bg-[#0c0d10] border border-slate-200 dark:border-[#2c2c2e] rounded-xl shadow-xl z-[500] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/40">
-                {ubsList.map(u => (
-                  <button
-                    key={u}
-                    disabled={u === ubsA}
-                    onClick={() => { setUbsB(u); setOpenB(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-[11px] font-bold transition-colors border-b border-slate-100 dark:border-[#2c2c2e] last:border-b-0 flex items-center justify-between ${
-                      ubsB === u
-                        ? 'bg-indigo-50/40 dark:bg-indigo-950/15 text-indigo-600 dark:text-indigo-400'
-                        : u === ubsA
-                          ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-zinc-900/50 text-slate-400'
-                          : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
-                    }`}
-                  >
-                    {u}
-                    {ubsB === u && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Grid Comparativa de Métricas (Lado a Lado) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Painel UBS A */}
-        <div className="border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-5 bg-white dark:bg-[#121316]/90 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 bg-teal-500 h-full" />
-          
+      {/* ── Gráfico temporal ── */}
+      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center justify-between mb-4.5">
-              <span className="px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-wider bg-teal-50/60 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400 border border-teal-100/50 dark:border-teal-900/40">
-                UNIDADE A
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> {statsA.total} Alunos
-              </span>
-            </div>
-
-            <h4 className="text-sm font-black text-slate-850 dark:text-[#f5f5f7] mb-4 tracking-tight">
-              {ubsA}
+            <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-wider">
+              Evolução Histórica · {activeIndConfig.label}
             </h4>
-
-            {/* Linhas de Prevalência */}
-            <div className="space-y-3.5 mb-5">
-              <IndicatorBar label="Peso Adequado" value={statsA.eut} color="bg-gradient-to-r from-emerald-550 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400" valueColor="text-emerald-600 dark:text-emerald-400" />
-              <IndicatorBar label="Obesidade" value={statsA.obs} color="bg-gradient-to-r from-red-550 to-red-500 dark:from-red-600 dark:to-red-400" valueColor="text-red-600 dark:text-red-400" />
-              <IndicatorBar label="Sobrepeso" value={statsA.sob} color="bg-gradient-to-r from-amber-550 to-amber-500 dark:from-amber-600 dark:to-amber-400" valueColor="text-amber-600 dark:text-amber-400" />
-              <IndicatorBar label="Desnutrição" value={statsA.des} color="bg-gradient-to-r from-blue-550 to-blue-500 dark:from-blue-600 dark:to-blue-400" valueColor="text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-
-          {/* Dados Demográficos Consolidados (Ano 2025) */}
-          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/40 grid grid-cols-2 gap-3 text-[10px]">
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Peso Adeq.</span>
-              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{demoA.globalAvgAgeEut} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Obes.</span>
-              <span className="text-sm font-black text-red-600 dark:text-red-400">{demoA.globalAvgAgeObs} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Sobr.</span>
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400">{demoA.globalAvgAgeSob} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Desn.</span>
-              <span className="text-sm font-black text-blue-600 dark:text-blue-400">{demoA.globalAvgAgeDes} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 col-span-2 flex items-center justify-between shadow-inner">
-              <div>
-                <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Gênero Mais Acometido (Geral)</span>
-                <span className="text-[11px] font-extrabold text-slate-700 dark:text-zinc-200">
-                  {demoA.globalAvgAgeObs > demoA.globalAvgAgeDes ? "Meninos (Predominante)" : "Meninas (Predominante)"}
-                </span>
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-blue-50/50 dark:bg-blue-955/20 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/40 shrink-0">
-                Nutri for Schools
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Painel UBS B */}
-        <div className="border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-5 bg-white dark:bg-[#121316]/90 shadow-[0_2px_8px_rgba(0,0,0,0.01)] hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 bg-indigo-500 h-full" />
-
-          <div>
-            <div className="flex items-center justify-between mb-4.5">
-              <span className="px-2.5 py-1 rounded text-[9px] font-black uppercase tracking-wider bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/40">
-                UNIDADE B
-              </span>
-              <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" /> {statsB.total} Alunos
-              </span>
-            </div>
-
-            <h4 className="text-sm font-black text-slate-850 dark:text-[#f5f5f7] mb-4 tracking-tight">
-              {ubsB}
-            </h4>
-
-            {/* Linhas de Prevalência */}
-            <div className="space-y-3.5 mb-5">
-              <IndicatorBar label="Peso Adequado" value={statsB.eut} color="bg-gradient-to-r from-emerald-550 to-emerald-500 dark:from-emerald-600 dark:to-emerald-400" valueColor="text-emerald-600 dark:text-emerald-400" />
-              <IndicatorBar label="Obesidade" value={statsB.obs} color="bg-gradient-to-r from-red-550 to-red-500 dark:from-red-600 dark:to-red-400" valueColor="text-red-600 dark:text-red-400" />
-              <IndicatorBar label="Sobrepeso" value={statsB.sob} color="bg-gradient-to-r from-amber-550 to-amber-500 dark:from-amber-600 dark:to-amber-400" valueColor="text-amber-600 dark:text-amber-400" />
-              <IndicatorBar label="Desnutrição" value={statsB.des} color="bg-gradient-to-r from-blue-550 to-blue-500 dark:from-blue-600 dark:to-blue-400" valueColor="text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-
-          {/* Dados Demográficos Consolidados (Ano 2025) */}
-          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800/40 grid grid-cols-2 gap-3 text-[10px]">
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Peso Adeq.</span>
-              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{demoB.globalAvgAgeEut} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Obes.</span>
-              <span className="text-sm font-black text-red-600 dark:text-red-400">{demoB.globalAvgAgeObs} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Sobr.</span>
-              <span className="text-sm font-black text-amber-600 dark:text-amber-400">{demoB.globalAvgAgeSob} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 shadow-inner">
-              <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Idade Média Desn.</span>
-              <span className="text-sm font-black text-blue-600 dark:text-blue-400">{demoB.globalAvgAgeDes} <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span></span>
-            </div>
-            <div className="bg-slate-50/50 dark:bg-zinc-900/20 p-2.5 rounded-xl border border-slate-200/40 dark:border-zinc-800/50 col-span-2 flex items-center justify-between shadow-inner">
-              <div>
-                <span className="text-slate-400 dark:text-zinc-550 font-bold uppercase tracking-wider block text-[8px] mb-0.5">Gênero Mais Acometido (Geral)</span>
-                <span className="text-[11px] font-extrabold text-slate-700 dark:text-zinc-200">
-                  {demoB.globalAvgAgeObs > demoB.globalAvgAgeDes ? "Meninos (Predominante)" : "Meninas (Predominante)"}
-                </span>
-              </div>
-              <span className="px-1.5 py-0.5 rounded text-[8px] font-black bg-indigo-50/50 dark:bg-indigo-955/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/40 shrink-0">
-                Nutri for Schools
-              </span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Gráfico de Evolução Comparativo Temporal (Overlay das duas UBSs) */}
-      <div className="bg-slate-50/50 dark:bg-zinc-800/10 border border-slate-100 dark:border-zinc-800/50 rounded-2xl p-5">
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h4 className="text-xs font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-              Evolução Temporal Comparativa: % {indicatorConfig.label}
-            </h4>
-            <p className="text-[9px] text-slate-400 dark:text-zinc-500 font-semibold mt-0.5">
-              Comparação histórica real (2018–2025) e projeções preditivas <span className="text-amber-500 font-bold">★</span> (2026–2027)
+            <p className="text-[9px] text-slate-400 dark:text-zinc-600 font-semibold mt-0.5">
+              2010–2025 · Projeções <span className="text-amber-500">★</span> 2026–2027
             </p>
           </div>
-
-          <div className="flex items-center gap-3 text-[10px] font-bold">
+          <div className="flex items-center gap-4 text-[10px] font-bold">
             <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
-              <span className="w-3 h-0.5 bg-teal-500 inline-block" /> Unidade A
+              <span className="w-5 h-[3px] bg-teal-500 rounded-full inline-block" /> A
             </span>
-            <span className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
-              <span className="w-3 h-0.5 bg-indigo-500 border-t border-dashed inline-block" style={{ borderTop: '2px dashed' }} /> Unidade B
+            <span className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
+              <span className="w-5 h-[3px] rounded-full inline-block border-t-[2px] border-dashed border-indigo-500" /> B
             </span>
           </div>
         </div>
 
-        <div className="h-56">
+        <div className="h-52">
           {mounted ? (
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
+              <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
-                  <filter id="glow-teal" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d9488" floodOpacity="0.45" />
+                  <filter id="cmp-glow-a" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d9488" floodOpacity="0.4" />
                   </filter>
-                  <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#6366f1" floodOpacity="0.45" />
+                  <filter id="cmp-glow-b" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#6366f1" floodOpacity="0.4" />
                   </filter>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"} vertical={false} />
-                <XAxis dataKey="ano" stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} />
-                <YAxis stroke={darkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)"} tick={{ fill: darkMode ? '#a1a1aa' : '#475569', fontSize: 10, fontWeight: 'bold' }} tickLine={false} axisLine={false} unit="%" />
-                <Tooltip content={<CustomCompareTooltip />} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke={darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="ano"
+                  tick={{ fill: darkMode ? '#71717a' : '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fill: darkMode ? '#71717a' : '#94a3b8', fontSize: 10, fontWeight: 700 }}
+                  tickLine={false}
+                  axisLine={false}
+                  unit="%"
+                />
+                <Tooltip content={<CompareTooltip />} />
                 <ReferenceLine
                   x="2025"
-                  stroke={darkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)"}
+                  stroke={darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}
                   strokeDasharray="4 3"
-                  label={{ value: 'Previsões →', fill: darkMode ? '#a1a1aa' : '#64748b', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
+                  label={{ value: 'Prev. →', fill: darkMode ? '#52525b' : '#94a3b8', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
                 />
-                
-                {/* Linha UBS A (Sólida / Glow) */}
                 <Line
                   type="monotone"
+                  dataKey="A"
                   name={ubsA}
-                  dataKey={ubsA}
                   stroke="#0d9488"
-                  strokeWidth={3}
-                  filter="url(#glow-teal)"
+                  strokeWidth={2.5}
+                  filter="url(#cmp-glow-a)"
                   dot={(props: any) => {
                     const { cx, cy, payload } = props;
                     return payload?.isPrevisao
-                      ? <circle cx={cx} cy={cy} r={5} fill="none" stroke="#0d9488" strokeWidth={2} strokeDasharray="3 1" />
-                      : <circle cx={cx} cy={cy} r={4} fill="#0d9488" />;
+                      ? <circle key={`a-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#0d9488" strokeWidth={2} strokeDasharray="3 1" />
+                      : <circle key={`a-${cx}`} cx={cx} cy={cy} r={3} fill="#0d9488" />;
                   }}
-                  activeDot={{ r: 6, fill: '#fff', stroke: '#0d9488', strokeWidth: 3 }}
+                  activeDot={{ r: 5, fill: '#fff', stroke: '#0d9488', strokeWidth: 2.5 }}
                 />
-
-                {/* Linha UBS B (Dashed / Glow) */}
                 <Line
                   type="monotone"
+                  dataKey="B"
                   name={ubsB}
-                  dataKey={ubsB}
                   stroke="#6366f1"
-                  strokeWidth={2.5}
-                  strokeDasharray="4 4"
-                  filter="url(#glow-indigo)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  filter="url(#cmp-glow-b)"
                   dot={(props: any) => {
                     const { cx, cy, payload } = props;
                     return payload?.isPrevisao
-                      ? <circle cx={cx} cy={cy} r={5} fill="none" stroke="#6366f1" strokeWidth={2} strokeDasharray="3 1" />
-                      : <circle cx={cx} cy={cy} r={4} fill="#6366f1" />;
+                      ? <circle key={`b-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#6366f1" strokeWidth={2} strokeDasharray="3 1" />
+                      : <circle key={`b-${cx}`} cx={cx} cy={cy} r={3} fill="#6366f1" />;
                   }}
-                  activeDot={{ r: 6, fill: '#fff', stroke: '#6366f1', strokeWidth: 3 }}
+                  activeDot={{ r: 5, fill: '#fff', stroke: '#6366f1', strokeWidth: 2.5 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-slate-50/50 dark:bg-zinc-800/10 rounded-xl" />
+            <div className="w-full h-full rounded-xl bg-slate-50 dark:bg-zinc-800/20" />
           )}
         </div>
       </div>
 
-    </div>
-  );
-}
-
-// Subcomponente de barra de prevalência para simplificar
-function IndicatorBar({ label, value, color, valueColor }: { label: string; value: number; color: string; valueColor: string }) {
-  const isHealthyWeight = label === "Peso Adequado";
-  const displayWidth = isHealthyWeight ? value : Math.min(value * 3, 100);
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-[11px] font-bold">
-        <span className="text-slate-600 dark:text-zinc-300 font-semibold">{label}</span>
-        <span className={`font-extrabold ${valueColor} font-mono`}>{value.toFixed(1)}%</span>
-      </div>
-      <div className="h-2 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden p-[1px] border border-slate-200/30 dark:border-zinc-700/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${displayWidth}%` }}
-          className={`h-full ${color} rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.1)]`}
-          transition={{ duration: 0.8 }}
-          style={{ maxWidth: '100%' }}
-        />
-      </div>
-    </div>
-  );
-}
-
-interface CustomCompareTooltipProps {
-  active?: boolean;
-  payload?: Array<{
-    color: string;
-    strokeDasharray?: string | number;
-    name: string;
-    value: number;
-    dataKey: string | number;
-  }>;
-  label?: string;
-}
-
-function CustomCompareTooltip({ active, payload, label }: CustomCompareTooltipProps) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-xl p-3 shadow-lg text-xs transition-colors">
-      <p className="text-slate-500 dark:text-zinc-400 mb-2 font-bold uppercase tracking-wider text-[10px]">{label}</p>
-      {payload.map((p) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-6 mb-1.5 last:mb-0">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: p.color, border: p.strokeDasharray ? '1px dashed #fff' : 'none' }} />
-            <span className="text-slate-600 dark:text-zinc-350 font-bold truncate max-w-[130px]">{p.name.replace('UBS ', '').replace('USF ', '')}</span>
-          </div>
-          <span className="font-extrabold text-slate-900 dark:text-[#f5f5f7]">{Number(p.value).toFixed(2)}%</span>
-        </div>
-      ))}
     </div>
   );
 }

@@ -4,32 +4,64 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f8fafc; /* Relaxing off-white canvas */
-  --foreground: #0f172a; /* Slate 900 primary text */
+  /* ━━━ COLORS: Premium Palette ━━━ */
+  --background: #fafbfc;
+  --background-alt: #f5f7f9;
+  --foreground: #0c0e11;
   --card: #ffffff;
-  --card-border: #e2e8f0; /* Soft border */
-  --card-hover-border: #cbd5e1;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b; /* Soft slate gray */
-  --text-muted: #94a3b8;
+  --card-border: #e4e6eb;
+  --card-hover-border: #d0d5dd;
+  --text-primary: #0c0e11;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
   --sidebar: #ffffff;
-  --sidebar-border: #e2e8f0;
+  --sidebar-border: #e4e6eb;
   --accent: #0d9488;
   --accent-light: #f0fdfa;
   --accent-border: #ccfbf1;
+
+  /* ━━━ SPACING: Generous Whitespace ━━━ */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 2.5rem;
+  --spacing-3xl: 3rem;
+
+  /* ━━━ BORDER RADIUS: Consistent & Modern ━━━ */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ━━━ SHADOWS: Subtle & Premium ━━━ */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.01);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.01);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.03), 0 2px 4px rgba(0, 0, 0, 0.01);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.01);
+
+  /* ━━━ TYPOGRAPHY: Premium Scale ━━━ */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
 }
 
 .dark {
-  --background: #090a0c; /* Deep rich matte dark charcoal/black */
-  --foreground: #f1f5f9; /* Slate 100 primary text */
-  --card: #121316; /* Clean rich card charcoal */
-  --card-border: #1f2229; /* Refined dark border */
-  --card-hover-border: #2e333e;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8; /* Muted soft slate text */
-  --text-muted: #475569;
-  --sidebar: #121316;
-  --sidebar-border: #1f2229;
+  --background: #0f1117;
+  --background-alt: #161b22;
+  --foreground: #f8f9fb;
+  --card: #1c1f26;
+  --card-border: #30363d;
+  --card-hover-border: #484f58;
+  --text-primary: #f8f9fb;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --sidebar: #1c1f26;
+  --sidebar-border: #30363d;
   --accent: #0d9488;
   --accent-light: #0d2d2a;
   --accent-border: #0f4e47;
@@ -37,14 +69,19 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-border: var(--card-border);
   --color-card-hover: var(--card-hover-border);
   --color-sidebar: var(--sidebar);
   --color-sidebar-border: var(--sidebar-border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-border: var(--accent-border);
+  --color-muted: var(--text-muted);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 
   /* Custom Palette for Ultra-High Fidelity BI Theme and Contrast */
   --color-slate-450: #7f8ea3;
@@ -64,14 +101,84 @@
   --color-rose-955: #330810;
 }
 
+/* ━━━ BASE STYLES: Premium Typography & Spacing ━━━ */
+* {
+  @apply transition-colors duration-300 ease-in-out;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* --- PREMIUM SCROLLBARS --- */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+p {
+  line-height: var(--line-height-relaxed);
+}
+
+/* ━━━ INTERACTIVE ELEMENTS ━━━ */
+a {
+  @apply font-medium text-accent transition-all duration-200 hover:text-accent/80;
+}
+
+button, input, select, textarea {
+  font-family: var(--font-sans);
+  font-size: inherit;
+}
+
+/* ━━━ FORMS & INPUTS ━━━ */
+input, textarea, select {
+  @apply bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-foreground placeholder:text-muted transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30;
+}
+
+/* ━━━ CODE & PRE ━━━ */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+pre {
+  background: var(--background-alt);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  overflow-x: auto;
+  font-size: 0.875rem;
+}
+
+/* ━━━ SCROLLBAR: Premium Styling ━━━ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -82,24 +189,124 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(107, 114, 128, 0.25);
   border-radius: 9999px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(13, 148, 136, 0.6);
+  background: rgba(13, 148, 136, 0.5);
 }
 
 /* Firefox Support */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  scrollbar-color: rgba(107, 114, 128, 0.25) transparent;
 }
+
 .dark * {
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* ━━━ SELECTION ━━━ */
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+::-moz-selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* ━━━ UTILITY CLASSES ━━━ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ━━━ PREMIUM ANIMATIONS ━━━ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideInDown 0.4s ease-out;
+}
+
+/* ━━━ GLASS MORPHISM ━━━ */
+@utility glass {
+  @apply backdrop-blur-md bg-white/80 dark:bg-zinc-900/80;
+}
+
+/* ━━━ COMPONENT UTILITIES ━━━ */
+@utility card-base {
+  @apply bg-card dark:bg-slate-950 border border-card-border dark:border-zinc-800 rounded-xl transition-all duration-300;
+  box-shadow: var(--shadow-sm);
+}
+
+@utility card-hover {
+  @apply hover:border-card-hover dark:hover:border-zinc-700 hover:shadow-md hover:-translate-y-0.5;
+}
+
+@utility button-base {
+  @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent/50;
+}
+
+@utility button-primary {
+  @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent/50 bg-accent text-white hover:bg-accent/90 focus:ring-offset-accent/20;
+}
+
+@utility button-secondary {
+  @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent/50 bg-slate-100 dark:bg-zinc-800 text-foreground hover:bg-slate-200 dark:hover:bg-zinc-700;
+}
+
+@utility text-gradient {
+  @apply bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-zinc-300 bg-clip-text text-transparent;
 }
