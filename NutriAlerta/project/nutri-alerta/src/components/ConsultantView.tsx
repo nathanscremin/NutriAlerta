@@ -313,11 +313,17 @@ export default function ConsultantView() {
   const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
   if (prevContextRef.current === '') {
-    prevContextRef.current = contextKey;
-    return;
-  }
-  if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
+  return;
+}
+  if (prevContextRef.current === contextKey) {
+  // Mesmo contexto — só roda se regionalData acabou de chegar
+  if (!regionalData || Object.keys(regionalData).length === 0) return;
+} else {
+  prevContextRef.current = contextKey;
+}
+
+  if (!regionalData || Object.keys(regionalData).length === 0) return;
     
   console.log('DEBUG keys regionalData:', JSON.stringify(Object.keys(regionalData)));
   console.log('DEBUG anoSelecionado:', anoSelecionado);
