@@ -278,7 +278,6 @@ export default function ConsultantView() {
     if (analysisLevel === 'bairro' && !selectedBairroName) return;
     if (analysisLevel === 'escola' && !selectedSchoolName) return;
     
-    
     prevContextRef.current = contextKey;
 
     const cleanYr = anoSelecionado.replace('★', '').trim();
@@ -340,6 +339,13 @@ export default function ConsultantView() {
     );
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
 
+  useEffect(() => {
+  if (!regionalData || Object.keys(regionalData).length === 0) return;
+  if (analysisLevel === 'municipio') return;
+  if (!selectedUbs && !selectedBairroName && !selectedSchoolName) return;
+  prevContextRef.current = 'force-recalc';
+}, [regionalData]);
+  
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
