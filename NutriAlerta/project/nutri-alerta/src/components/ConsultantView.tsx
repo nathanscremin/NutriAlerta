@@ -322,6 +322,21 @@ export default function ConsultantView() {
   const cleanYr = anoSelecionado.replace('★', '').trim();
 
 let valorIndicador = 0;
+
+let valorIndicador = 0;
+    
+// DEBUG 
+console.log('🔍 DEBUG contexto UBS:', {
+  analysisLevel,
+  selectedUbs,
+  cleanYr,
+  indicador,
+  regionalData_keys: Object.keys(regionalData),
+  regionalData_ubs: regionalData[cleanYr]?.[selectedUbs],
+  temporalData_length: temporalData.length,
+  temporalData_find: temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr),
+});
+    
 if (analysisLevel === 'ubs' && selectedUbs) {
   const ubsData = regionalData[cleanYr]?.[selectedUbs];
   if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
