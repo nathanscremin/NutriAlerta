@@ -323,7 +323,16 @@ const text = parts
   .map((p: any) => p.text)
   .join('') || result.response.text();
 
-return NextResponse.json({ response: text, thinking: thinking || null });
+      if (isKvConfigured) {
+        try {
+          const updatedHistory = await chat.getHistory();
+          await kv.set(sessionId, updatedHistory);
+        } catch (kvErr) {
+          console.warn("Vercel KV write failed:", kvErr);
+        }
+      }
+
+      return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
