@@ -511,7 +511,7 @@ export default function ConsultantView() {
   } else {
     geralVal = dadosAno.obesidade;
   }
-  const geralBadge = getRiskBadge(geralVal, indicator);
+  const geralBadge = getRiskBadge(geralVal, indicador);
 
   const totalAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;
@@ -790,7 +790,7 @@ export default function ConsultantView() {
                   const nomeSimplificado = simplificar(nomeUbs);
                   const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
                   
-                  return chaveChaveEncontrada ? dadosAno[chaveEncontrada] : null;
+                  return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
                 };
 
                 const ubsData = encontrarRegistroSanitizado(cleanYear, ubs.nome);
