@@ -71,8 +71,6 @@ function getRiskBadge(value: number, indicator: string) {
   }
 }
 
-const normalizeQuotes = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019]/g, '"');
-
 const calcularValorEscalado = (dataRecord: any, ind: string, mObs: number, mDes: number) => {
   const dObs = dataRecord ? dataRecord.obesidade : 12.93;
   const dDes = dataRecord ? dataRecord.desnutricao : 2.62;
@@ -107,6 +105,15 @@ const calcularValorEscalado = (dataRecord: any, ind: string, mObs: number, mDes:
   }
 
   return norm[ind as keyof typeof norm];
+};
+
+const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
+  if (!data || !name) return undefined;
+  if (data[name]) return data[name];
+  const normalize = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019"]/g, '').toLowerCase().trim();
+  const normalizedName = normalize(name);
+  const key = Object.keys(data).find(k => normalize(k) === normalizedName);
+  return key ? data[key] : undefined;
 };
 
 export default function ConsultantView() {
@@ -212,7 +219,7 @@ export default function ConsultantView() {
       const ubsName = selectedUbs;
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
-        const yrRecord = ubsName ? regionalData[cleanYr]?.[ubsName] || regionalData[cleanYr]?.[normalizeQuotes(ubsName)] : null;
+        const yrRecord = normalizeUbsKey(ubsName || '', regionalData[cleanYr] || {});
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -228,7 +235,7 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
-        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bairroMetrics[bName].regiao_ubs)] : null;
+        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? normalizeUbsKey(bairroMetrics[bName].regiao_ubs, regionalData[cleanYr] || {}) : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -244,7 +251,7 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
-        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(schoolMetrics[schoolName].regiao_ubs)] : null;
+        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? normalizeUbsKey(schoolMetrics[schoolName].regiao_ubs, regionalData[cleanYr] || {}) : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -310,21 +317,7 @@ export default function ConsultantView() {
 
     let valorIndicador = 0;
     if (analysisLevel === 'ubs' && selectedUbs) {
-      const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
-        const dadosAno = regionalData[ano];
-        if (!dadosAno) return null;
-        if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
-        if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
-        
-        const simplificar = (str: string) => 
-          str.toLowerCase().replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        const nomeSimplificado = simplificar(nomeUbs);
-        const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
-        return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
-      };
-
-      const ubsData = encontrarRegistroSanitizado(cleanYr, selectedUbs);
+      const ubsData = normalizeUbsKey(selectedUbs, regionalData[cleanYr] || {});
       valorIndicador = calcularValorEscalado(ubsData, indicador, multObs, multDes);
     } else if (analysisLevel === 'bairro' && selectedBairroName) {
       const bMetric = bairroMetrics[selectedBairroName];
@@ -332,7 +325,7 @@ export default function ConsultantView() {
       if (bYearData) {
         valorIndicador = calcularValorEscalado(bYearData, indicador, multObs, multDes);
       } else {
-        const ubsRecord = bMetric?.regiao_ubs ? regionalData[cleanYr]?.[bMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bMetric.regiao_ubs)] : null;
+        const ubsRecord = bMetric?.regiao_ubs ? normalizeUbsKey(bMetric.regiao_ubs, regionalData[cleanYr] || {}) : null;
         valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
       }
     } else if (analysisLevel === 'escola' && selectedSchoolName) {
@@ -341,7 +334,7 @@ export default function ConsultantView() {
       if (sYearData) {
         valorIndicador = calcularValorEscalado(sYearData, indicador, multObs, multDes);
       } else {
-        const ubsRecord = sMetric?.regiao_ubs ? regionalData[cleanYr]?.[sMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(sMetric.regiao_ubs)] : null;
+        const ubsRecord = sMetric?.regiao_ubs ? normalizeUbsKey(sMetric.regiao_ubs, regionalData[cleanYr] || {}) : null;
         valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
       }
     } else {
@@ -410,7 +403,7 @@ export default function ConsultantView() {
 
     let ubsRecordForChat = null;
     if (analysisLevel === 'ubs' && selectedUbs) {
-      ubsRecordForChat = regionalData[cleanYr]?.[selectedUbs] ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
+      ubsRecordForChat = normalizeUbsKey(selectedUbs, regionalData[cleanYr] || {});
     } else if (analysisLevel === 'bairro' && selectedBairroName) {
       ubsRecordForChat = bairroMetrics[selectedBairroName]?.anos?.[cleanYr];
     } else if (analysisLevel === 'escola' && selectedSchoolName) {
@@ -773,27 +766,7 @@ export default function ConsultantView() {
             <>
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
-
-                const encontrarRegistroSanitizado = (ano: string, nomeUbs: string) => {
-                  const dadosAno = regionalData[ano];
-                  if (!dadosAno) return null;
-                  
-                  if (dadosAno[nomeUbs]) return dadosAno[nomeUbs];
-                  if (dadosAno[normalizeQuotes(nomeUbs)]) return dadosAno[normalizeQuotes(nomeUbs)];
-                  
-                  const simplificar = (str: string) => 
-                    str.toLowerCase()
-                       .replace(/[\s\-\"\'\u201c\u201d\u2018\u2019]/g, '')
-                       .normalize("NFD")
-                       .replace(/[\u0300-\u036f]/g, "");
-
-                  const nomeSimplificado = simplificar(nomeUbs);
-                  const chaveEncontrada = Object.keys(dadosAno).find(key => simplificar(key) === nomeSimplificado);
-                  
-                  return chaveEncontrada ? dadosAno[chaveEncontrada] : null;
-                };
-
-                const ubsData = encontrarRegistroSanitizado(cleanYear, ubs.nome);
+                const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
 
                 const finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
                 const badge = getRiskBadge(finalVal, indicador);
@@ -859,7 +832,7 @@ export default function ConsultantView() {
                 if (bYearData) {
                   finalVal = calcularValorEscalado(bYearData, indicador, multObs, multDes);
                 } else {
-                  const ubsData = regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)];
+                  const ubsData = normalizeUbsKey(parentUbs, regionalData[cleanYear] || {});
                   finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
                 }
                 const badge = getRiskBadge(finalVal, indicador);
@@ -873,7 +846,7 @@ export default function ConsultantView() {
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)] shadow-teal-500/10' 
                         : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
@@ -911,7 +884,7 @@ export default function ConsultantView() {
                 if (sYearData) {
                   finalVal = calcularValorEscalado(sYearData, indicador, multObs, multDes);
                 } else {
-                  const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)] : null;
+                  const ubsRecord = normalizeUbsKey(parentUbs, regionalData[cleanYear] || {});
                   finalVal = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
                 }
                 const badge = getRiskBadge(finalVal, indicador);
@@ -925,8 +898,8 @@ export default function ConsultantView() {
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
-                        : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)] shadow-teal-500/10' 
+                        : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-Transparant border-l-transparent'
                     }`}
                   >
                     <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${isSelected ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'}`}>
