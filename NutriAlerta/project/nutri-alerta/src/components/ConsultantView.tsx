@@ -85,11 +85,10 @@ export default function ConsultantView() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [pendingContext, setPendingContext] = useState<string | null>(null); // ← aqui
-  const prevContextRef = useRef<string>('');                                 // ← aqui
+  const [pendingContext, setPendingContext] = useState<string | null>(null);
+  const prevContextRef = useRef<string>('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Lista de Bairros Únicos extraídos do GeoJSON
   const uniqueBairrosList = React.useMemo(() => {
     const bairrosGeoJSON = getVoronoiGeoJSON();
     if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
@@ -105,12 +104,10 @@ export default function ConsultantView() {
     return list.sort((a, b) => a.nome.localeCompare(b.nome));
   }, []);
 
-  // Lista de Escolas
   const schoolsList = React.useMemo(() => {
     return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
   }, []);
 
-  // Lista de UBSs
   const ubsList = React.useMemo(() => {
     return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
       const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
@@ -119,11 +116,8 @@ export default function ConsultantView() {
     });
   }, []);
 
-  // Filtros aplicados baseados no searchQuery ativo e na hierarquia de foco
   const filteredUbs = React.useMemo(() => {
-    return ubsList.filter(u =>
-      u.nome.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return ubsList.filter(u => u.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [ubsList, searchQuery]);
 
   const filteredBairros = React.useMemo(() => {
@@ -131,9 +125,7 @@ export default function ConsultantView() {
     if (selectedUbs) {
       list = list.filter(b => b.parentUbs === selectedUbs);
     }
-    return list.filter(b =>
-      b.nome.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return list.filter(b => b.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [uniqueBairrosList, selectedUbs, searchQuery]);
 
   const filteredSchools = React.useMemo(() => {
@@ -143,52 +135,31 @@ export default function ConsultantView() {
     } else if (selectedUbs) {
       list = list.filter(s => s.regiao_ubs === selectedUbs);
     }
-    return list.filter(s =>
-      s.nome.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return list.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  // Filtra as sugestões da barra de busca do assistente
   const filteredSearchSuggestions = React.useMemo(() => {
     if (!searchQuery.trim()) return [];
-    
-    // Filtro por Escolas
     let list = schoolsList.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    // Se estivermos em um bairro, mostra apenas escolas desse bairro
     if (selectedBairroName) {
       list = list.filter(s => s.bairro === selectedBairroName);
     }
-    
     return list.slice(0, 5);
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  // Multadores dinâmicos baseados nas camadas ativas de POIs
   const { multObs, multDes } = React.useMemo(() => {
     let mObs = 1;
     let mDes = 1;
-
     const hasSupermarket = activePoiTypes.includes('Alimentação - Mercado');
     const hasFastFood = activePoiTypes.includes('Alimentação - Restaurante/Fast-food');
     const hasSport = activePoiTypes.includes('Esporte e Lazer');
-
-    if (hasSupermarket && !hasFastFood) {
-      mObs *= 0.90;
-      mDes *= 0.95;
-    }
-    if (hasFastFood && !hasSupermarket) {
-      mObs *= 1.15;
-    }
-    if (hasSport) {
-      mObs *= 0.92;
-    }
-    if (activePoiTypes.length === 0) {
-      mObs *= 1.05;
-    }
+    if (hasSupermarket && !hasFastFood) { mObs *= 0.90; mDes *= 0.95; }
+    if (hasFastFood && !hasSupermarket) { mObs *= 1.15; }
+    if (hasSport) { mObs *= 0.92; }
+    if (activePoiTypes.length === 0) { mObs *= 1.05; }
     return { multObs: mObs, multDes: mDes };
   }, [activePoiTypes]);
 
-  // Dado temporal reativo com suporte a análise hierárquica multinível e efeitos das camadas de POIs
   const activeTemporalData = React.useMemo(() => {
     let baseSource: Array<{
       ano: string;
@@ -230,7 +201,6 @@ export default function ConsultantView() {
         const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
         const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-        
         return {
           ano: yr,
           desnutricao: bairroRecord && typeof bairroRecord.desnutricao === 'number' ? bairroRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
@@ -247,7 +217,6 @@ export default function ConsultantView() {
         const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
         const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
-
         return {
           ano: yr,
           desnutricao: schoolRecord && typeof schoolRecord.desnutricao === 'number' ? schoolRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
@@ -267,14 +236,7 @@ export default function ConsultantView() {
       const afterSum = scaleDes + scaleObs + scaleSob;
       const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
       const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-      
-      const rawObj = {
-        desnutricao: scaleDes,
-        obesidade: scaleObs,
-        sobrepeso: scaleSob,
-        eutrofia: scaleEut
-      };
-      
+      const rawObj = { desnutricao: scaleDes, obesidade: scaleObs, sobrepeso: scaleSob, eutrofia: scaleEut };
       const sum = rawObj.desnutricao + rawObj.sobrepeso + rawObj.obesidade + rawObj.eutrofia;
       const norm = {
         desnutricao: Number(((rawObj.desnutricao / sum) * 100).toFixed(2)),
@@ -287,21 +249,11 @@ export default function ConsultantView() {
         let maxK: keyof typeof norm = 'eutrofia';
         let maxV = norm[maxK];
         (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
-          if (norm[k] > maxV) {
-            maxV = norm[k];
-            maxK = k;
-          }
+          if (norm[k] > maxV) { maxV = norm[k]; maxK = k; }
         });
         norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
       }
-
-      return {
-        ...d,
-        desnutricao: norm.desnutricao,
-        obesidade: norm.obesidade,
-        sobrepeso: norm.sobrepeso,
-        eutrofia: norm.eutrofia
-      };
+      return { ...d, desnutricao: norm.desnutricao, obesidade: norm.obesidade, sobrepeso: norm.sobrepeso, eutrofia: norm.eutrofia };
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
 
@@ -310,104 +262,83 @@ export default function ConsultantView() {
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
   useEffect(() => {
-  const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
+    const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
-  if (prevContextRef.current === '') {
-  prevContextRef.current = contextKey;
-  return;
-}
+    // Inicialização: guarda o contexto inicial sem disparar preview
+    if (prevContextRef.current === '') {
+      prevContextRef.current = contextKey;
+      return;
+    }
 
-  useEffect(() => {
-  const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
+    // Sem mudança de contexto
+    if (prevContextRef.current === contextKey) return;
 
-  if (prevContextRef.current === '') {
+    // Aguarda seleção específica quando o nível exige uma
+    if (analysisLevel === 'ubs' && !selectedUbs) return;
+    if (analysisLevel === 'bairro' && !selectedBairroName) return;
+    if (analysisLevel === 'escola' && !selectedSchoolName) return;
+
     prevContextRef.current = contextKey;
-    return;
-  }
-  if (prevContextRef.current === contextKey) return;
 
-  if (analysisLevel === 'ubs' && !selectedUbs) return;
-  if (analysisLevel === 'bairro' && !selectedBairroName) return;
-  if (analysisLevel === 'escola' && !selectedSchoolName) return;
+    const cleanYr = anoSelecionado.replace('★', '').trim();
 
-  prevContextRef.current = contextKey;
-    
-  if (prevContextRef.current === contextKey) return;
-  prevContextRef.current = contextKey;
-    
-  const cleanYr = anoSelecionado.replace('★', '').trim();
-}
-            
-let valorIndicador = 0;
-    
-// DEBUG 
-console.log('🔍 DEBUG contexto UBS:', {
-  analysisLevel,
-  selectedUbs,
-  cleanYr,
-  indicador,
-  regionalData_keys: Object.keys(regionalData),
-  regionalData_ubs: regionalData[cleanYr]?.[selectedUbs],
-  temporalData_length: temporalData.length,
-  temporalData_find: temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr),
-});
-    
-if (analysisLevel === 'ubs' && selectedUbs) {
-  const ubsData = regionalData[cleanYr]?.[selectedUbs];
-  if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
-    valorIndicador = ubsData[indicador as keyof typeof ubsData] as number;
-  } else {
-    const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
-    valorIndicador = (globalRec as any)?.[indicador] ?? 0;
-  }
-} else if (analysisLevel === 'bairro' && selectedBairroName) {
-  const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
-  valorIndicador = bData?.[indicador] ?? 0;
-} else if (analysisLevel === 'escola' && selectedSchoolName) {
-  const sData = (schoolMetrics as any)[selectedSchoolName]?.anos?.[cleanYr];
-  valorIndicador = sData?.[indicador] ?? 0;
-} else {
-  const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
-  valorIndicador = (globalRec as any)?.[indicador] ?? 0;
-}
+    let valorIndicador = 0;
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      const ubsData = regionalData[cleanYr]?.[selectedUbs];
+      if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
+        valorIndicador = ubsData[indicador as keyof typeof ubsData] as number;
+      } else {
+        // Fallback: temporalData global (mesma fonte da lista lateral)
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
+        valorIndicador = (globalRec as any)?.[indicador] ?? 0;
+      }
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
+      valorIndicador = bData?.[indicador] ?? 0;
+    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+      const sData = (schoolMetrics as any)[selectedSchoolName]?.anos?.[cleanYr];
+      valorIndicador = sData?.[indicador] ?? 0;
+    } else {
+      const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
+      valorIndicador = (globalRec as any)?.[indicador] ?? 0;
+    }
 
-  valorIndicador = Number(valorIndicador.toFixed(2));
+    valorIndicador = Number(valorIndicador.toFixed(2));
 
-  const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
-    : indicador === 'sobrepeso' ? 'Sobrepeso'
-    : indicador === 'eutrofia' ? 'Peso Adequado'
-    : 'Obesidade';
+    const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
+      : indicador === 'sobrepeso' ? 'Sobrepeso'
+      : indicador === 'eutrofia' ? 'Peso Adequado'
+      : 'Obesidade';
 
-  const badge = getRiskBadge(valorIndicador, indicador);
+    const badge = getRiskBadge(valorIndicador, indicador);
 
-  let scopeLabel = '';
-  let proactiveQuestion = '';
+    let scopeLabel = '';
+    let proactiveQuestion = '';
 
-  if (analysisLevel === 'municipio') {
-    scopeLabel = 'Rio Claro (Geral)';
-    proactiveQuestion = 'Quer uma análise da situação nutricional do município ou uma comparação entre UBSs?';
-  } else if (analysisLevel === 'ubs' && selectedUbs) {
-    scopeLabel = selectedUbs;
-    proactiveQuestion = badge.label.includes('Alto') || badge.label.includes('Médio')
-      ? 'Quer que eu analise as causas ou sugira intervenções prioritárias para essa unidade?'
-      : 'Quer comparar essa UBS com a média municipal ou explorar os bairros de abrangência?';
-  } else if (analysisLevel === 'bairro' && selectedBairroName) {
-    scopeLabel = selectedBairroName;
-    proactiveQuestion = 'Quer analisar o perfil nutricional deste bairro ou ver as escolas vinculadas?';
-  } else if (analysisLevel === 'escola' && selectedSchoolName) {
-    scopeLabel = selectedSchoolName;
-    proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de intervenção no ambiente escolar?';
-  } else {
-    setPendingContext(null);
-    return;
-  }
+    if (analysisLevel === 'municipio') {
+      scopeLabel = 'Rio Claro (Geral)';
+      proactiveQuestion = 'Quer uma análise da situação nutricional do município ou uma comparação entre UBSs?';
+    } else if (analysisLevel === 'ubs' && selectedUbs) {
+      scopeLabel = selectedUbs;
+      proactiveQuestion = badge.label.includes('Alto') || badge.label.includes('Médio')
+        ? 'Quer que eu analise as causas ou sugira intervenções prioritárias para essa unidade?'
+        : 'Quer comparar essa UBS com a média municipal ou explorar os bairros de abrangência?';
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      scopeLabel = selectedBairroName;
+      proactiveQuestion = 'Quer analisar o perfil nutricional deste bairro ou ver as escolas vinculadas?';
+    } else if (analysisLevel === 'escola' && selectedSchoolName) {
+      scopeLabel = selectedSchoolName;
+      proactiveQuestion = 'Quer analisar o perfil nutricional desta escola ou sugestões de intervenção no ambiente escolar?';
+    } else {
+      setPendingContext(null);
+      return;
+    }
 
-  setPendingContext(
-    `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
-  );
-
+    setPendingContext(
+      `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
+    );
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
-  
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -416,11 +347,11 @@ if (analysisLevel === 'ubs' && selectedUbs) {
     const contextSnapshot = pendingContext;
     setPendingContext(null);
     setMessages(prev => [
-    ...prev,
-    ...(contextSnapshot ? [{ role: 'bot' as const, text: contextSnapshot }] : []),
-    { role: 'user' as const, text }
+      ...prev,
+      ...(contextSnapshot ? [{ role: 'bot' as const, text: contextSnapshot }] : []),
+      { role: 'user' as const, text }
     ]);
-  setLoading(true);
+    setLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
@@ -469,7 +400,6 @@ if (analysisLevel === 'ubs' && selectedUbs) {
   async function clearConversation() {
     if (clearing || loading) return;
     setClearing(true);
-
     const oldSessionId = getSessionId();
     try {
       await fetch('/api/chat', {
@@ -478,7 +408,6 @@ if (analysisLevel === 'ubs' && selectedUbs) {
         body: JSON.stringify({ sessionId: oldSessionId }),
       });
     } catch {}
-
     resetSessionId();
     localStorage.removeItem(MESSAGES_KEY);
     setMessages([INITIAL_MESSAGE_CONSULTANT]);
@@ -493,52 +422,32 @@ if (analysisLevel === 'ubs' && selectedUbs) {
     }
   }
 
-  // Métrica consolidada para a opção Geral
   let geralVal = 0;
   if (indicador === 'desnutricao') {
     geralVal = dadosAno.desnutricao;
   } else if (indicador === 'sobrepeso') {
-    const currentYearRegions = regionalData && regionalData[cleanYear] 
-      ? Object.values(regionalData[cleanYear]) 
-      : [];
+    const currentYearRegions = regionalData && regionalData[cleanYear] ? Object.values(regionalData[cleanYear]) : [];
     if (currentYearRegions.length > 0) {
       let sumSobrepeso = 0, count = 0;
-      currentYearRegions.forEach((reg: any) => {
-        if (typeof reg.sobrepeso === 'number') {
-          sumSobrepeso += reg.sobrepeso;
-          count++;
-        }
-      });
+      currentYearRegions.forEach((reg: any) => { if (typeof reg.sobrepeso === 'number') { sumSobrepeso += reg.sobrepeso; count++; } });
       geralVal = count > 0 ? Number((sumSobrepeso / count).toFixed(2)) : 16.3;
-    } else {
-      geralVal = 16.3;
-    }
+    } else { geralVal = 16.3; }
   } else if (indicador === 'eutrofia') {
     const currentYearRegions = regionalData && regionalData[cleanYear] ? Object.values(regionalData[cleanYear]) : [];
     if (currentYearRegions.length > 0) {
       let sumEutrofia = 0, count = 0;
-      currentYearRegions.forEach((reg: any) => {
-        if (typeof reg.eutrofia === 'number') {
-          sumEutrofia += reg.eutrofia;
-          count++;
-        }
-      });
+      currentYearRegions.forEach((reg: any) => { if (typeof reg.eutrofia === 'number') { sumEutrofia += reg.eutrofia; count++; } });
       geralVal = count > 0 ? Number((sumEutrofia / count).toFixed(2)) : 61.2;
-    } else {
-      geralVal = 61.2;
-    }
+    } else { geralVal = 61.2; }
   } else {
     geralVal = dadosAno.obesidade;
   }
   const geralBadge = getRiskBadge(geralVal, indicador);
 
-  // Dynamic total evaluated students across all UBSs for the selected year
   const totalAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;
     Object.values(schoolMetrics || {}).forEach((sch: any) => {
-      if (sch.anos?.[cleanYear]?.total_avaliados) {
-        totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
-      }
+      if (sch.anos?.[cleanYear]?.total_avaliados) { totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados; }
     });
     return totalSchoolAvaliados;
   }, [schoolMetrics, cleanYear]);
@@ -574,7 +483,6 @@ if (analysisLevel === 'ubs' && selectedUbs) {
             </div>
           </div>
           
-          {/* Signal / Active Context Pill */}
           <div className="flex flex-wrap items-center gap-2 md:ml-auto">
             <div className={`text-[9.5px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 ${
               analysisLevel !== 'municipio' 
@@ -602,7 +510,6 @@ if (analysisLevel === 'ubs' && selectedUbs) {
             </button>
           </div>
 
-          {/* Indicator Toggle */}
           <div className="flex items-center bg-slate-100/60 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl p-0.5 gap-0.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] md:ml-auto">
             {[
               { id: 'obesidade', label: 'Obesidade' },
@@ -669,15 +576,15 @@ if (analysisLevel === 'ubs' && selectedUbs) {
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-teal-50/80 dark:bg-teal-955/20 border border-teal-100 dark:border-teal-900/60 flex items-center justify-center shrink-0 mt-1 opacity-50">
                 <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-500" />
-            </div>
-            <div className="bg-slate-100/60 dark:bg-zinc-800/40 border border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[85%] opacity-60">
-              <ReactMarkdown className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
-                {pendingContext}
-              </ReactMarkdown>
+              </div>
+              <div className="bg-slate-100/60 dark:bg-zinc-800/40 border border-dashed border-slate-300 dark:border-zinc-700 rounded-2xl rounded-tl-sm px-5 py-4 max-w-[85%] opacity-60">
+                <ReactMarkdown className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed">
+                  {pendingContext}
+                </ReactMarkdown>
               </div>
             </div>
           )}
-               <div ref={bottomRef} />
+          <div ref={bottomRef} />
         </div>
 
         <div className="p-5 border-t border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
@@ -704,7 +611,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
         </div>
       </div>
 
-      {/* Right: Geographic Selection Panel (Geral, UBS, Bairros, Escolas) */}
+      {/* Right: Geographic Selection Panel */}
       <div className="w-[40%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
         
         {/* Level Tabs */}
@@ -720,10 +627,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
               return (
                 <button
                   key={lvl.id}
-                  onClick={() => {
-                    setAnalysisLevel(lvl.id as any);
-                    setSearchQuery('');
-                  }}
+                  onClick={() => { setAnalysisLevel(lvl.id as any); setSearchQuery(''); }}
                   className={`flex-1 flex flex-col items-center py-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-350 cursor-pointer ${
                     analysisLevel === lvl.id
                       ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-400 shadow-sm'
@@ -775,9 +679,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
           
           {analysisLevel === 'municipio' && (
             <div
-              onClick={() => {
-                setAnalysisLevel('municipio');
-              }}
+              onClick={() => setAnalysisLevel('municipio')}
               className="p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]"
             >
               <div className="p-2 rounded-xl border border-teal-200/50 dark:border-teal-905/65 shrink-0 bg-teal-50/60 dark:bg-teal-955/20 text-teal-600 dark:text-teal-400 shadow-sm">
@@ -823,27 +725,20 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                 }
                 const badge = getRiskBadge(finalVal, indicador);
                 
-                // Sum the total evaluated students of all schools in this UBS region for this year
                 let ubsTotalEvaluated = 0;
                 Object.values(schoolMetrics || {}).forEach((sch: any) => {
                   if (sch.regiao_ubs === ubs.nome && sch.anos?.[cleanYear]?.total_avaliados) {
                     ubsTotalEvaluated += sch.anos[cleanYear].total_avaliados;
                   }
                 });
-
-                const totalAvaliados = ubsTotalEvaluated > 0 
-                  ? ubsTotalEvaluated 
-                  : (ubsData?.total_avaliados || 1200);
+                const totalAvaliados = ubsTotalEvaluated > 0 ? ubsTotalEvaluated : (ubsData?.total_avaliados || 1200);
 
                 return (
                   <div
                     key={ubs.nome}
                     onClick={() => {
-                      if (isSelected) {
-                        setSelection('municipio', null, null, null);
-                      } else {
-                        setSelection('ubs', ubs.nome, null, null);
-                      }
+                      if (isSelected) { setSelection('municipio', null, null, null); }
+                      else { setSelection('ubs', ubs.nome, null, null); }
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
@@ -874,9 +769,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                 );
               })}
               {filteredUbs.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">
-                  Nenhuma unidade de saúde encontrada.
-                </div>
+                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhuma unidade de saúde encontrada.</div>
               )}
             </>
           )}
@@ -885,48 +778,38 @@ if (analysisLevel === 'ubs' && selectedUbs) {
             <>
               {filteredBairros.map(b => {
                 const isSelected = selectedBairroName === b.nome;
-                
                 const parentUbs = b.parentUbs;
                 const ubsData = regionalData[cleanYear]?.[parentUbs];
                 const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                
                 const baseDes = ubsData && typeof ubsData.desnutricao === 'number' ? ubsData.desnutricao : globalRec.desnutricao;
                 const baseObs = ubsData && typeof ubsData.obesidade === 'number' ? ubsData.obesidade : globalRec.obesidade;
                 const baseSob = ubsData && typeof ubsData.sobrepeso === 'number' ? ubsData.sobrepeso : (globalRec as any).sobrepeso || 16.3;
                 const baseEut = ubsData && typeof ubsData.eutrofia === 'number' ? ubsData.eutrofia : (globalRec as any).eutrofia || 61.2;
-                
                 const bMetric = bairroMetrics[b.nome];
                 const bYearData = bMetric?.anos?.[cleanYear];
-                
                 let pDes = bYearData ? bYearData.desnutricao : baseDes;
                 let pObs = bYearData ? bYearData.obesidade : baseObs;
                 let pSob = bYearData ? bYearData.sobrepeso : baseSob;
                 let pEut = bYearData ? bYearData.eutrofia : baseEut;
-                
                 const scaleDes = Number((pDes * multDes).toFixed(2));
                 const scaleObs = Number((pObs * multObs).toFixed(2));
                 const scaleSob = Number((pSob * ((multObs + 1) / 2)).toFixed(2));
                 const beforeSum = pDes + pObs + pSob;
                 const afterSum = scaleDes + scaleObs + scaleSob;
                 const scaleEut = Math.max(10, Number((pEut - (afterSum - beforeSum)).toFixed(2)));
-                
                 let finalVal = 0;
                 if (indicador === 'desnutricao') finalVal = scaleDes;
                 else if (indicador === 'obesidade') finalVal = scaleObs;
                 else if (indicador === 'sobrepeso') finalVal = scaleSob;
                 else finalVal = scaleEut;
-
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (
                   <div
                     key={b.nome}
                     onClick={() => {
-                      if (isSelected) {
-                        setSelection('ubs', b.parentUbs || null, null, null);
-                      } else {
-                        setSelection('bairro', b.parentUbs || null, b.nome, null);
-                      }
+                      if (isSelected) { setSelection('ubs', b.parentUbs || null, null, null); }
+                      else { setSelection('bairro', b.parentUbs || null, b.nome, null); }
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
@@ -934,19 +817,13 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                         : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
-                      isSelected 
-                        ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
-                        : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
-                    }`}>
+                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${isSelected ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'}`}>
                       <MapPin className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">{b.nome}</h4>
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
-                          {badge.label}
-                        </span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>{badge.label}</span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
                         <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
@@ -957,9 +834,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                 );
               })}
               {filteredBairros.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">
-                  Nenhum bairro encontrado.
-                </div>
+                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhum bairro encontrado.</div>
               )}
             </>
           )}
@@ -968,56 +843,40 @@ if (analysisLevel === 'ubs' && selectedUbs) {
             <>
               {filteredSchools.map(s => {
                 const isSelected = selectedSchoolName === s.nome;
-                
                 const parentUbs = s.regiao_ubs || '';
                 const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
                 const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                
                 const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
                 const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
                 const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3;
                 const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 61.2;
-                
                 const sMetric = schoolMetrics[s.nome];
                 const sYearData = sMetric?.anos?.[cleanYear];
-                
                 let pDes = sYearData ? sYearData.desnutricao : baseDes;
                 let pObs = sYearData ? sYearData.obesidade : baseObs;
                 let pSob = sYearData ? sYearData.sobrepeso : baseSob;
                 let pEut = sYearData ? sYearData.eutrofia : baseEut;
-                
                 const sum = pDes + pObs + pSob + pEut;
-                if (sum > 0) {
-                  pDes = (pDes / sum) * 100;
-                  pObs = (pObs / sum) * 100;
-                  pSob = (pSob / sum) * 100;
-                  pEut = (pEut / sum) * 100;
-                }
-                
+                if (sum > 0) { pDes = (pDes/sum)*100; pObs = (pObs/sum)*100; pSob = (pSob/sum)*100; pEut = (pEut/sum)*100; }
                 const scaleDes = Number((pDes * multDes).toFixed(2));
                 const scaleObs = Number((pObs * multObs).toFixed(2));
                 const scaleSob = Number((pSob * ((multObs + 1) / 2)).toFixed(2));
                 const beforeSum = pDes + pObs + pSob;
                 const afterSum = scaleDes + scaleObs + scaleSob;
                 const scaleEut = Math.max(10, Number((pEut - (afterSum - beforeSum)).toFixed(2)));
-                
                 let finalVal = 0;
                 if (indicador === 'desnutricao') finalVal = scaleDes;
                 else if (indicador === 'obesidade') finalVal = scaleObs;
                 else if (indicador === 'sobrepeso') finalVal = scaleSob;
                 else finalVal = scaleEut;
-
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (
                   <div
                     key={s.nome}
                     onClick={() => {
-                      if (isSelected) {
-                        setSelection('bairro', parentUbs || null, s.bairro || null, null);
-                      } else {
-                        setSelection('escola', parentUbs || null, s.bairro || null, s.nome);
-                      }
+                      if (isSelected) { setSelection('bairro', parentUbs || null, s.bairro || null, null); }
+                      else { setSelection('escola', parentUbs || null, s.bairro || null, s.nome); }
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
@@ -1025,19 +884,13 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                         : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
-                      isSelected 
-                        ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
-                        : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
-                    }`}>
+                    <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${isSelected ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'}`}>
                       <MapPin className="w-4 h-4 text-blue-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
                         <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">{s.nome}</h4>
-                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>
-                          {badge.label}
-                        </span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${badge.bg} shrink-0`}>{badge.label}</span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
                         <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
@@ -1048,9 +901,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
                 );
               })}
               {filteredSchools.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">
-                  Nenhuma escola encontrada.
-                </div>
+                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhuma escola encontrada.</div>
               )}
             </>
           )}
