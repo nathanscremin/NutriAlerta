@@ -277,8 +277,7 @@ export default function ConsultantView() {
     if (analysisLevel === 'ubs' && !selectedUbs) return;
     if (analysisLevel === 'bairro' && !selectedBairroName) return;
     if (analysisLevel === 'escola' && !selectedSchoolName) return;
-
-    if (Object.keys(regionalData).length === 0) return;
+    
     
     prevContextRef.current = contextKey;
 
