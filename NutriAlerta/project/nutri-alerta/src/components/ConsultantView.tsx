@@ -73,7 +73,6 @@ function getRiskBadge(value: number, indicator: string) {
 
 const normalizeQuotes = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019]/g, '"');
 
-// Função unificada para garantir consistência exata de dados entre chatbot e listas laterais
 const calcularValorEscalado = (dataRecord: any, ind: string, mObs: number, mDes: number) => {
   const dObs = dataRecord ? dataRecord.obesidade : 12.93;
   const dDes = dataRecord ? dataRecord.desnutricao : 2.62;
@@ -291,7 +290,7 @@ export default function ConsultantView() {
   const cleanYear = anoSelecionado.replace('★', '').trim();
   const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
 
-useEffect(() => {
+  useEffect(() => {
     const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
     if (prevContextRef.current === '') {
@@ -380,7 +379,7 @@ useEffect(() => {
     prevContextRef.current = 'force-recalc';
   }, [regionalData]);
   
-async function sendMessage() {
+  async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
 
@@ -396,7 +395,6 @@ async function sendMessage() {
 
     const cleanYr = anoSelecionado.replace('★', '').trim();
 
-    // Isola e calcula o registro da região selecionada antes de enviar
     let ubsRecordForChat = null;
     if (analysisLevel === 'ubs' && selectedUbs) {
       ubsRecordForChat = regionalData[cleanYr]?.[selectedUbs] ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
@@ -406,7 +404,6 @@ async function sendMessage() {
       ubsRecordForChat = schoolMetrics[selectedSchoolName]?.anos?.[cleanYr];
     }
 
-    // Passa pela mesma normalização de 100% das listagens
     const chatDesnutricao = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'desnutricao', multObs, multDes) : dadosAno.desnutricao;
     const chatObesidade    = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'obesidade', multObs, multDes) : dadosAno.obesidade;
     const chatSobrepeso    = ubsRecordForChat ? calcularValorEscalado(ubsRecordForChat, 'sobrepeso', multObs, multDes) : dadosAno.sobrepeso;
@@ -446,15 +443,6 @@ async function sendMessage() {
           }
         })
       });
-
-      const data = await res.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.response || data.error || 'Sem resposta.' }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Erro de conexão com a API.' }]);
-    }
-
-    setLoading(false);
-  }
 
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'bot', text: data.response || data.error || 'Sem resposta.' }]);
@@ -774,7 +762,6 @@ async function sendMessage() {
                 const isSelected = selectedUbs === ubs.nome;
                 const ubsData = regionalData[cleanYear]?.[ubs.nome] ?? regionalData[cleanYear]?.[normalizeQuotes(ubs.nome)];
                 
-                // Calcula o valor final usando a mesma função utilitária do chatbot
                 const finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
                 const badge = getRiskBadge(finalVal, indicador);
                 
