@@ -3,6 +3,10 @@ import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
 import { createClient } from '@supabase/supabase-js';
+import { kv } from '@vercel/kv';
+
+const CACHE_KEY = 'nutrialerta_data_cache';
+const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
 
 // Isolated thread-safe authenticated admin client to bypass RLS in the cloud database
 async function getAdminSupabaseClient() {
@@ -65,16 +69,13 @@ async function fetchAndSyncDbData() {
   const cwd = process.cwd();
   console.log('[Supabase Cloud Sync] Starting dynamic cloud database query...');
   
-  // 1. Authenticate with Supabase to bypass RLS policies
   const adminClient = await getAdminSupabaseClient();
   
-  // 2. Fetch all schools
   const { data: dbSchools, error: schoolsErr } = await adminClient.from('escolas').select('*');
   if (schoolsErr) {
     throw new Error(`Failed to fetch schools from Supabase: ${schoolsErr.message}`);
   }
   
-  // 3. Fetch all health records in sequential chunks
   const pageSize = 1000;
   const allRecords: any[] = [];
   let i = 0;
@@ -102,7 +103,6 @@ async function fetchAndSyncDbData() {
   
   console.log(`[Supabase Cloud Sync] Loaded ${allRecords.length} records from Supabase.`);
 
-  // 4. Load spatial mapping POIs
   const poisPath = path.join(cwd, 'src', 'lib', 'extractedPois.json');
   let extractedPois: any[] = [];
   try {
@@ -112,7 +112,6 @@ async function fetchAndSyncDbData() {
     console.warn('[Supabase Cloud Sync] extractedPois.json not found, using empty array.');
   }
 
-  // Map school DB name to POI metadata
   const schoolMap: Record<string, any> = {};
   dbSchools.forEach((s: any) => {
     const norm = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
@@ -131,7 +130,6 @@ async function fetchAndSyncDbData() {
     };
   });
 
-  // If we have records in the database, rebuild Base_Nutricional_Consolidada_Final.csv
   if (allRecords.length > 0) {
     const ubsYearGroups: Record<string, any> = {};
     
@@ -149,16 +147,9 @@ async function fetchAndSyncDbData() {
 
       if (!ubsYearGroups[key]) {
         ubsYearGroups[key] = {
-          cnes,
-          ubsName,
-          ano: year,
-          Magreza_Acentuada_Qtd: 0,
-          Magreza_Qtd: 0,
-          Eutrofia_Qtd: 0,
-          Sobrepeso_Qtd: 0,
-          Obesidade_Qtd: 0,
-          Obesidade_Grave_Qtd: 0,
-          Total: 0
+          cnes, ubsName, ano: year,
+          Magreza_Acentuada_Qtd: 0, Magreza_Qtd: 0, Eutrofia_Qtd: 0,
+          Sobrepeso_Qtd: 0, Obesidade_Qtd: 0, Obesidade_Grave_Qtd: 0, Total: 0
         };
       }
 
@@ -187,29 +178,20 @@ async function fetchAndSyncDbData() {
       const total = g.Total;
       if (total === 0) return;
 
-      const magAcentPct = ((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(6);
-      const magPct = ((g.Magreza_Qtd / total) * 100).toFixed(6);
-      const eutPct = ((g.Eutrofia_Qtd / total) * 100).toFixed(6);
-      const sobPct = ((g.Sobrepeso_Qtd / total) * 100).toFixed(6);
-      const obsPct = ((g.Obesidade_Qtd / total) * 100).toFixed(6);
-      const obsGravePct = ((g.Obesidade_Grave_Qtd / total) * 100).toFixed(6);
-
       const row = [
         'SP', '354390', 'RIO CLARO', g.cnes, g.ubsName,
         '', '', '', '', '', '', '', '',
         total, 'SP', g.ano, '0 a 18 anos',
-        g.Magreza_Acentuada_Qtd, magAcentPct,
-        g.Magreza_Qtd, magPct,
-        g.Eutrofia_Qtd, eutPct,
-        g.Sobrepeso_Qtd, sobPct,
-        g.Obesidade_Qtd, obsPct,
-        g.Obesidade_Grave_Qtd, obsGravePct
+        g.Magreza_Acentuada_Qtd, ((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(6),
+        g.Magreza_Qtd, ((g.Magreza_Qtd / total) * 100).toFixed(6),
+        g.Eutrofia_Qtd, ((g.Eutrofia_Qtd / total) * 100).toFixed(6),
+        g.Sobrepeso_Qtd, ((g.Sobrepeso_Qtd / total) * 100).toFixed(6),
+        g.Obesidade_Qtd, ((g.Obesidade_Qtd / total) * 100).toFixed(6),
+        g.Obesidade_Grave_Qtd, ((g.Obesidade_Grave_Qtd / total) * 100).toFixed(6)
       ];
-
       csvRows.push(row.join(','));
     });
 
-    // Write consolidated CSV data to both folders to trigger ML check
     const csvFilename = 'Base_Nutricional_Consolidada_Final.csv';
     const pathsToUpdate = [
       path.join(cwd, '..', 'csv', csvFilename),
@@ -220,12 +202,10 @@ async function fetchAndSyncDbData() {
     for (const p of pathsToUpdate) {
       try {
         await fs.writeFile(p, csvRows.join('\n'), 'utf8');
-        console.log(`[Supabase Cloud Sync] Wrote dynamic cloud data to CSV: ${p}`);
       } catch (err) {}
     }
   }
 
-  // 5. Build high-fidelity school, neighborhood, and UBS dynamic metrics
   const schoolYearGroups: Record<string, any> = {};
   allRecords.forEach(r => {
     const date = new Date(r.data_coleta);
@@ -235,15 +215,9 @@ async function fetchAndSyncDbData() {
     const key = `${r.escola_id}-${year}`;
     if (!schoolYearGroups[key]) {
       schoolYearGroups[key] = {
-        escola_id: r.escola_id,
-        ano: year,
-        Magreza_Acentuada_Qtd: 0,
-        Magreza_Qtd: 0,
-        Eutrofia_Qtd: 0,
-        Sobrepeso_Qtd: 0,
-        Obesidade_Qtd: 0,
-        Obesidade_Grave_Qtd: 0,
-        Total: 0
+        escola_id: r.escola_id, ano: year,
+        Magreza_Acentuada_Qtd: 0, Magreza_Qtd: 0, Eutrofia_Qtd: 0,
+        Sobrepeso_Qtd: 0, Obesidade_Qtd: 0, Obesidade_Grave_Qtd: 0, Total: 0
       };
     }
 
@@ -293,7 +267,6 @@ async function fetchAndSyncDbData() {
     }, {})
   };
 
-  // Write local JSON cache
   try {
     const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
     await fs.writeFile(jsonDestPath, JSON.stringify(dbConsolidatedResult, null, 2), 'utf8');
@@ -302,7 +275,6 @@ async function fetchAndSyncDbData() {
   return schoolMetrics;
 }
 
-// Define the health units to perform geographical proximity mapping
 const UNIDADES_SAUDE = [
   { nome: "UBS Jardim Chervezon “Dr. Nicolino Maziotti”", categoria: "UBS", lat: -22.385236150603358, lon: -47.564888689845596 },
   { nome: "UBS 29 “Oreste Armando Giovani”", categoria: "UBS", lat: -22.42459370350195, lon: -47.56384685307812 },
@@ -325,12 +297,10 @@ const UNIDADES_SAUDE = [
   { nome: "USF Terra Nova", categoria: "UBS", lat: -22.449226627079025, lon: -47.583233814971415 }
 ];
 
-// Helper to calculate geographical proximity
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
 }
 
-// Map coordinates to standard frontend UBS names
 function findNearestUbsName(lat: number, lon: number) {
   let nearest = null;
   let minDistance = Infinity;
@@ -345,7 +315,6 @@ function findNearestUbsName(lat: number, lon: number) {
   return nearest ? nearest.nome : null;
 }
 
-// Fast CSV Parser
 function parseCSV(content: string) {
   const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
@@ -384,7 +353,6 @@ function parseCSV(content: string) {
   });
 }
 
-// Robust Math Percentages Normalization to sum exactly to targetSum (default 100.00%)
 function normalizePercentages<T extends Record<string, any>>(
   obj: T,
   keys: Array<keyof T>,
@@ -420,7 +388,6 @@ function normalizePercentages<T extends Record<string, any>>(
   return result;
 }
 
-// Dynamic CSV Finder
 async function findCSVFile(filenames: string[]): Promise<string | null> {
   const cwd = process.cwd();
   const checkPaths = [
@@ -501,7 +468,7 @@ function averageTemporalMetrics(records: Array<Record<string, any>>) {
     acc.sobrepeso += Number(record.sobrepeso || 0);
     acc.eutrofia += Number(record.eutrofia || 0);
     return acc;
-  }, { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 });
+  }, { desnutricao: 0, obesity: 0, sobrepeso: 0, eutrofia: 0 });
 
   return normalizePercentages(
     {
@@ -862,6 +829,22 @@ async function loadLocalCsvFallback(cwd: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const isKvConfigured = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+  // ── CACHE READ ──────────────────────────────────────────────────────────────
+  if (isKvConfigured) {
+    try {
+      const cached = await kv.get(CACHE_KEY);
+      if (cached) {
+        console.log('[Cache HIT] Returning cached data');
+        return NextResponse.json(cached);
+      }
+    } catch (e) {
+      console.warn('[Cache] KV read failed, proceeding to full fetch');
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   const cwd = process.cwd();
   let sourceMeta: SourceMeta = {
     source: 'supabase',
@@ -1010,7 +993,7 @@ export async function GET(req: NextRequest) {
       yearsList = temporalData.map((entry) => entry.ano);
     }
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       temporalData,
       regionalData,
@@ -1019,7 +1002,20 @@ export async function GET(req: NextRequest) {
       demographicData,
       yearsList,
       sourceMeta
-    });
+    };
+
+    // ── CACHE WRITE ─────────────────────────────────────────────────────────────
+    if (isKvConfigured) {
+      try {
+        await kv.set(CACHE_KEY, responseData, { ex: CACHE_TTL });
+        console.log('[Cache] Data cached for 6 hours');
+      } catch (e) {
+        console.warn('[Cache] KV write failed');
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────────
+
+    return NextResponse.json(responseData);
   } catch (error: any) {
     console.error('API Dynamic Data Error:', error);
     return NextResponse.json({
