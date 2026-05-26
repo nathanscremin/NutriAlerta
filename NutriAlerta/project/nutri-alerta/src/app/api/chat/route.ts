@@ -314,6 +314,7 @@ const chat = model.startChat({ history: historyForAPI });
 const result = await chat.sendMessage(message);
 
 const parts = result.response.candidates?.[0]?.content?.parts ?? [];
+// Adicionando console.log
 console.log('🧠 parts:', JSON.stringify(parts.map((p: any) => ({ thought: p.thought, len: p.text?.length }))));
 const thinking = parts
   .filter((p: any) => p.thought === true)
