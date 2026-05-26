@@ -336,7 +336,8 @@ export default function ConsultantView() {
   prevContextRef.current = contextKey;
     
   const cleanYr = anoSelecionado.replace('★', '').trim();
-
+}
+            
 let valorIndicador = 0;
     
 // DEBUG 
