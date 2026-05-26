@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 interface Message {
   role: 'user' | 'bot';
   text: string;
+  thinking?: string | null;
 }
 
 const SESSION_KEY = 'nutribot_especialista_session';
