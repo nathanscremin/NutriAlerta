@@ -301,13 +301,13 @@ export async function POST(req: NextRequest) {
       const historyForAPI = [...historyFromDB];
 
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
+  model: 'gemini-2.5-flash-preview-04-17',
   systemInstruction: {
     role: "system",
     parts: [{ text: systemInstruction }]
   },
   generationConfig: {
-    thinkingConfig: { thinkingBudget: 800 }  
+    thinkingConfig: { thinkingBudget: 5000 }  
   } as any
 });
 const chat = model.startChat({ history: historyForAPI });
