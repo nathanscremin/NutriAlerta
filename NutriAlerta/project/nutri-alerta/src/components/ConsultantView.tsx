@@ -95,6 +95,15 @@ function ThinkingBubble({ thinking }: { thinking: string }) {
   );
 }
 
+const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
+  if (!data || !name) return undefined;
+  if (data[name]) return data[name];
+  const normalize = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019"]/g, '').toLowerCase().trim();
+  const normalizedName = normalize(name);
+  const key = Object.keys(data).find(k => normalize(k) === normalizedName);
+  return key ? data[key] : undefined;
+};
+
 export default function ConsultantView() {
   const { 
     anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
