@@ -300,28 +300,30 @@ export async function POST(req: NextRequest) {
       const systemInstruction = getSystemInstruction(context, contextoRAG);
       const historyForAPI = [...historyFromDB];
 
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.5-flash',
-        systemInstruction: {
-          role: "system",
-          parts: [{ text: systemInstruction }]
-        }
-      });
-      const chat = model.startChat({ history: historyForAPI });
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-2.5-flash',
+  systemInstruction: {
+    role: "system",
+    parts: [{ text: systemInstruction }]
+  },
+  generationConfig: {
+    thinkingConfig: { thinkingBudget: 800 }  
+  } as any
+});
+const chat = model.startChat({ history: historyForAPI });
+const result = await chat.sendMessage(message);
 
-      const result = await chat.sendMessage(message);
-      const text = result.response.text();
+const parts = result.response.candidates?.[0]?.content?.parts ?? [];
+const thinking = parts
+  .filter((p: any) => p.thought === true)
+  .map((p: any) => p.text)
+  .join('');
+const text = parts
+  .filter((p: any) => !p.thought)
+  .map((p: any) => p.text)
+  .join('') || result.response.text();
 
-      if (isKvConfigured) {
-        try {
-          const updatedHistory = await chat.getHistory();
-          await kv.set(sessionId, updatedHistory);
-        } catch (kvErr) {
-          console.warn("Vercel KV write failed:", kvErr);
-        }
-      }
-
-      return NextResponse.json({ response: text });
+return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
