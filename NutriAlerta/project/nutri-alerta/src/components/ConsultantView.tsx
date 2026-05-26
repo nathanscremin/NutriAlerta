@@ -72,6 +72,28 @@ function getRiskBadge(value: number, indicator: string) {
 }
 
 const normalizeQuotes = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019]/g, '"');
+
+// Função unificada para garantir consistência exata de dados entre chatbot e listas laterais
+const calcularValorEscalado = (dataRecord: any, ind: string, mObs: number, mDes: number) => {
+  const dObs = dataRecord ? dataRecord.obesidade : 12.93;
+  const dDes = dataRecord ? dataRecord.desnutricao : 2.62;
+  const dSob = dataRecord ? dataRecord.sobrepeso : 16.3;
+  const dEut = dataRecord ? dataRecord.eutrofia : 61.2;
+
+  if (ind === 'eutrofia') {
+    const scaleDes = Number((dDes * mDes).toFixed(2));
+    const scaleObs = Number((dObs * mObs).toFixed(2));
+    const scaleSob = Number((dSob * ((mObs + 1) / 2)).toFixed(2));
+    const beforeSum = dDes + dObs + dSob;
+    const afterSum = scaleDes + scaleObs + scaleSob;
+    return Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+  }
+
+  if (ind === 'desnutricao') return Number((dDes * mDes).toFixed(2));
+  if (ind === 'sobrepeso') return Number((dSob * ((mObs + 1) / 2)).toFixed(2));
+  return Number((dObs * mObs).toFixed(2)); // obesidade
+};
+
 export default function ConsultantView() {
   const { 
     anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
@@ -139,15 +161,6 @@ export default function ConsultantView() {
     return list.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const filteredSearchSuggestions = React.useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    let list = schoolsList.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (selectedBairroName) {
-      list = list.filter(s => s.bairro === selectedBairroName);
-    }
-    return list.slice(0, 5);
-  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
-
   const { multObs, multDes } = React.useMemo(() => {
     let mObs = 1;
     let mDes = 1;
@@ -184,7 +197,7 @@ export default function ConsultantView() {
       const ubsName = selectedUbs;
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
-        const yrRecord = ubsName ? regionalData[cleanYr]?.[ubsName] : null;
+        const yrRecord = ubsName ? regionalData[cleanYr]?.[ubsName] || regionalData[cleanYr]?.[normalizeQuotes(ubsName)] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -200,7 +213,7 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
-        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] : null;
+        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? regionalData[cleanYr]?.[bairroMetrics[bName].regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bairroMetrics[bName].regiao_ubs)] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -216,7 +229,7 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
-        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] : null;
+        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? regionalData[cleanYr]?.[schoolMetrics[schoolName].regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(schoolMetrics[schoolName].regiao_ubs)] : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 0, obesidade: 0, sobrepeso: 15.2, eutrofia: 58 };
         return {
           ano: yr,
@@ -265,16 +278,13 @@ export default function ConsultantView() {
   useEffect(() => {
     const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
 
-    // Inicialização: guarda o contexto inicial sem disparar preview
     if (prevContextRef.current === '') {
       prevContextRef.current = contextKey;
       return;
     }
 
-    // Sem mudança de contexto
     if (prevContextRef.current === contextKey) return;
 
-    // Aguarda seleção específica quando o nível exige uma
     if (analysisLevel === 'ubs' && !selectedUbs) return;
     if (analysisLevel === 'bairro' && !selectedBairroName) return;
     if (analysisLevel === 'escola' && !selectedSchoolName) return;
@@ -285,21 +295,28 @@ export default function ConsultantView() {
 
     let valorIndicador = 0;
     if (analysisLevel === 'ubs' && selectedUbs) {
-    const ubsData = regionalData[cleanYr]?.[selectedUbs] 
-             ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
-      if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
-        valorIndicador = ubsData[indicador as keyof typeof ubsData] as number;
-      } else {
-        // Fallback: temporalData global (mesma fonte da lista lateral)
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
-        valorIndicador = (globalRec as any)?.[indicador] ?? 0;
-      }
+      const ubsData = regionalData[cleanYr]?.[selectedUbs] 
+               ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
+      valorIndicador = calcularValorEscalado(ubsData, indicador, multObs, multDes);
     } else if (analysisLevel === 'bairro' && selectedBairroName) {
-      const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
-      valorIndicador = bData?.[indicador] ?? 0;
+      const bMetric = bairroMetrics[selectedBairroName];
+      const bYearData = bMetric?.anos?.[cleanYr];
+      if (bYearData) {
+        valorIndicador = bYearData[indicador as keyof typeof bYearData] ?? 0;
+      } else {
+        const ubsRecord = bMetric?.regiao_ubs ? regionalData[cleanYr]?.[bMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(bMetric.regiao_ubs)] : null;
+        valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
+      }
     } else if (analysisLevel === 'escola' && selectedSchoolName) {
-      const sData = (schoolMetrics as any)[selectedSchoolName]?.anos?.[cleanYr];
-      valorIndicador = sData?.[indicador] ?? 0;
+      const sMetric = schoolMetrics[selectedSchoolName];
+      const sYearData = sMetric?.anos?.[cleanYr];
+      if (sYearData) {
+        // Escala os dados brutos da escola de forma semelhante à lista
+        valorIndicador = calcularValorEscalado(sYearData, indicador, multObs, multDes);
+      } else {
+        const ubsRecord = sMetric?.regiao_ubs ? regionalData[cleanYr]?.[sMetric.regiao_ubs] || regionalData[cleanYr]?.[normalizeQuotes(sMetric.regiao_ubs)] : null;
+        valorIndicador = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
+      }
     } else {
       const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
       valorIndicador = (globalRec as any)?.[indicador] ?? 0;
@@ -339,14 +356,14 @@ export default function ConsultantView() {
     setPendingContext(
       `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
     );
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData, multObs, multDes]);
 
   useEffect(() => {
-  if (!regionalData || Object.keys(regionalData).length === 0) return;
-  if (analysisLevel === 'municipio') return;
-  if (!selectedUbs && !selectedBairroName && !selectedSchoolName) return;
-  prevContextRef.current = 'force-recalc';
-}, [regionalData]);
+    if (!regionalData || Object.keys(regionalData).length === 0) return;
+    if (analysisLevel === 'municipio') return;
+    if (!selectedUbs && !selectedBairroName && !selectedSchoolName) return;
+    prevContextRef.current = 'force-recalc';
+  }, [regionalData]);
   
   async function sendMessage() {
     const text = input.trim();
@@ -640,7 +657,7 @@ export default function ConsultantView() {
                   className={`flex-1 flex flex-col items-center py-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-350 cursor-pointer ${
                     analysisLevel === lvl.id
                       ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-400 shadow-sm'
-                      : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
+                      : 'text-slate-550 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 mb-1 ${analysisLevel === lvl.id ? 'text-teal-655 dark:text-teal-400' : 'text-slate-405 dark:text-zinc-500'}`} />
@@ -701,7 +718,7 @@ export default function ConsultantView() {
                     {geralBadge.label}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
+                <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
                   <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{geralVal}%</strong></span>
                   <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliadosStr}</strong></span>
                 </div>
@@ -714,24 +731,9 @@ export default function ConsultantView() {
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
                 const ubsData = regionalData[cleanYear]?.[ubs.nome] ?? regionalData[cleanYear]?.[normalizeQuotes(ubs.nome)];
-                let val = ubsData ? ubsData[indicador] : (indicador === 'desnutricao' ? 2.62 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
-
-                let finalVal = 0;
-                if (indicador === 'eutrofia') {
-                  const dObs = ubsData ? ubsData.obesidade : 12.93;
-                  const dDes = ubsData ? ubsData.desnutricao : 2.62;
-                  const dSob = ubsData ? ubsData.sobrepeso : 16.3;
-                  const dEut = ubsData ? ubsData.eutrofia : 61.2;
-                  const scaleDes = Number((dDes * multDes).toFixed(2));
-                  const scaleObs = Number((dObs * multObs).toFixed(2));
-                  const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
-                  const beforeSum = dDes + dObs + dSob;
-                  const afterSum = scaleDes + scaleObs + scaleSob;
-                  finalVal = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
-                } else {
-                  const multiplier = indicador === 'desnutricao' ? multDes : multObs;
-                  finalVal = Number((val * multiplier).toFixed(2));
-                }
+                
+                // Calcula o valor final usando a mesma função utilitária do chatbot
+                const finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
                 const badge = getRiskBadge(finalVal, indicador);
                 
                 let ubsTotalEvaluated = 0;
@@ -740,7 +742,7 @@ export default function ConsultantView() {
                     ubsTotalEvaluated += sch.anos[cleanYear].total_avaliados;
                   }
                 });
-                const totalAvaliados = ubsTotalEvaluated > 0 ? ubsTotalEvaluated : (ubsData?.total_avaliados || 1200);
+                const totalAvaliadosUbs = ubsTotalEvaluated > 0 ? ubsTotalEvaluated : (ubsData?.total_avaliados || 1200);
 
                 return (
                   <div
@@ -771,7 +773,7 @@ export default function ConsultantView() {
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
                         <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{finalVal}%</strong></span>
-                        <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliados}</strong></span>
+                        <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliadosUbs}</strong></span>
                       </div>
                     </div>
                   </div>
@@ -788,29 +790,16 @@ export default function ConsultantView() {
               {filteredBairros.map(b => {
                 const isSelected = selectedBairroName === b.nome;
                 const parentUbs = b.parentUbs;
-                const ubsData = regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)];
-                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                const baseDes = ubsData && typeof ubsData.desnutricao === 'number' ? ubsData.desnutricao : globalRec.desnutricao;
-                const baseObs = ubsData && typeof ubsData.obesidade === 'number' ? ubsData.obesidade : globalRec.obesidade;
-                const baseSob = ubsData && typeof ubsData.sobrepeso === 'number' ? ubsData.sobrepeso : (globalRec as any).sobrepeso || 16.3;
-                const baseEut = ubsData && typeof ubsData.eutrofia === 'number' ? ubsData.eutrofia : (globalRec as any).eutrofia || 61.2;
                 const bMetric = bairroMetrics[b.nome];
                 const bYearData = bMetric?.anos?.[cleanYear];
-                let pDes = bYearData ? bYearData.desnutricao : baseDes;
-                let pObs = bYearData ? bYearData.obesidade : baseObs;
-                let pSob = bYearData ? bYearData.sobrepeso : baseSob;
-                let pEut = bYearData ? bYearData.eutrofia : baseEut;
-                const scaleDes = Number((pDes * multDes).toFixed(2));
-                const scaleObs = Number((pObs * multObs).toFixed(2));
-                const scaleSob = Number((pSob * ((multObs + 1) / 2)).toFixed(2));
-                const beforeSum = pDes + pObs + pSob;
-                const afterSum = scaleDes + scaleObs + scaleSob;
-                const scaleEut = Math.max(10, Number((pEut - (afterSum - beforeSum)).toFixed(2)));
+                
                 let finalVal = 0;
-                if (indicador === 'desnutricao') finalVal = scaleDes;
-                else if (indicador === 'obesidade') finalVal = scaleObs;
-                else if (indicador === 'sobrepeso') finalVal = scaleSob;
-                else finalVal = scaleEut;
+                if (bYearData) {
+                  finalVal = calcularValorEscalado(bYearData, indicador, multObs, multDes);
+                } else {
+                  const ubsData = regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)];
+                  finalVal = calcularValorEscalado(ubsData, indicador, multObs, multDes);
+                }
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (
@@ -853,33 +842,16 @@ export default function ConsultantView() {
               {filteredSchools.map(s => {
                 const isSelected = selectedSchoolName === s.nome;
                 const parentUbs = s.regiao_ubs || '';
-                const ubsRecord = parentUbs 
-                ? (regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)])
-                : null;
-                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
-                const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
-                const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3;
-                const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 61.2;
                 const sMetric = schoolMetrics[s.nome];
                 const sYearData = sMetric?.anos?.[cleanYear];
-                let pDes = sYearData ? sYearData.desnutricao : baseDes;
-                let pObs = sYearData ? sYearData.obesidade : baseObs;
-                let pSob = sYearData ? sYearData.sobrepeso : baseSob;
-                let pEut = sYearData ? sYearData.eutrofia : baseEut;
-                const sum = pDes + pObs + pSob + pEut;
-                if (sum > 0) { pDes = (pDes/sum)*100; pObs = (pObs/sum)*100; pSob = (pSob/sum)*100; pEut = (pEut/sum)*100; }
-                const scaleDes = Number((pDes * multDes).toFixed(2));
-                const scaleObs = Number((pObs * multObs).toFixed(2));
-                const scaleSob = Number((pSob * ((multObs + 1) / 2)).toFixed(2));
-                const beforeSum = pDes + pObs + pSob;
-                const afterSum = scaleDes + scaleObs + scaleSob;
-                const scaleEut = Math.max(10, Number((pEut - (afterSum - beforeSum)).toFixed(2)));
+                
                 let finalVal = 0;
-                if (indicador === 'desnutricao') finalVal = scaleDes;
-                else if (indicador === 'obesidade') finalVal = scaleObs;
-                else if (indicador === 'sobrepeso') finalVal = scaleSob;
-                else finalVal = scaleEut;
+                if (sYearData) {
+                  finalVal = calcularValorEscalado(sYearData, indicador, multObs, multDes);
+                } else {
+                  const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] ?? regionalData[cleanYear]?.[normalizeQuotes(parentUbs)] : null;
+                  finalVal = calcularValorEscalado(ubsRecord, indicador, multObs, multDes);
+                }
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (
