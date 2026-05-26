@@ -80,18 +80,34 @@ const calcularValorEscalado = (dataRecord: any, ind: string, mObs: number, mDes:
   const dSob = dataRecord ? dataRecord.sobrepeso : 16.3;
   const dEut = dataRecord ? dataRecord.eutrofia : 61.2;
 
-  if (ind === 'eutrofia') {
-    const scaleDes = Number((dDes * mDes).toFixed(2));
-    const scaleObs = Number((dObs * mObs).toFixed(2));
-    const scaleSob = Number((dSob * ((mObs + 1) / 2)).toFixed(2));
-    const beforeSum = dDes + dObs + dSob;
-    const afterSum = scaleDes + scaleObs + scaleSob;
-    return Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+  const scaleDes = Number((dDes * mDes).toFixed(2));
+  const scaleObs = Number((dObs * mObs).toFixed(2));
+  const scaleSob = Number((dSob * ((mObs + 1) / 2)).toFixed(2));
+  
+  const beforeSum = dDes + dObs + dSob;
+  const afterSum = scaleDes + scaleObs + scaleSob;
+  const scaleEut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+
+  const sum = scaleDes + scaleSob + scaleObs + scaleEut;
+  
+  const norm = {
+    desnutricao: Number(((scaleDes / sum) * 100).toFixed(2)),
+    sobrepeso: Number(((scaleSob / sum) * 100).toFixed(2)),
+    obesidade: Number(((scaleObs / sum) * 100).toFixed(2)),
+    eutrofia: Number(((scaleEut / sum) * 100).toFixed(2))
+  };
+
+  const diff = Number((100 - (norm.desnutricao + norm.sobrepeso + norm.obesidade + norm.eutrofia)).toFixed(2));
+  if (diff !== 0) {
+    let maxK: keyof typeof norm = 'eutrofia';
+    let maxV = norm[maxK];
+    (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
+      if (norm[k] > maxV) { maxV = norm[k]; maxK = k; }
+    });
+    norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
   }
 
-  if (ind === 'desnutricao') return Number((dDes * mDes).toFixed(2));
-  if (ind === 'sobrepeso') return Number((dSob * ((mObs + 1) / 2)).toFixed(2));
-  return Number((dObs * mObs).toFixed(2)); // obesidade
+  return norm[ind as keyof typeof norm];
 };
 
 export default function ConsultantView() {
