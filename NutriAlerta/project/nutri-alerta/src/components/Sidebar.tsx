@@ -243,8 +243,7 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Filtros Globais — Visíveis em todas as telas, exceto no Consultor */}
-        {viewMode !== 'consultant' && (
+        {/* Filtros Globais — Visíveis em todas as telas */}
           <div className="space-y-6">
             {/* Ano de Referência */}
             <div>
@@ -570,7 +569,7 @@ export default function Sidebar() {
               </div>
             </div>
           </div>
-        )}
+
 
         {/* Separador Fixo */}
         <div className="border-t border-slate-100 dark:border-zinc-900/40" />

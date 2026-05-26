@@ -66,21 +66,21 @@ export default function UrbanConflictSection() {
           tooltip="Mapeamento de parques, praças e complexos esportivos para fomento de atividade física."
         />
         <KpiCard
-          label="Fast Food"
+          label="Alimentação Rápida"
           value={AMBIENTE_OBESOGENICO.length}
           icon={<Utensils className="w-4 h-4 text-red-600 dark:text-red-400" />}
-          colorClass="bg-red-50/50 dark:bg-red-950/20 border-red-100/40 dark:border-red-900/35"
+          colorClass="bg-red-50/50 dark:bg-red-955/20 border-red-100/40 dark:border-red-900/35"
           textColor="text-red-700 dark:text-red-400"
-          tooltip="Lanchonetes, restaurantes de comida rápida e conveniências com alto risco obesogênico."
+          tooltip="Mapeamento de lanchonetes e redes de alimentação rápida com predomínio de ultraprocessados."
         />
         <KpiCard
-          label="Índice de Risco"
+          label="Índice de Concentração"
           value={`${ratioRisco}%`}
           icon={<ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
-          colorClass="bg-amber-50/50 dark:bg-amber-950/20 border-amber-100/40 dark:border-amber-900/35"
+          colorClass="bg-amber-50/50 dark:bg-amber-955/20 border-amber-100/40 dark:border-amber-900/35"
           textColor="text-amber-700 dark:text-amber-400"
-          subtitle="do total são fatores de risco"
-          tooltip="Percentual de estabelecimentos de risco sobre o total mapeado na infraestrutura alimentar local."
+          subtitle="do total mapeado na região"
+          tooltip="Percentual de estabelecimentos de alimentação rápida em relação à infraestrutura alimentar total."
         />
       </div>
 
@@ -91,14 +91,14 @@ export default function UrbanConflictSection() {
         <div className="w-full md:w-[65%] bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl overflow-hidden relative shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300">
           <div className="absolute top-3 left-3 z-10 pointer-events-none">
             <p className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm">
-              Mapa de Conflito Urbano — Pântanos Alimentares
+              Mapa de Análise Territorial — Distribuição de Equipamentos
             </p>
           </div>
           {/* Legenda */}
           <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
             <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-[9px] font-bold">Fast Food / Conveniência</span>
+              <span className="text-[9px] font-bold">Alimentação Rápida / Conveniência</span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -118,7 +118,7 @@ export default function UrbanConflictSection() {
             Proporção de Infraestrutura
           </h3>
           <p className="text-[10px] text-slate-500 dark:text-zinc-400 mb-3 font-semibold">
-            Saudável (Mercados + Esportes) vs. Risco (Fast Food + Conv.)
+            Saudável (Mercados + Esportes) vs. Alternativas Rápidas
           </p>
           <div className="flex-1">
             {mounted ? (
@@ -167,12 +167,12 @@ export default function UrbanConflictSection() {
             
             <div className={`rounded-xl p-3 border text-[10px] leading-relaxed font-semibold transition-colors duration-200 shadow-sm relative z-0 ${
               Number(ratioRisco) > 20
-                ? 'bg-red-50/55 dark:bg-red-955/10 border-red-100/60 dark:border-red-900/40 text-red-700 dark:text-red-405'
+                ? 'bg-red-50/55 dark:bg-red-955/10 border-red-100/60 dark:border-red-900/40 text-red-700 dark:text-red-400'
                 : 'bg-emerald-50/55 dark:bg-emerald-955/10 border-emerald-100/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-450'
             }`}>
               {Number(ratioRisco) > 20
-                ? `⚠️ ${ratioRisco}% da infraestrutura mapeada é obesogênica. Regiões sem praças/mercados próximos configuram Pântanos Alimentares críticos.`
-                : `✅ Boa proporção de fatores protetivos (${(100 - Number(ratioRisco)).toFixed(1)}%). Monitore concentrações de fast food sem cobertura verde.`
+                ? `⚠️ ${ratioRisco}% da infraestrutura mapeada nesta região é composta por estabelecimentos de fast-food e conveniência. Recomenda-se incentivar opções de alimentação saudável.`
+                : `✅ Excelente equilíbrio territorial com ${(100 - Number(ratioRisco)).toFixed(1)}% de opções saudáveis e áreas de lazer ativas.`
               }
             </div>
           </div>

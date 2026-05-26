@@ -3,8 +3,30 @@ import React, { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getDemographicsForUbs } from '@/lib/demographics';
 import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Users2, ShieldCheck, TrendingUp, TrendingDown, HelpCircle, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { 
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, Tooltip as RechartsTooltip 
+} from 'recharts';
+import { 
+  Info, Mars, Venus 
+} from 'lucide-react';
+
+// ── Custom Tooltip for Recharts Prevalence Bar Chart ───────────────────────────
+const CustomChartTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-zinc-800/80 rounded-xl p-3 shadow-lg text-xs transition-all">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: data.fill }} />
+        <span className="font-extrabold text-slate-800 dark:text-[#f5f5f7]">{data.name}</span>
+      </div>
+      <p className="text-slate-500 dark:text-zinc-400 font-semibold leading-none">
+        Prevalência: <span className="font-mono font-black text-slate-900 dark:text-white">{Number(data.value).toFixed(2)}%</span>
+      </p>
+    </div>
+  );
+};
 
 export default function DemographicsSection() {
   const { 
@@ -46,7 +68,7 @@ export default function DemographicsSection() {
     };
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-  // Calcula os dados demográficos
+  // Calcula os dados demográficos determinísticos
   const demoData = useMemo(() => {
     const focusName = analysisLevel === 'escola' 
       ? selectedSchoolName 
@@ -66,206 +88,138 @@ export default function DemographicsSection() {
 
   const activeGroup = demoData.ageGroups[activeGroupIndex];
 
-
-  // Helper para renderizar a barra de progresso de gênero
-  const renderGenderBar = (label: string, rate: number, male: number, female: number, badgeBg: string) => {
-    const isMaleGreater = male > female;
-    const diff = Math.abs(male - female);
-    
+  // Helper para renderizar os cards de distribuição de gênero (sem tags/badges artificiais)
+  const renderGenderBarCard = (
+    title: string,
+    rate: number,
+    male: number,
+    female: number,
+    accentColor: string,
+    borderColor: string
+  ) => {
     return (
-      <div className="space-y-2 bg-slate-50/50 dark:bg-zinc-800/30 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/40">
-        <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="text-slate-700 dark:text-zinc-300 font-semibold">{label}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black text-slate-800 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded border dark:border-zinc-700/60">{rate.toFixed(2)}%</span>
-            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${badgeBg} border`}>
-              {diff <= 1 ? "Equilibrado" : isMaleGreater ? "Meninos +" : "Meninas +"}
+      <div className={`rounded-xl p-4.5 border bg-white dark:bg-slate-950 transition-all duration-300 hover:shadow-md ${borderColor} relative group overflow-hidden`}>
+        <div className="flex items-center justify-between mb-3.5">
+          <span className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">{title}</span>
+          <span className={`text-[10px] font-bold ${accentColor}`}>{rate.toFixed(2)}%</span>
+        </div>
+
+        <div className="space-y-2.5">
+          {/* Custom Progress Bar */}
+          <div className="relative h-2 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex border border-slate-200/20 dark:border-zinc-900/30">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${male}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full bg-blue-500"
+              title={`Meninos: ${male}%`}
+            />
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${female}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full bg-rose-500"
+              title={`Meninas: ${female}%`}
+            />
+          </div>
+
+          {/* Legend percentages with icons */}
+          <div className="flex justify-between items-center text-[10px] font-bold">
+            <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+              <Mars className="w-3.5 h-3.5" />
+              Meninos: <span className="font-mono">{male}%</span>
+            </span>
+            <span className="flex items-center gap-1 text-rose-600 dark:text-rose-500">
+              <Venus className="w-3.5 h-3.5" />
+              Meninas: <span className="font-mono">{female}%</span>
             </span>
           </div>
-        </div>
-
-        {/* Barra de Progresso Dupla */}
-        <div className="relative h-3 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${male}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full bg-blue-500"
-            title={`Meninos: ${male}%`}
-          />
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${female}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full bg-red-500"
-            title={`Meninas: ${female}%`}
-          />
-        </div>
-
-        {/* Legenda das Porcentagens */}
-        <div className="flex justify-between text-[10px] font-semibold text-slate-500 dark:text-zinc-400">
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Meninos: {male}%
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            Meninas: {female}%
-          </span>
         </div>
       </div>
     );
   };
 
-  // Texto explicativo dinâmico baseado na faixa selecionada
-  const groupInsightText = useMemo(() => {
-    if (!demoData || !demoData.ageGroups || demoData.ageGroups.length < 4) return "";
-    
-    const g0 = demoData.ageGroups[0];
-    const g1 = demoData.ageGroups[1];
-    const g2 = demoData.ageGroups[2];
-    const g3 = demoData.ageGroups[3];
-
-    switch (activeGroupIndex) {
-      case 0:
-        return `Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos representam ${g0.desnutricao.pctMasculino}% do predomínio em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida (taxa de prevalência local de ${g0.desnutricao.rate.toFixed(2)}%).`;
-      case 1:
-        return `Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com predomínio de ${g1.sobrepeso.pctFeminino}% das meninas para sobrepeso (taxa de prevalência local de ${g1.sobrepeso.rate.toFixed(2)}%).`;
-      case 2:
-        return `Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos com ${g2.obesidade.pctMasculino}% da prevalência (taxa de prevalência local de ${g2.obesidade.rate.toFixed(2)}%).`;
-      case 3:
-      default:
-        return `Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas com ${g3.sobrepeso.pctFeminino}% dos casos, impulsionada por fatores hormonais e fisiológicos do desenvolvimento (taxa de prevalência local de ${g3.sobrepeso.rate.toFixed(2)}%).`;
-    }
-  }, [activeGroupIndex, demoData]);
+  // Estrutura de dados para o gráfico Recharts da Faixa Etária Ativa
+  const chartData = useMemo(() => {
+    return [
+      { name: 'Peso Adequado', value: activeGroup.eutrofia.rate, fill: '#0d9488' },
+      { name: 'Sobrepeso', value: activeGroup.sobrepeso.rate, fill: '#d97706' },
+      { name: 'Obesidade', value: activeGroup.obesidade.rate, fill: '#f43f5e' },
+      { name: 'Desnutrição', value: activeGroup.desnutricao.rate, fill: '#2563eb' }
+    ];
+  }, [activeGroup]);
 
   return (
-    <div className="space-y-5 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 shadow-sm transition-colors duration-300">
+    <div className="space-y-7 bg-white dark:bg-slate-950 border border-slate-200/50 dark:border-zinc-800/50 rounded-xl p-7 shadow-sm transition-colors duration-300">
       
-      {/* Cabeçalho da Seção */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-indigo-600 dark:text-indigo-400 shadow-inner">
-            <Users2 className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-              Análise Demográfica Escolar
-            </h3>
-            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
-              Idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
-            </p>
-          </div>
+      {/* 1. Dashboard Header (Sem ícones decorativos ou badges de escopo/tags) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
+        <div>
+          <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+            Análise Epidemiológica Escolar
+          </h2>
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
+            Indicadores demográficos, idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
+          </p>
         </div>
-
-        {/* Selo do Indicador */}
-        <div className="text-[10px] text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-lg px-2.5 py-1.5 font-bold self-start sm:self-center shadow-sm">
-          Filtro: {
-            analysisLevel === 'escola'
-              ? `Escola ${selectedSchoolName}`
-              : analysisLevel === 'bairro'
-                ? `Bairro ${selectedBairroName}`
-                : analysisLevel === 'ubs'
-                  ? selectedUbs
-                  : 'Consolidado Rio Claro'
-          }
-        </div>
-
       </div>
 
-      {/* Grid de Idades Médias Globais */}
+      {/* 2. Top-tier KPI Cards Grid (Average Ages - Clean Visual) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Card Peso Adequado */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100/40 dark:border-emerald-900/35 shrink-0 shadow-sm">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeEut}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Peso Adequado (Teal) */}
+        <KpiCard
+          label="Idade Média · Peso Adequado"
+          value={demoData.globalAvgAgeEut}
+          accentColor="text-teal-600 dark:text-teal-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de peso saudável nesta localidade."
+        />
 
-        {/* Card Obesidade */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-red-50/50 dark:bg-red-955/20 text-red-650 dark:text-red-400 border border-red-100/40 dark:border-red-900/35 shrink-0 shadow-sm">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Obesidade</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeObs}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Obesidade (Rose) */}
+        <KpiCard
+          label="Idade Média · Obesidade"
+          value={demoData.globalAvgAgeObs}
+          accentColor="text-rose-600 dark:text-rose-455"
+          tooltip="Idade média dos indivíduos com diagnóstico de obesidade clínica."
+        />
 
-        {/* Card Sobrepeso */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-955/20 text-amber-650 dark:text-amber-400 border border-amber-100/40 dark:border-amber-900/35 shrink-0 shadow-sm">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Sobrepeso</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeSob}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Sobrepeso (Amber) */}
+        <KpiCard
+          label="Idade Média · Sobrepeso"
+          value={demoData.globalAvgAgeSob}
+          accentColor="text-amber-600 dark:text-amber-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de sobrepeso nesta região."
+        />
 
-        {/* Card Desnutrição */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-955/20 text-blue-650 dark:text-blue-450 border border-blue-100/40 dark:border-blue-900/35 shrink-0 shadow-sm">
-            <TrendingDown className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeDes}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
-
+        {/* KPI Desnutrição (Blue) */}
+        <KpiCard
+          label="Idade Média · Desnutrição"
+          value={demoData.globalAvgAgeDes}
+          accentColor="text-blue-600 dark:text-blue-400"
+          tooltip="Idade média dos indivíduos com quadro clínico de magreza ou desnutrição."
+        />
       </div>
 
-      {/* Seletor de Faixas Etárias (Tabs Interativas) */}
-      <div>
-        <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-2.5">
-          Escolha a Faixa Etária Escolar para Detalhar:
+      {/* 3. Seletor de Faixas Etárias (Interactive Rounded Tabs) */}
+      <div className="space-y-3">
+        <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest block leading-none">
+          Faixa Etária em Foco:
         </span>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/60 dark:border-zinc-800/80 p-1.5 rounded-2xl">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 bg-slate-50 dark:bg-zinc-900/30 border border-slate-200/50 dark:border-zinc-800/80 p-1.5 rounded-xl shadow-inner">
           {demoData.ageGroups.map((group, index) => {
             const isActive = activeGroupIndex === index;
             return (
               <button
                 key={group.faixa}
                 onClick={() => setActiveGroupIndex(index)}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all border duration-300 cursor-pointer ${
+                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all border duration-300 cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-650 dark:bg-indigo-600 border-indigo-700/40 text-white shadow-md'
-                    : 'bg-white dark:bg-[#121316] border-slate-200/50 dark:border-[#1f2229]/65 text-slate-650 dark:text-zinc-350 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                    ? 'bg-teal-600 dark:bg-teal-700 border-teal-700/30 text-white shadow-sm'
+                    : 'bg-white dark:bg-[#121316] border-slate-200/40 dark:border-zinc-800/60 text-slate-500 dark:text-zinc-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
                 }`}
               >
-                <span className="text-[11px] font-bold">{group.label}</span>
-                <span className={`text-[9px] mt-0.5 font-semibold ${isActive ? 'text-indigo-100' : 'text-slate-450 dark:text-zinc-550'}`}>
+                <span className="text-[11px] font-black">{group.label}</span>
+                <span className={`text-[9.5px] mt-1 font-bold ${isActive ? 'text-teal-100' : 'text-slate-400 dark:text-zinc-550'}`}>
                   {group.sub}
                 </span>
               </button>
@@ -274,102 +228,124 @@ export default function DemographicsSection() {
         </div>
       </div>
 
-      {/* Mini-Dashboard de Prevalência da Faixa Etária Ativa */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`metrics-${activeGroupIndex}`}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.2 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2"
-        >
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Peso Adequado</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{activeGroup.eutrofia.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-550 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Desnutrição</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-blue-600 dark:text-blue-400">{activeGroup.desnutricao.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Sobrepeso</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-amber-600 dark:text-amber-400">{activeGroup.sobrepeso.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider">Obesidade</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-rose-600 dark:text-rose-450">{activeGroup.obesidade.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Painel Reativo de Gêneros da Faixa Etária Ativa */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeGroupIndex}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
-          {renderGenderBar(
-            "Peso Adequado",
-            activeGroup.eutrofia.rate,
-            activeGroup.eutrofia.pctMasculino,
-            activeGroup.eutrofia.pctFeminino,
-            "bg-emerald-50/50 dark:bg-emerald-950/15 text-emerald-700 dark:text-emerald-400 border-emerald-100/40 dark:border-emerald-900/30"
-          )}
-          {renderGenderBar(
-            "Magreza / Desnutrição",
-            activeGroup.desnutricao.rate,
-            activeGroup.desnutricao.pctMasculino,
-            activeGroup.desnutricao.pctFeminino,
-            "bg-blue-50/50 dark:bg-blue-955/15 text-blue-700 dark:text-blue-450 border-blue-100/40 dark:border-blue-900/30"
-          )}
-          {renderGenderBar(
-            "Sobrepeso",
-            activeGroup.sobrepeso.rate,
-            activeGroup.sobrepeso.pctMasculino,
-            activeGroup.sobrepeso.pctFeminino,
-            "bg-amber-50/50 dark:bg-amber-955/15 text-amber-700 dark:text-amber-400 border-amber-100/40 dark:border-amber-900/30"
-          )}
-          {renderGenderBar(
-            "Obesidade",
-            activeGroup.obesidade.rate,
-            activeGroup.obesidade.pctMasculino,
-            activeGroup.obesidade.pctFeminino,
-            "bg-red-50/50 dark:bg-red-955/15 text-red-700 dark:text-red-405 border-red-100/40 dark:border-red-900/30"
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Bloco de Insight Epidemiológico Ancorado */}
-      <div className="relative mt-4">
-        {/* Visual Anchor Arrow pointing upwards towards the active gender bar */}
-        <div className="absolute -top-1.5 left-24 w-3.5 h-3.5 rotate-45 border-t border-l border-indigo-150/40 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-[#111124] z-10" />
+      {/* 4. Column Analytics Dashboard */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         
-        <div className="bg-indigo-50/60 dark:bg-indigo-955/10 border border-indigo-150/45 dark:border-indigo-900/40 p-4 rounded-xl flex gap-3 items-start leading-relaxed font-semibold transition-all relative z-0 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
-          <AlertCircle className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-          <div className="text-[10px] text-indigo-900 dark:text-indigo-300 space-y-1">
-            <p className="font-black uppercase tracking-wider">Insight Nutricional - Faixa Ativa</p>
-            <p className="text-slate-600 dark:text-zinc-350 font-semibold leading-normal">{groupInsightText}</p>
+        {/* Left Hand Column: Prevalence & Graphical Chart Analysis (Span 2) */}
+        <div className="xl:col-span-2 space-y-4 border border-slate-200/50 dark:border-zinc-800/80 p-5 rounded-xl bg-slate-50/20 dark:bg-zinc-900/5 transition-colors">
+          <div className="border-b border-slate-200/50 dark:border-zinc-800/70 pb-3">
+            <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+              Distribuição e Prevalência Geral
+            </h3>
+          </div>
+
+          <div className="flex items-center justify-center min-h-[220px]">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.05)'} />
+                <XAxis type="number" unit="%" tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 9, fontWeight: 'bold' }} stroke={darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'} />
+                <YAxis dataKey="name" type="category" width={90} tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 9, fontWeight: 'bold' }} stroke={darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'} />
+                <RechartsTooltip content={<CustomChartTooltip />} cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)' }} />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={16}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Right Hand Column: Gender Analysis Grid (Span 3) */}
+        <div className="xl:col-span-3 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-zinc-800/50 pb-3">
+            <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
+              Análise Epidemiológica por Gênero
+            </h3>
+            <div className="flex items-center gap-3 text-[10px] font-extrabold text-slate-500 dark:text-zinc-400">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-1 rounded-sm bg-blue-500" />Meninos</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-1 rounded-sm bg-rose-500" />Meninas</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            {/* Peso Adequado Gênero */}
+            {renderGenderBarCard(
+              "Peso Adequado",
+              activeGroup.eutrofia.rate,
+              activeGroup.eutrofia.pctMasculino,
+              activeGroup.eutrofia.pctFeminino,
+              "text-teal-600 dark:text-teal-400",
+              "border-slate-200/50 dark:border-zinc-800/50"
+            )}
+
+            {/* Obesidade Gênero */}
+            {renderGenderBarCard(
+              "Obesidade Clínica",
+              activeGroup.obesidade.rate,
+              activeGroup.obesidade.pctMasculino,
+              activeGroup.obesidade.pctFeminino,
+              "text-rose-600 dark:text-rose-455",
+              "border-slate-200/50 dark:border-zinc-800/50"
+            )}
+
+            {/* Sobrepeso Gênero */}
+            {renderGenderBarCard(
+              "Sobrepeso",
+              activeGroup.sobrepeso.rate,
+              activeGroup.sobrepeso.pctMasculino,
+              activeGroup.sobrepeso.pctFeminino,
+              "text-amber-600 dark:text-amber-400",
+              "border-slate-200/50 dark:border-zinc-800/50"
+            )}
+
+            {/* Desnutrição Gênero */}
+            {renderGenderBarCard(
+              "Desnutrição",
+              activeGroup.desnutricao.rate,
+              activeGroup.desnutricao.pctMasculino,
+              activeGroup.desnutricao.pctFeminino,
+              "text-blue-600 dark:text-blue-400",
+              "border-slate-200/50 dark:border-zinc-800/50"
+            )}
           </div>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+// ── Secondary KPI Card inline helper ───────────────────────────────────────────
+function KpiCard({
+  label, value, accentColor, tooltip
+}: {
+  label: string; value: string | number;
+  accentColor: string; tooltip?: string;
+}) {
+  return (
+    <div className="relative rounded-xl p-5 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden">
+      <div className="text-[10px] text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2.5 font-extrabold flex items-center justify-between relative z-10">
+        <span>{label}</span>
+        {tooltip && (
+          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7]">
+            <Info className="w-3.5 h-3.5" />
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
+              {tooltip}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-baseline gap-1 relative z-10">
+        <h3 className={`text-2.5xl font-black tracking-tight ${accentColor}`}>{value}</h3>
+        <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
+      </div>
     </div>
   );
 }
