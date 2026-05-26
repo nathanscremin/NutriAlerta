@@ -285,7 +285,8 @@ export default function ConsultantView() {
 
     let valorIndicador = 0;
     if (analysisLevel === 'ubs' && selectedUbs) {
-      const ubsData = regionalData[cleanYr]?.[selectedUbs];
+    const ubsData = regionalData[cleanYr]?.[selectedUbs] 
+             ?? regionalData[cleanYr]?.[normalizeQuotes(selectedUbs)];
       if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
         valorIndicador = ubsData[indicador as keyof typeof ubsData] as number;
       } else {
@@ -713,7 +714,6 @@ export default function ConsultantView() {
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
                 const ubsData = regionalData[cleanYear]?.[ubs.nome] ?? regionalData[cleanYear]?.[normalizeQuotes(ubs.nome)];
-                console.log('UBS lookup:', ubs.nome, '→', ubsData ? 'FOUND' : 'NOT FOUND');
                 let val = ubsData ? ubsData[indicador] : (indicador === 'desnutricao' ? 2.62 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
 
                 let finalVal = 0;
