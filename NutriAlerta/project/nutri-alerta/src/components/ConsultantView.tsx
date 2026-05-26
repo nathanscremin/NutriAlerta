@@ -323,16 +323,16 @@ export default function ConsultantView() {
 
 let valorIndicador = 0;
 if (analysisLevel === 'ubs' && selectedUbs) {
+  // Tenta regionalData primeiro
   const ubsData = regionalData[cleanYr]?.[selectedUbs];
-  if (ubsData) {
-    valorIndicador = ubsData[indicador as keyof typeof ubsData] as number ?? 0;
+  if (ubsData && typeof ubsData[indicador as keyof typeof ubsData] === 'number') {
+    valorIndicador = ubsData[indicador as keyof typeof ubsData] as number;
   } else {
-    // Fallback: usa dadosAno que já foi calculado pelo activeTemporalData
-    valorIndicador = indicador === 'desnutricao' ? dadosAno.desnutricao
-      : indicador === 'sobrepeso' ? dadosAno.sobrepeso
-      : indicador === 'eutrofia' ? dadosAno.eutrofia
-      : dadosAno.obesidade;
+    // Fallback: pega direto do temporalData global (mesmo fonte dos cards da lista)
+    const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr);
+    valorIndicador = (globalRec as any)?.[indicador] ?? 0;
   }
+}
 } else if (analysisLevel === 'bairro' && selectedBairroName) {
   const bData = (bairroMetrics as any)[selectedBairroName]?.anos?.[cleanYr];
   valorIndicador = bData?.[indicador] ?? 0;
@@ -379,7 +379,7 @@ if (analysisLevel === 'ubs' && selectedUbs) {
     `**Contexto atualizado: ${scopeLabel}**\n${labelIndicador}: **${valorIndicador}%** · ${badge.label} · Ano: ${anoSelecionado}\n\n${proactiveQuestion}`
   );
 
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData, dadosAno]);
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, indicador, anoSelecionado, regionalData, bairroMetrics, schoolMetrics, temporalData]);
   
   async function sendMessage() {
     const text = input.trim();
