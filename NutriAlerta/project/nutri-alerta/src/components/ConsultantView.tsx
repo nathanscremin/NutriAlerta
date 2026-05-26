@@ -316,6 +316,22 @@ export default function ConsultantView() {
   prevContextRef.current = contextKey;
   return;
 }
+
+  useEffect(() => {
+  const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
+
+  if (prevContextRef.current === '') {
+    prevContextRef.current = contextKey;
+    return;
+  }
+  if (prevContextRef.current === contextKey) return;
+
+  if (analysisLevel === 'ubs' && !selectedUbs) return;
+  if (analysisLevel === 'bairro' && !selectedBairroName) return;
+  if (analysisLevel === 'escola' && !selectedSchoolName) return;
+
+  prevContextRef.current = contextKey;
+    
   if (prevContextRef.current === contextKey) return;
   prevContextRef.current = contextKey;
     
