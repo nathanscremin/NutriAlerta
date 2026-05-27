@@ -305,11 +305,16 @@ const model = genAI.getGenerativeModel({
   systemInstruction: {
     role: "system",
     parts: [{ text: systemInstruction }]
-  },
+  }
+});
+
+const chat = model.startChat({ 
+  history: historyForAPI,
   generationConfig: {
-    thinkingConfig: { thinkingBudget: 5000 }  
+    thinkingConfig: { thinkingBudget: 8000 }
   } as any
 });
+      
 const chat = model.startChat({ history: historyForAPI });
 const result = await chat.sendMessage(message);
 
