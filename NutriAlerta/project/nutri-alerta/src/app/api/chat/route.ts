@@ -337,13 +337,12 @@ const text = parts
           console.warn("Vercel KV write failed:", kvErr);
         }
       }
-  const screenData = context?.screenData;
 
   return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
-      Response.json({ response: fallbackText });
+      return NextResponse.json({ response: fallbackText });
     }
   } catch (error: any) {
     console.error('ERRO API:', error);
