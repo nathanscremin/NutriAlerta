@@ -315,7 +315,6 @@ const chat = model.startChat({
   } as any
 });
       
-const chat = model.startChat({ history: historyForAPI });
 const result = await chat.sendMessage(message);
 
 const parts = result.response.candidates?.[0]?.content?.parts ?? [];
