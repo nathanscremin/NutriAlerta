@@ -338,7 +338,7 @@ const text = parts
         }
       }
   const screenData = context?.screenData;
-  const auditLog = thinking || `[Log de Auditoria]\nContexto analisado: ${screenData?.analysisLevel} → ${screenData?.scopeName}\nIndicador: ${screenData?.indicador} | Ano: ${screenData?.ano}\nChunks RAG consultados: ${contextoRAG ? 'Sim' : 'Nenhum'}\nDados injetados: obesidade=${screenData?.obesidade}%, desnutricao=${screenData?.desnutricao}%`;
+  const auditLog = thinking || `[Log de Auditoria]\nContexto analisado: ${context?.screenData?.analysisLevel} → ${context?.screenData?.scopeName}\nIndicador: ${context?.screenData?.indicador} | Ano: ${context?.screenData?.ano}\nChunks RAG consultados: ${contextoRAG ? 'Sim' : 'Nenhum'}\nDados injetados: obesidade=${context?.screenData?.obesidade}%, desnutricao=${context?.screenData?.desnutricao}%`;
 
   return NextResponse.json({ response: text, thinking: auditLog });
     } catch (geminiErr: any) {
