@@ -338,9 +338,8 @@ const text = parts
         }
       }
   const screenData = context?.screenData;
-  const auditLog = thinking || `[Log de Auditoria]\nContexto analisado: ${context?.screenData?.analysisLevel} → ${context?.screenData?.scopeName}\nIndicador: ${context?.screenData?.indicador} | Ano: ${context?.screenData?.ano}\nChunks RAG consultados: ${contextoRAG ? 'Sim' : 'Nenhum'}\nDados injetados: obesidade=${context?.screenData?.obesidade}%, desnutricao=${context?.screenData?.desnutricao}%`;
 
-  return NextResponse.json({ response: text, thinking: auditLog });
+  return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
