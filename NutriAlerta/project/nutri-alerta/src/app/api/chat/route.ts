@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
     const { sessionId, message, context } = await req.json();
     console.log('📥 screenData recebido:', JSON.stringify(context?.screenData, null, 2));
     console.log('🤖 genAI configurado:', !!genAI);
-
+    
     if (!sessionId || !message || !context) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
     }
@@ -337,12 +337,14 @@ const text = parts
           console.warn("Vercel KV write failed:", kvErr);
         }
       }
+  const screenData = context?.screenData;
+  const auditLog = thinking || `[Log de Auditoria]\nContexto analisado: ${screenData?.analysisLevel} → ${screenData?.scopeName}\nIndicador: ${screenData?.indicador} | Ano: ${screenData?.ano}\nChunks RAG consultados: ${contextoRAG ? 'Sim' : 'Nenhum'}\nDados injetados: obesidade=${screenData?.obesidade}%, desnutricao=${screenData?.desnutricao}%`;
 
-      return NextResponse.json({ response: text, thinking: thinking || null });
+  return NextResponse.json({ response: text, thinking: auditLog });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
-      return NextResponse.json({ response: fallbackText });
+      Response.json({ response: fallbackText });
     }
   } catch (error: any) {
     console.error('ERRO API:', error);
