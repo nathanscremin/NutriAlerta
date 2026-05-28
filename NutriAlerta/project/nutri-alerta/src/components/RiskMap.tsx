@@ -40,6 +40,12 @@ const getChoroplethColor = (value: number, indicator: string) => {
     if (value < 3.5) return '#3b82f6';
     if (value < 4.5) return '#1d4ed8';
     return '#1e3a8a';
+  } else if (indicator === 'magreza') {
+    if (value < 12) return '#eff6ff';
+    if (value < 15) return '#7dd3fc';
+    if (value < 18) return '#38bdf8';
+    if (value < 21) return '#0ea5e9';
+    return '#0369a1';
   } else if (indicator === 'eutrofia') {
     if (value < 55) return '#d1fae5';
     if (value < 60) return '#6ee7b7';
@@ -62,15 +68,51 @@ const getChoroplethColor = (value: number, indicator: string) => {
   }
 };
 
+const getSeverityLevel = (value: number, indicator: string) => {
+  if (indicator === 'desnutricao') {
+    if (value < 1.5) return 0;
+    if (value < 2.5) return 1;
+    if (value < 3.5) return 2;
+    if (value < 4.5) return 3;
+    return 4;
+  } else if (indicator === 'magreza') {
+    if (value < 12) return 0;
+    if (value < 15) return 1;
+    if (value < 18) return 2;
+    if (value < 21) return 3;
+    return 4;
+  } else if (indicator === 'sobrepeso') {
+    if (value < 12) return 0;
+    if (value < 15) return 1;
+    if (value < 18) return 2;
+    if (value < 21) return 3;
+    return 4;
+  } else {
+    // Obesidade
+    if (value < 7) return 0;
+    if (value < 10) return 1;
+    if (value < 13) return 2;
+    if (value < 16) return 3;
+    return 4;
+  }
+};
+
 const indicatorLabels = {
   desnutricao: 'Desnutrição',
+  magreza: 'Magreza',
   sobrepeso: 'Sobrepeso',
   obesidade: 'Obesidade',
   eutrofia: 'Peso Adequado',
   global: 'Visão Global'
 } as const;
 
-const getIndicatorLegend = (indicator: string) => {
+const getIndicatorLegend = (indicator: string, darkMode?: boolean) => {
+  if (indicator === 'global') {
+    return [
+      ['Foco Geral (Consolidado)', darkMode ? '#27272a' : '#ffffff']
+    ];
+  }
+
   if (indicator === 'desnutricao') {
     return [
       ['< 1,5%', '#dbeafe'],
@@ -78,6 +120,16 @@ const getIndicatorLegend = (indicator: string) => {
       ['2,5% – 3,5%', '#3b82f6'],
       ['3,5% – 4,5%', '#1d4ed8'],
       ['≥ 4,5%', '#1e3a8a']
+    ];
+  }
+
+  if (indicator === 'magreza') {
+    return [
+      ['< 12%', '#eff6ff'],
+      ['12% – 15%', '#7dd3fc'],
+      ['15% – 18%', '#38bdf8'],
+      ['18% – 21%', '#0ea5e9'],
+      ['≥ 21%', '#0369a1']
     ];
   }
 
@@ -158,6 +210,8 @@ export default function RiskMap() {
     schoolMetrics, bairroMetrics
   } = useAppStore();
 
+  const safeNumber = (value: any, fallback: number) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+
   useEffect(() => {
     setMounted(true);
     // Use dynamically generated Voronoi grid based on UBS coordinates
@@ -165,88 +219,63 @@ export default function RiskMap() {
     return () => setMounted(false);
   }, []);
 
-  // Multiplicadores dos POIs das camadas de infraestrutura (Simulação de Intervenção)
-  const { multObs, multDes } = React.useMemo(() => {
-    let mObs = 1.0;
-    let mDes = 1.0;
-    if (!activePoiTypes.includes('Alimentação - Restaurante/Fast-food')) {
-      mObs *= 0.88;
-    }
-    if (!activePoiTypes.includes('Esporte e Lazer')) {
-      mObs *= 1.10;
-    }
-    if (!activePoiTypes.includes('Alimentação - Mercado')) {
-      mDes *= 1.15;
-      mObs *= 1.08;
-    }
-    if (!activePoiTypes.includes('Educação')) {
-      mDes *= 1.05;
-      mObs *= 1.05;
-    }
-    return { multObs: mObs, multDes: mDes };
-  }, [activePoiTypes]);
-
-  // Recupera métricas para o bairro ajustadas pelos POIs
+  // Recupera métricas para o bairro diretamente da fonte de dados do modelo
   const getBairroMetrics = React.useCallback((nomeReal: string, nome: string) => {
     const cleanYear = anoSelecionado.replace('★', '').trim();
     const bMetric = bairroMetrics?.[nomeReal];
     const bYearData = bMetric?.anos?.[cleanYear];
 
+    const safeNumber = (value: any, fallback: number) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+
     let dObs = 12.93;
     let dDes = 2.62;
+    let dMag = 0;
     let dSob = 16.3;
     let dEut = 61.55;
 
     if (bYearData) {
-      dDes = bYearData.desnutricao;
-      dObs = bYearData.obesidade;
-      dSob = bYearData.sobrepeso;
-      dEut = bYearData.eutrofia;
+      dDes = safeNumber(bYearData.desnutricao, dDes);
+      dMag = safeNumber(bYearData.magreza, dMag);
+      dObs = safeNumber(bYearData.obesidade, dObs);
+      dSob = safeNumber(bYearData.sobrepeso, dSob);
+      dEut = safeNumber(bYearData.eutrofia, dEut);
     } else {
       const yearData = regionalData && regionalData[cleanYear] ? regionalData[cleanYear] : null;
       const regionRecord = yearData ? yearData[nome] : null;
-      dObs = regionRecord ? (regionRecord.obesidade || 0) : 12.93;
-      dDes = regionRecord ? (regionRecord.desnutricao || 0) : 2.62;
-      dSob = regionRecord ? (regionRecord.sobrepeso || 0) : 16.3;
-      dEut = regionRecord ? (regionRecord.eutrofia || 0) : 61.55;
+      dObs = safeNumber(regionRecord?.obesidade, dObs);
+      dDes = safeNumber(regionRecord?.desnutricao, dDes);
+      dMag = safeNumber(regionRecord?.magreza, dMag);
+      dSob = safeNumber(regionRecord?.sobrepeso, dSob);
+      dEut = safeNumber(regionRecord?.eutrofia, dEut);
     }
 
-    const scaleDes = Number((dDes * multDes).toFixed(2));
-    const scaleObs = Number((dObs * multObs).toFixed(2));
-    const scaleSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
-    const beforeSum = dDes + dObs + dSob;
-    const afterSum = scaleDes + scaleObs + scaleSob;
-    const eut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
-
-    return { des: scaleDes, obs: scaleObs, sob: scaleSob, eut };
-  }, [anoSelecionado, regionalData, bairroMetrics, multDes, multObs]);
+    return { des: dDes, mag: dMag, obs: dObs, sob: dSob, eut: dEut };
+  }, [anoSelecionado, regionalData, bairroMetrics]);
 
   const getFeatureStyle = (feature: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
     const nomeReal = feature.properties?.nome_real_bairro || nome;
-    const { des, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
+    const { des, mag, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
     
     let riskValue = 0;
     if (indicador === 'desnutricao') riskValue = des;
+    else if (indicador === 'magreza') riskValue = mag;
     else if (indicador === 'sobrepeso') riskValue = sob;
     else if (indicador === 'eutrofia') riskValue = eut;
     else riskValue = obs;
 
     let fillColor = '';
     if (indicador === 'global') {
-      const ratioDes = des / 2.62;
-      const ratioObs = obs / 19.88;
-      const ratioEut = eut / 61.55;
-
-      if (ratioObs > 1.15 && ratioObs >= ratioDes) {
-        fillColor = getChoroplethColor(obs, 'obesidade');
-      } else if (ratioDes > 1.15 && ratioDes > ratioObs) {
-        fillColor = getChoroplethColor(des, 'desnutricao');
-      } else {
-        fillColor = getChoroplethColor(eut, 'eutrofia');
-      }
+      const candidates = [
+        { id: 'desnutricao', val: des, lvl: getSeverityLevel(des, 'desnutricao') },
+        { id: 'magreza', val: mag, lvl: getSeverityLevel(mag, 'magreza') },
+        { id: 'sobrepeso', val: sob, lvl: getSeverityLevel(sob, 'sobrepeso') },
+        { id: 'obesidade', val: obs, lvl: getSeverityLevel(obs, 'obesidade') }
+      ];
+      candidates.sort((a, b) => b.lvl - a.lvl || b.val - a.val);
+      fillColor = getChoroplethColor(candidates[0].val, candidates[0].id);
     } else {
-      fillColor = getChoroplethColor(riskValue, indicador);
+     fillColor = getChoroplethColor(riskValue, indicador);
     }
 
     let isActive = false;
@@ -273,7 +302,7 @@ export default function RiskMap() {
   const onEachFeature = (feature: any, layer: any) => {
     const nome = feature.properties?.nome_bairro || 'Desconhecido';
     const nomeReal = feature.properties?.nome_real_bairro || nome;
-    const { des, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
+    const { des, mag, obs, sob, eut } = getBairroMetrics(nomeReal, nome);
 
     layer.on({
       mouseover: (e: any) => { 
@@ -300,30 +329,10 @@ export default function RiskMap() {
         const ubsName = feature.properties?.nome_bairro || '';
         const bairroName = feature.properties?.nome_real_bairro || ubsName;
 
-        if (analysisLevel === 'municipio') {
-          setSelection('ubs', ubsName, null, null);
-        } else if (analysisLevel === 'ubs') {
-          if (ubsName === selectedUbs) {
-            setSelection('bairro', selectedUbs, bairroName, null);
-          } else {
-            setSelection('ubs', ubsName, null, null);
-          }
-        } else if (analysisLevel === 'bairro') {
-          if (bairroName === selectedBairroName) {
-            setSelection('ubs', selectedUbs, null, null);
-          } else if (ubsName === selectedUbs) {
-            setSelection('bairro', selectedUbs, bairroName, null);
-          } else {
-            setSelection('ubs', ubsName, null, null);
-          }
-        } else if (analysisLevel === 'escola') {
-          if (bairroName === selectedBairroName) {
-            setSelection('bairro', selectedUbs, selectedBairroName, null);
-          } else if (ubsName === selectedUbs) {
-            setSelection('bairro', selectedUbs, bairroName, null);
-          } else {
-            setSelection('ubs', ubsName, null, null);
-          }
+        if (analysisLevel === 'bairro' && selectedBairroName === bairroName) {
+          setSelection('municipio', null, null, null);
+        } else {
+          setSelection('bairro', ubsName, bairroName, null);
         }
       },
     });
@@ -343,6 +352,10 @@ export default function RiskMap() {
             <div class="flex items-center justify-between gap-2.5">
               <span class="text-blue-500 font-bold">Desnutrição:</span>
               <strong class="text-blue-600 dark:text-blue-400 font-mono font-black">${des.toFixed(2)}%</strong>
+            </div>
+            <div class="flex items-center justify-between gap-2.5">
+              <span class="text-sky-500 font-bold">Magreza:</span>
+              <strong class="text-sky-600 dark:text-sky-400 font-mono font-black">${mag.toFixed(2)}%</strong>
             </div>
             <div class="flex items-center justify-between gap-2.5">
               <span class="text-emerald-500 font-bold">Peso Adeq.:</span>
@@ -375,6 +388,10 @@ export default function RiskMap() {
         activeVal = eut;
         label = 'Peso Adequado';
         colorClass = 'text-emerald-500';
+      } else if (indicador === 'magreza') {
+        activeVal = mag;
+        label = 'Magreza';
+        colorClass = 'text-sky-500';
       } else {
         activeVal = obs;
         label = 'Obesidade';
@@ -421,7 +438,7 @@ export default function RiskMap() {
       : analysisLevel === 'ubs'
         ? (selectedUbs || 'UBS')
         : 'Rio Claro';
-  const indicatorLegend = getIndicatorLegend(indicador);
+  const indicatorLegend = getIndicatorLegend(indicador, darkMode);
 
   return (
     <>
@@ -509,17 +526,11 @@ export default function RiskMap() {
             const cleanYear = anoSelecionado.replace('★', '').trim();
             const schoolRecord = isSchool ? schoolMetrics[poi.nome]?.anos[cleanYear] : null;
 
-            const dDes = schoolRecord ? schoolRecord.desnutricao : (metrics?.des ?? 2.62);
-            const dObs = schoolRecord ? schoolRecord.obesidade : (metrics?.obs ?? 12.93);
-            const dSob = schoolRecord ? schoolRecord.sobrepeso : (metrics?.sob ?? 16.3);
-            const dEut = schoolRecord ? schoolRecord.eutrofia : (metrics?.eut ?? 61.55);
-
-            const schoolDes = Number((dDes * multDes).toFixed(2));
-            const schoolObs = Number((dObs * multObs).toFixed(2));
-            const schoolSob = Number((dSob * ((multObs + 1) / 2)).toFixed(2));
-            const beforeSum = dDes + dObs + dSob;
-            const afterSum = schoolDes + schoolObs + schoolSob;
-            const schoolEut = Math.max(10, Number((dEut - (afterSum - beforeSum)).toFixed(2)));
+            const dDes = schoolRecord ? safeNumber(schoolRecord.desnutricao, metrics?.des ?? 2.62) : (metrics?.des ?? 2.62);
+            const dMag = schoolRecord ? safeNumber(schoolRecord.magreza, metrics?.mag ?? 0) : (metrics?.mag ?? 0);
+            const dObs = schoolRecord ? safeNumber(schoolRecord.obesidade, metrics?.obs ?? 12.93) : (metrics?.obs ?? 12.93);
+            const dSob = schoolRecord ? safeNumber(schoolRecord.sobrepeso, metrics?.sob ?? 16.3) : (metrics?.sob ?? 16.3);
+            const dEut = schoolRecord ? safeNumber(schoolRecord.eutrofia, metrics?.eut ?? 61.55) : (metrics?.eut ?? 61.55);
 
             // Determina a prevalência do indicador ativo para destacar no tooltip
             let activeVal = 0;
@@ -527,19 +538,23 @@ export default function RiskMap() {
             let colorClass = '';
             
             if (indicador === 'desnutricao') {
-              activeVal = isSchool ? schoolDes : (metrics?.des ?? 0);
+              activeVal = isSchool ? dDes : (metrics?.des ?? 0);
               activeLabel = 'Desnutrição';
               colorClass = 'text-blue-500 dark:text-blue-450';
+            } else if (indicador === 'magreza') {
+              activeVal = isSchool ? dMag : (metrics?.mag ?? 0);
+              activeLabel = 'Magreza';
+              colorClass = 'text-sky-500 dark:text-sky-450';
             } else if (indicador === 'sobrepeso') {
-              activeVal = isSchool ? schoolSob : (metrics?.sob ?? 0);
+              activeVal = isSchool ? dSob : (metrics?.sob ?? 0);
               activeLabel = 'Sobrepeso';
               colorClass = 'text-amber-500 dark:text-amber-450';
             } else if (indicador === 'eutrofia') {
-              activeVal = isSchool ? schoolEut : (metrics?.eut ?? 0);
+              activeVal = isSchool ? dEut : (metrics?.eut ?? 0);
               activeLabel = 'Peso Adequado';
               colorClass = 'text-emerald-500 dark:text-emerald-450';
             } else { // default ou 'obesidade'
-              activeVal = isSchool ? schoolObs : (metrics?.obs ?? 0);
+              activeVal = isSchool ? dObs : (metrics?.obs ?? 0);
               activeLabel = 'Obesidade';
               colorClass = 'text-red-500 dark:text-red-450';
             }
@@ -612,23 +627,27 @@ export default function RiskMap() {
                         </div>
                       )}
 
-                      {indicador === 'global' ? (
+                       {indicador === 'global' ? (
                         <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[9px] pt-1.5 border-t border-slate-100 dark:border-zinc-800/60 w-full font-sans">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-blue-500 font-bold">Desn.:</span>
-                            <strong className="text-blue-600 dark:text-blue-400 font-mono font-black">{schoolDes.toFixed(1)}%</strong>
+                            <strong className="text-blue-600 dark:text-blue-400 font-mono font-black">{dDes.toFixed(1)}%</strong>
+                          </div>
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-sky-500 font-bold">Mag.:</span>
+                            <strong className="text-sky-600 dark:text-sky-400 font-mono font-black">{dMag.toFixed(1)}%</strong>
                           </div>
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-emerald-500 font-bold">Eutr.:</span>
-                            <strong className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{schoolEut.toFixed(1)}%</strong>
+                            <strong className="text-emerald-600 dark:text-emerald-400 font-mono font-black">{dEut.toFixed(1)}%</strong>
                           </div>
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-amber-500 font-bold">Sob.:</span>
-                            <strong className="text-amber-600 dark:text-amber-400 font-mono font-black">{schoolSob.toFixed(1)}%</strong>
+                            <strong className="text-amber-600 dark:text-amber-400 font-mono font-black">{dSob.toFixed(1)}%</strong>
                           </div>
-                          <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center justify-between gap-1 col-span-2">
                             <span className="text-red-500 font-bold">Obes.:</span>
-                            <strong className="text-red-600 dark:text-red-400 font-mono font-black">{schoolObs.toFixed(1)}%</strong>
+                            <strong className="text-red-600 dark:text-red-400 font-mono font-black">{dObs.toFixed(1)}%</strong>
                           </div>
                         </div>
                       ) : (

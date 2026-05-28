@@ -247,7 +247,8 @@ async function fetchAndSyncDbData() {
     }
 
     schoolMetrics[schoolName].anos[g.ano] = {
-      desnutricao: Number((((g.Magreza_Acentuada_Qtd + g.Magreza_Qtd) / total) * 100).toFixed(2)),
+      desnutricao: Number(((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(2)),
+      magreza: Number(((g.Magreza_Qtd / total) * 100).toFixed(2)),
       eutrofia: Number(((g.Eutrofia_Qtd / total) * 100).toFixed(2)),
       sobrepeso: Number(((g.Sobrepeso_Qtd / total) * 100).toFixed(2)),
       obesidade: Number((((g.Obesidade_Qtd + g.Obesidade_Grave_Qtd) / total) * 100).toFixed(2)),
@@ -428,6 +429,7 @@ function buildDefaultTemporalEntry(year: number) {
   return {
     ano: formatTemporalYear(year),
     desnutricao: 2.62,
+    magreza: 0,
     obesidade: 12.93,
     sobrepeso: 15.2,
     eutrofia: 61.55,
@@ -464,26 +466,28 @@ function averageTemporalMetrics(records: Array<Record<string, any>>) {
 
   const avg = records.reduce((acc: any, record: any) => {
     acc.desnutricao += Number(record.desnutricao || 0);
+    acc.magreza += Number(record.magreza || 0);
     acc.obesidade += Number(record.obesidade || 0);
     acc.sobrepeso += Number(record.sobrepeso || 0);
     acc.eutrofia += Number(record.eutrofia || 0);
     return acc;
-  }, { desnutricao: 0, obesity: 0, sobrepeso: 0, eutrofia: 0 });
+  }, { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 });
 
   return normalizePercentages(
     {
       desnutricao: avg.desnutricao / records.length,
+      magreza: avg.magreza / records.length,
       obesidade: avg.obesidade / records.length,
       sobrepeso: avg.sobrepeso / records.length,
       eutrofia: avg.eutrofia / records.length
     },
-    ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+    ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
   );
 }
 
 function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<string, any>>) {
   const temporalYearRange = getTemporalYearRange();
-  const seriesByYear: Record<number, { desnutricao: number; obesidade: number; sobrepeso: number; eutrofia: number }> = {};
+  const seriesByYear: Record<number, { desnutricao: number; magreza: number; obesidade: number; sobrepeso: number; eutrofia: number }> = {};
 
   temporalYearRange.forEach((year) => {
     const records = Object.values(regionalData[String(year)] || {});
@@ -492,6 +496,7 @@ function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<s
     if (averaged) {
       seriesByYear[year] = {
         desnutricao: Number(averaged.desnutricao.toFixed(2)),
+        magreza: Number(averaged.magreza.toFixed(2)),
         obesidade: Number(averaged.obesidade.toFixed(2)),
         sobrepeso: Number(averaged.sobrepeso.toFixed(2)),
         eutrofia: Number(averaged.eutrofia.toFixed(2))
@@ -511,7 +516,7 @@ function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<s
       continue;
     }
 
-    const metrics = ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+    const metrics = ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
     const filledValues = {} as Record<(typeof metrics)[number], number>;
 
     metrics.forEach((metric) => {
@@ -534,6 +539,7 @@ function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<s
     return {
       ano: formatTemporalYear(year),
       desnutricao: Number(values.desnutricao.toFixed(2)),
+      magreza: Number(values.magreza.toFixed(2)),
       obesidade: Number(values.obesidade.toFixed(2)),
       sobrepeso: Number(values.sobrepeso.toFixed(2)),
       eutrofia: Number(values.eutrofia.toFixed(2)),
@@ -552,7 +558,7 @@ function buildRegionalDataFromSchoolMetrics(schoolMetrics: Record<string, any>) 
   });
 
   Array.from(years).sort((a, b) => Number(a) - Number(b)).forEach((year) => {
-    const buckets: Record<string, { desnutricao: number; obesidade: number; sobrepeso: number; eutrofia: number; total_avaliados: number }> = {};
+    const buckets: Record<string, { desnutricao: number; magreza: number; obesidade: number; sobrepeso: number; eutrofia: number; total_avaliados: number }> = {};
 
     Object.values(schoolMetrics).forEach((school: any) => {
       const yearData = school?.anos?.[year];
@@ -561,10 +567,11 @@ function buildRegionalDataFromSchoolMetrics(schoolMetrics: Record<string, any>) 
       const ubsName = school.regiao_ubs || findNearestUbsName(Number(school.lat), Number(school.lon)) || UNIDADES_SAUDE[0].nome;
       const total = Number(yearData.total_avaliados || 0);
       if (!buckets[ubsName]) {
-        buckets[ubsName] = { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0, total_avaliados: 0 };
+        buckets[ubsName] = { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0, total_avaliados: 0 };
       }
 
       buckets[ubsName].desnutricao += Number(yearData.desnutricao || 0) * total;
+      buckets[ubsName].magreza += Number(yearData.magreza || 0) * total;
       buckets[ubsName].obesidade += Number(yearData.obesidade || 0) * total;
       buckets[ubsName].sobrepeso += Number(yearData.sobrepeso || 0) * total;
       buckets[ubsName].eutrofia += Number(yearData.eutrofia || 0) * total;
@@ -576,11 +583,12 @@ function buildRegionalDataFromSchoolMetrics(schoolMetrics: Record<string, any>) 
       const normalized = normalizePercentages(
         {
           desnutricao: bucket.desnutricao / total,
+          magreza: bucket.magreza / total,
           obesidade: bucket.obesidade / total,
           sobrepeso: bucket.sobrepeso / total,
           eutrofia: bucket.eutrofia / total
         },
-        ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+        ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
       );
 
       regionalData[year] = regionalData[year] || {};
@@ -615,6 +623,7 @@ function attachRegionalDeltaMetrics(regionalData: Record<string, Record<string, 
       };
 
       record.delta_desnutricao = getDelta('desnutricao');
+      record.delta_magreza = getDelta('magreza');
       record.delta_obesidade = getDelta('obesidade');
       record.delta_sobrepeso = getDelta('sobrepeso');
       record.delta_eutrofia = getDelta('eutrofia');
@@ -636,6 +645,7 @@ function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>,
     Array.from(years).sort((a, b) => Number(a) - Number(b)).forEach((year) => {
       let total = 0;
       let weightedDes = 0;
+      let weightedMag = 0;
       let weightedObs = 0;
       let weightedSob = 0;
       let weightedEut = 0;
@@ -646,6 +656,7 @@ function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>,
         const avaliados = Number(yearData.total_avaliados || 0);
         total += avaliados;
         weightedDes += Number(yearData.desnutricao || 0) * avaliados;
+        weightedMag += Number(yearData.magreza || 0) * avaliados;
         weightedObs += Number(yearData.obesidade || 0) * avaliados;
         weightedSob += Number(yearData.sobrepeso || 0) * avaliados;
         weightedEut += Number(yearData.eutrofia || 0) * avaliados;
@@ -655,11 +666,12 @@ function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>,
         const normalized = normalizePercentages(
           {
             desnutricao: weightedDes / total,
+            magreza: weightedMag / total,
             obesidade: weightedObs / total,
             sobrepeso: weightedSob / total,
             eutrofia: weightedEut / total
           },
-          ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+          ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
         );
         anos[year] = {
           ...normalized,
@@ -693,7 +705,7 @@ function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>,
 
 function projectSchoolMetricsForward(schoolMetrics: Record<string, any>, targetYears = [2026, 2027]) {
   const projectedSchoolMetrics = JSON.parse(JSON.stringify(schoolMetrics || {}));
-  const metricKeys = ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+  const metricKeys = ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
 
   Object.values(projectedSchoolMetrics).forEach((school: any) => {
     if (!school?.anos) return;
@@ -781,6 +793,7 @@ async function loadLocalCsvFallback(cwd: string) {
     rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
     rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
     rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
+    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
     rec.total_avaliados = Number(row.Total || 0);
   });
 
@@ -794,7 +807,8 @@ async function loadLocalCsvFallback(cwd: string) {
     if (!ubsName) return;
 
     const rec = getOrInit(year, ubsName, row);
-    rec.desnutricao = Number((row.Magreza_Pct || row.Tendencia_Desnutricao || 2.62).toFixed(2));
+    rec.desnutricao = Number((row.Tendencia_Desnutricao || row.Magreza_Pct || 2.62).toFixed(2));
+    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
   });
 
   Object.keys(regionalData).forEach((year) => {
@@ -803,14 +817,16 @@ async function loadLocalCsvFallback(cwd: string) {
       const normalized = normalizePercentages(
         {
           desnutricao: rec.desnutricao ?? 2.62,
+          magreza: rec.magreza ?? 0,
           obesidade: rec.obesidade ?? 12.93,
           sobrepeso: rec.sobrepeso ?? 15.2,
           eutrofia: rec.eutrofia ?? 61.55
         },
-        ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+        ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
       );
 
       rec.desnutricao = normalized.desnutricao;
+      rec.magreza = normalized.magreza;
       rec.obesidade = normalized.obesidade;
       rec.sobrepeso = normalized.sobrepeso;
       rec.eutrofia = normalized.eutrofia;
@@ -926,13 +942,15 @@ export async function GET(req: NextRequest) {
             const normalized = normalizePercentages(
               {
                 desnutricao: data.desnutricao || 0,
+                magreza: data.magreza || 0,
                 obesidade: data.obesidade || 0,
                 sobrepeso: data.sobrepeso || 0,
                 eutrofia: data.eutrofia || 0
               },
-              ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']
+              ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
             );
             data.desnutricao = normalized.desnutricao;
+            data.magreza = normalized.magreza;
             data.obesidade = normalized.obesidade;
             data.sobrepeso = normalized.sobrepeso;
             data.eutrofia = normalized.eutrofia;

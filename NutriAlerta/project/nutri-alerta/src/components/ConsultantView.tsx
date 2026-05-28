@@ -104,38 +104,6 @@ const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
   return key ? data[key] : undefined;
 };
 
-const getScaledAndNormalizedMetrics = (
-  record: { desnutricao: number; obesidade: number; sobrepeso: number; eutrofia: number },
-  multDes: number,
-  multObs: number
-) => {
-  const scaleDes = Number((record.desnutricao * multDes).toFixed(2));
-  const scaleObs = Number((record.obesidade * multObs).toFixed(2));
-  const scaleSob = Number(((record.sobrepeso || 0) * ((multObs + 1) / 2)).toFixed(2));
-  const beforeSum = (record.desnutricao || 0) + (record.obesidade || 0) + (record.sobrepeso || 0);
-  const afterSum = scaleDes + scaleObs + scaleSob;
-  const baseEut = record.eutrofia !== undefined ? record.eutrofia : (100 - beforeSum);
-  const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-  const rawObj = { desnutricao: scaleDes, obesidade: scaleObs, sobrepeso: scaleSob, eutrofia: scaleEut };
-  const sum = rawObj.desnutricao + rawObj.sobrepeso + rawObj.obesidade + rawObj.eutrofia;
-  const norm = {
-    desnutricao: Number(((rawObj.desnutricao / sum) * 100).toFixed(2)),
-    sobrepeso: Number(((rawObj.sobrepeso / sum) * 100).toFixed(2)),
-    obesidade: Number(((rawObj.obesidade / sum) * 100).toFixed(2)),
-    eutrofia: Number(((rawObj.eutrofia / sum) * 100).toFixed(2))
-  };
-  const diff = Number((100 - (norm.desnutricao + norm.sobrepeso + norm.obesidade + norm.eutrofia)).toFixed(2));
-  if (diff !== 0) {
-    let maxK: keyof typeof norm = 'eutrofia';
-    let maxV = norm[maxK];
-    (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
-      if (norm[k] > maxV) { maxV = norm[k]; maxK = k; }
-    });
-    norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
-  }
-  return norm;
-};
-
 export default function ConsultantView() {
   const { 
     anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
@@ -212,23 +180,11 @@ export default function ConsultantView() {
     return list.slice(0, 5);
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const { multObs, multDes } = React.useMemo(() => {
-    let mObs = 1;
-    let mDes = 1;
-    const hasSupermarket = activePoiTypes.includes('Alimentação - Mercado');
-    const hasFastFood = activePoiTypes.includes('Alimentação - Restaurante/Fast-food');
-    const hasSport = activePoiTypes.includes('Esporte e Lazer');
-    if (hasSupermarket && !hasFastFood) { mObs *= 0.90; mDes *= 0.95; }
-    if (hasFastFood && !hasSupermarket) { mObs *= 1.15; }
-    if (hasSport) { mObs *= 0.92; }
-    if (activePoiTypes.length === 0) { mObs *= 1.05; }
-    return { multObs: mObs, multDes: mDes };
-  }, [activePoiTypes]);
-
   const activeTemporalData = React.useMemo(() => {
     let baseSource: Array<{
       ano: string;
       desnutricao: number;
+      magreza: number;
       obesidade: number;
       sobrepeso: number;
       eutrofia: number;
@@ -239,6 +195,7 @@ export default function ConsultantView() {
       baseSource = temporalData.map(d => ({
         ano: d.ano,
         desnutricao: d.desnutricao,
+        magreza: d.magreza || 0,
         obesidade: d.obesidade,
         sobrepeso: (d as any).sobrepeso || 15.2,
         eutrofia: d.eutrofia || 58,
@@ -249,10 +206,11 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const yrRecord = ubsName ? normalizeUbsKey(ubsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
         return {
           ano: yr,
           desnutricao: yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalRec.desnutricao,
+          magreza: yrRecord && typeof yrRecord.magreza === 'number' ? yrRecord.magreza : (globalRec as any).magreza || 0,
           obesidade: yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalRec.obesidade,
           sobrepeso: yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3,
           eutrofia: yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : (globalRec as any).eutrofia || 61.2,
@@ -266,10 +224,11 @@ export default function ConsultantView() {
         const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
         const parentUbsName = (bName && bairroMetrics[bName]?.regiao_ubs) || selectedUbs;
         const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
         return {
           ano: yr,
           desnutricao: bairroRecord && typeof bairroRecord.desnutricao === 'number' ? bairroRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
+          magreza: bairroRecord && typeof bairroRecord.magreza === 'number' ? bairroRecord.magreza : (ubsRecord?.magreza ?? (globalRec as any).magreza ?? 0),
           obesidade: bairroRecord && typeof bairroRecord.obesidade === 'number' ? bairroRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
           sobrepeso: bairroRecord && typeof bairroRecord.sobrepeso === 'number' ? bairroRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 16.3),
           eutrofia: bairroRecord && typeof bairroRecord.eutrofia === 'number' ? bairroRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 61.2),
@@ -283,10 +242,11 @@ export default function ConsultantView() {
         const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
         const parentUbsName = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) || selectedUbs;
         const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
+        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
         return {
           ano: yr,
           desnutricao: schoolRecord && typeof schoolRecord.desnutricao === 'number' ? schoolRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
+          magreza: schoolRecord && typeof schoolRecord.magreza === 'number' ? schoolRecord.magreza : (ubsRecord?.magreza ?? (globalRec as any).magreza ?? 0),
           obesidade: schoolRecord && typeof schoolRecord.obesidade === 'number' ? schoolRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
           sobrepeso: schoolRecord && typeof schoolRecord.sobrepeso === 'number' ? schoolRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 16.3),
           eutrofia: schoolRecord && typeof schoolRecord.eutrofia === 'number' ? schoolRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 61.2),
@@ -295,15 +255,20 @@ export default function ConsultantView() {
       });
     }
 
-    return baseSource.map(d => {
-      const norm = getScaledAndNormalizedMetrics(d, multDes, multObs);
-      return { ...d, ...norm };
-    });
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
+    return baseSource;
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics]);
 
-  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
+  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   const cleanYear = anoSelecionado.replace('★', '').trim();
-  const mainLabel = indicador === 'eutrofia' ? 'peso adequado' : indicador === 'desnutricao' ? 'desnutrição' : indicador === 'sobrepeso' ? 'sobrepeso' : 'obesidade';
+  const mainLabel = indicador === 'eutrofia'
+    ? 'peso adequado'
+    : indicador === 'desnutricao'
+      ? 'desnutrição'
+      : indicador === 'magreza'
+        ? 'magreza'
+        : indicador === 'sobrepeso'
+          ? 'sobrepeso'
+          : 'obesidade';
 
   useEffect(() => {
     const contextKey = `${analysisLevel}|${selectedUbs}|${selectedBairroName}|${selectedSchoolName}`;
@@ -327,6 +292,7 @@ export default function ConsultantView() {
     const valorIndicador = Number((dadosAno[indicador as keyof typeof dadosAno] || 0).toFixed(2));
 
     const labelIndicador = indicador === 'desnutricao' ? 'Desnutrição'
+      : indicador === 'magreza' ? 'Magreza'
       : indicador === 'sobrepeso' ? 'Sobrepeso'
       : indicador === 'eutrofia' ? 'Peso Adequado'
       : 'Obesidade';
@@ -457,20 +423,12 @@ export default function ConsultantView() {
   let geralVal = 0;
   if (indicador === 'desnutricao') {
     geralVal = dadosAno.desnutricao;
+  } else if (indicador === 'magreza') {
+    geralVal = dadosAno.magreza;
   } else if (indicador === 'sobrepeso') {
-    const currentYearRegions = regionalData && regionalData[cleanYear] ? Object.values(regionalData[cleanYear]) : [];
-    if (currentYearRegions.length > 0) {
-      let sumSobrepeso = 0, count = 0;
-      currentYearRegions.forEach((reg: any) => { if (typeof reg.sobrepeso === 'number') { sumSobrepeso += reg.sobrepeso; count++; } });
-      geralVal = count > 0 ? Number((sumSobrepeso / count).toFixed(2)) : 16.3;
-    } else { geralVal = 16.3; }
+    geralVal = dadosAno.sobrepeso;
   } else if (indicador === 'eutrofia') {
-    const currentYearRegions = regionalData && regionalData[cleanYear] ? Object.values(regionalData[cleanYear]) : [];
-    if (currentYearRegions.length > 0) {
-      let sumEutrofia = 0, count = 0;
-      currentYearRegions.forEach((reg: any) => { if (typeof reg.eutrofia === 'number') { sumEutrofia += reg.eutrofia; count++; } });
-      geralVal = count > 0 ? Number((sumEutrofia / count).toFixed(2)) : 61.2;
-    } else { geralVal = 61.2; }
+    geralVal = dadosAno.eutrofia;
   } else {
     geralVal = dadosAno.obesidade;
   }
@@ -528,7 +486,7 @@ export default function ConsultantView() {
                 analysisLevel === 'ubs' ? `UBS: ${selectedUbs}` : 'Rio Claro (Geral)'
               }
             </div>
-            <div className="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-teal-750 dark:text-teal-400 bg-teal-50/80 dark:bg-teal-955/20 px-2.5 py-1.5 rounded-xl border border-teal-100 dark:border-teal-900/60 shrink-0">
+            <div className="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-teal-750 dark:text-teal-450 bg-teal-50/80 dark:bg-teal-955/20 px-2.5 py-1.5 rounded-xl border border-teal-100 dark:border-teal-900/60 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
               Online
             </div>
@@ -545,9 +503,10 @@ export default function ConsultantView() {
           <div className="flex items-center bg-slate-100/60 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl p-0.5 gap-0.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] md:ml-auto">
             {[
               { id: 'obesidade', label: 'Obesidade' },
-              { id: 'desnutricao', label: 'Desnutrição' },
               { id: 'sobrepeso', label: 'Sobrepeso' },
               { id: 'eutrofia', label: 'Peso Saudável' },
+              { id: 'magreza', label: 'Magreza' },
+              { id: 'desnutricao', label: 'Desnutrição' },
             ].map(({ id, label }) => (
               <button
                 key={id}
@@ -555,7 +514,7 @@ export default function ConsultantView() {
                 className={`px-2.5 py-1.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300 cursor-pointer ${
                   indicador === id
                     ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-sm'
-                    : 'text-slate-550 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
+                    : 'text-slate-555 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
                 }`}
               >
                 {label}
@@ -740,15 +699,9 @@ export default function ConsultantView() {
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
                 const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
-                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                const rawMetrics = {
-                  desnutricao: ubsData && typeof ubsData.desnutricao === 'number' ? ubsData.desnutricao : globalRec.desnutricao,
-                  obesidade: ubsData && typeof ubsData.obesidade === 'number' ? ubsData.obesidade : globalRec.obesidade,
-                  sobrepeso: ubsData && typeof ubsData.sobrepeso === 'number' ? ubsData.sobrepeso : ((globalRec as any).sobrepeso || 16.3),
-                  eutrofia: ubsData && typeof ubsData.eutrofia === 'number' ? ubsData.eutrofia : ((globalRec as any).eutrofia || 61.2)
-                };
-                const normalizedMetrics = getScaledAndNormalizedMetrics(rawMetrics, multDes, multObs);
-                const finalVal = normalizedMetrics[indicador as keyof typeof normalizedMetrics];
+                const finalVal = ubsData && typeof ubsData[indicador] === 'number'
+                  ? ubsData[indicador]
+                  : (indicador === 'desnutricao' ? 2.62 : indicador === 'magreza' ? 0.0 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
                 const badge = getRiskBadge(finalVal, indicador);
                 
                 let ubsTotalEvaluated = 0;
@@ -768,7 +721,7 @@ export default function ConsultantView() {
                     }}
                     className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
                       isSelected 
-                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-950/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
+                        ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]' 
                         : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
                     }`}
                   >
@@ -806,21 +759,11 @@ export default function ConsultantView() {
                 const isSelected = selectedBairroName === b.nome;
                 const parentUbs = b.parentUbs;
                 const ubsData = normalizeUbsKey(parentUbs, regionalData[cleanYear] || {});
-                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                const baseDes = ubsData && typeof ubsData.desnutricao === 'number' ? ubsData.desnutricao : globalRec.desnutricao;
-                const baseObs = ubsData && typeof ubsData.obesidade === 'number' ? ubsData.obesidade : globalRec.obesidade;
-                const baseSob = ubsData && typeof ubsData.sobrepeso === 'number' ? ubsData.sobrepeso : (globalRec as any).sobrepeso || 16.3;
-                const baseEut = ubsData && typeof ubsData.eutrofia === 'number' ? ubsData.eutrofia : (globalRec as any).eutrofia || 61.2;
+                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
+                const baseVal = ubsData && typeof ubsData[indicador] === 'number' ? ubsData[indicador] : (globalRec as any)[indicador] ?? 0;
                 const bMetric = bairroMetrics[b.nome];
                 const bYearData = bMetric?.anos?.[cleanYear];
-                const rawMetrics = {
-                  desnutricao: bYearData ? bYearData.desnutricao : baseDes,
-                  obesidade: bYearData ? bYearData.obesidade : baseObs,
-                  sobrepeso: bYearData ? bYearData.sobrepeso : baseSob,
-                  eutrofia: bYearData ? bYearData.eutrofia : baseEut
-                };
-                const normalizedMetrics = getScaledAndNormalizedMetrics(rawMetrics, multDes, multObs);
-                const finalVal = normalizedMetrics[indicador as keyof typeof normalizedMetrics];
+                const finalVal = bYearData && typeof bYearData[indicador] === 'number' ? bYearData[indicador] : baseVal;
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (
@@ -866,27 +809,11 @@ export default function ConsultantView() {
                 const ubsRecord = parentUbs 
                 ? normalizeUbsKey(parentUbs, regionalData[cleanYear] || {})
                 : null;
-                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-                const baseDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalRec.desnutricao;
-                const baseObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalRec.obesidade;
-                const baseSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3;
-                const baseEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : (globalRec as any).eutrofia || 61.2;
+                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
+                const baseVal = ubsRecord && typeof ubsRecord[indicador] === 'number' ? ubsRecord[indicador] : (globalRec as any)[indicador] ?? 0;
                 const sMetric = schoolMetrics[s.nome];
                 const sYearData = sMetric?.anos?.[cleanYear];
-                let pDes = sYearData ? sYearData.desnutricao : baseDes;
-                let pObs = sYearData ? sYearData.obesidade : baseObs;
-                let pSob = sYearData ? sYearData.sobrepeso : baseSob;
-                let pEut = sYearData ? sYearData.eutrofia : baseEut;
-                const sum = pDes + pObs + pSob + pEut;
-                if (sum > 0) { pDes = (pDes/sum)*100; pObs = (pObs/sum)*100; pSob = (pSob/sum)*100; pEut = (pEut/sum)*100; }
-                const rawMetrics = {
-                  desnutricao: pDes,
-                  obesidade: pObs,
-                  sobrepeso: pSob,
-                  eutrofia: pEut
-                };
-                const normalizedMetrics = getScaledAndNormalizedMetrics(rawMetrics, multDes, multObs);
-                const finalVal = normalizedMetrics[indicador as keyof typeof normalizedMetrics];
+                const finalVal = sYearData && typeof sYearData[indicador] === 'number' ? sYearData[indicador] : baseVal;
                 const badge = getRiskBadge(finalVal, indicador);
 
                 return (

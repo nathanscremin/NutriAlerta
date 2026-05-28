@@ -52,6 +52,7 @@ interface AppState {
   temporalData: Array<{
     ano: string;
     desnutricao: number;
+    magreza: number;
     obesidade: number;
     sobrepeso: number;
     eutrofia: number;

@@ -13,6 +13,7 @@ import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tool
 interface UbsStats {
   obs: number;
   des: number;
+  mag: number;
   sob: number;
   eut: number;
   total: number;
@@ -28,6 +29,7 @@ interface CompareTooltipProps {
 
 const INDICATORS = [
   { id: 'eutrofia',    label: 'Peso Adequado', short: 'Eut.',   key: 'eut', color: '#0d9488', tailwind: 'teal' },
+  { id: 'magreza',     label: 'Magreza',       short: 'Mag.',   key: 'mag', color: '#38bdf8', tailwind: 'sky' },
   { id: 'obesidade',   label: 'Obesidade',      short: 'Obes.',  key: 'obs', color: '#f43f5e', tailwind: 'rose' },
   { id: 'sobrepeso',   label: 'Sobrepeso',       short: 'Sob.',   key: 'sob', color: '#f59e0b', tailwind: 'amber' },
   { id: 'desnutricao', label: 'Desnutrição',     short: 'Desn.',  key: 'des', color: '#3b82f6', tailwind: 'blue' },
@@ -38,6 +40,7 @@ const INDICATOR_STYLES: Record<string, { bar: string; text: string; bg: string; 
   rose:  { bar: 'from-rose-500 to-rose-400',   text: 'text-rose-600 dark:text-rose-400',   bg: 'bg-rose-50 dark:bg-rose-950/30',   border: 'border-rose-200/60 dark:border-rose-800/40',  glow: '#f43f5e' },
   amber: { bar: 'from-amber-500 to-amber-400', text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200/60 dark:border-amber-800/40',glow: '#f59e0b' },
   blue:  { bar: 'from-blue-500 to-blue-400',   text: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-50 dark:bg-blue-950/30',   border: 'border-blue-200/60 dark:border-blue-800/40',  glow: '#3b82f6' },
+  sky:   { bar: 'from-sky-500 to-sky-400',    text: 'text-sky-600 dark:text-sky-400',    bg: 'bg-sky-50 dark:bg-sky-950/30',    border: 'border-sky-200/60 dark:border-sky-800/40',   glow: '#38bdf8' },
 };
 
 // ─── Componentes auxiliares ───────────────────────────────────────────────────
@@ -262,7 +265,7 @@ export default function UbsComparisonSection() {
   }, [selectedBairro, ubsList]);
 
   const activeIndicator = useMemo(() => {
-    if (['desnutricao', 'eutrofia', 'sobrepeso', 'obesidade'].includes(indicador)) return indicador as 'desnutricao' | 'eutrofia' | 'sobrepeso' | 'obesidade';
+    if (['desnutricao', 'magreza', 'eutrofia', 'sobrepeso', 'obesidade'].includes(indicador)) return indicador as 'desnutricao' | 'magreza' | 'eutrofia' | 'sobrepeso' | 'obesidade';
     return 'obesidade';
   }, [indicador]);
 
@@ -289,17 +292,17 @@ export default function UbsComparisonSection() {
         ubsTotal += sch.anos[cleanYear].total_avaliados;
       }
     });
-    return { obs: metrics.obesidade, des: metrics.desnutricao, sob: metrics.sobrepeso, eut: metrics.eutrofia, total: ubsTotal || 350 };
+    return { obs: metrics.obesidade, mag: metrics.magreza ?? 0, des: metrics.desnutricao, sob: metrics.sobrepeso, eut: metrics.eutrofia, total: ubsTotal || 350 };
   }, [regionalData, temporalData, schoolMetrics]);
 
   const statsA = useMemo(() => getStats(ubsA, '2025'), [getStats, ubsA]);
   const statsB = useMemo(() => getStats(ubsB, '2025'), [getStats, ubsB]);
 
-  const demoA = useMemo(() => getDemographicsForUbs(ubsA, '2025', statsA.des, statsA.sob, statsA.obs, statsA.eut), [ubsA, statsA]);
-  const demoB = useMemo(() => getDemographicsForUbs(ubsB, '2025', statsB.des, statsB.sob, statsB.obs, statsB.eut), [ubsB, statsB]);
+  const demoA = useMemo(() => getDemographicsForUbs(ubsA, '2025', statsA.des, statsA.sob, statsA.obs, statsA.eut, statsA.mag), [ubsA, statsA]);
+  const demoB = useMemo(() => getDemographicsForUbs(ubsB, '2025', statsB.des, statsB.sob, statsB.obs, statsB.eut, statsB.mag), [ubsB, statsB]);
 
   const chartData = useMemo(() => {
-    const keyMap = { obesidade: 'obs', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
+    const keyMap = { obesidade: 'obs', magreza: 'mag', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
     const k = keyMap[activeIndicator];
     return yearsList.map(yr => {
       const cleanYr = yr.replace('★', '').trim();
@@ -315,7 +318,7 @@ export default function UbsComparisonSection() {
   }, [getStats, ubsA, ubsB, yearsList, activeIndicator]);
 
   // Valor principal do indicador ativo para o placar central
-  const activeKeyMap = { obesidade: 'obs', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
+  const activeKeyMap = { obesidade: 'obs', magreza: 'mag', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
   const activeKey = activeKeyMap[activeIndicator];
   const valA = statsA[activeKey];
   const valB = statsB[activeKey];

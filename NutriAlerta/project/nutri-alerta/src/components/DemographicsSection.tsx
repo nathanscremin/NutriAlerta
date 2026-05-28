@@ -62,6 +62,7 @@ export default function DemographicsSection() {
 
     return {
       des: Number(scoped.desnutricao.toFixed(2)),
+      mag: Number(scoped.magreza.toFixed(2)),
       obs: Number(scoped.obesidade.toFixed(2)),
       sob: Number(scoped.sobrepeso.toFixed(2)),
       eut: Number(scoped.eutrofia.toFixed(2))
@@ -78,13 +79,8 @@ export default function DemographicsSection() {
           ? selectedUbs 
           : 'Geral';
     
-    const key = `${focusName || 'Geral'}-${cleanYear}`;
-    if (demographicData && demographicData[key]) {
-      return demographicData[key];
-    }
-    
-    return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut);
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates, demographicData]);
+    return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut, rates.mag);
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates]);
 
   const activeGroup = demoData.ageGroups[activeGroupIndex];
 
@@ -145,6 +141,7 @@ export default function DemographicsSection() {
       { name: 'Peso Adequado', value: activeGroup.eutrofia.rate, fill: '#0d9488' },
       { name: 'Sobrepeso', value: activeGroup.sobrepeso.rate, fill: '#d97706' },
       { name: 'Obesidade', value: activeGroup.obesidade.rate, fill: '#f43f5e' },
+      { name: 'Magreza', value: activeGroup.magreza.rate, fill: '#38bdf8' },
       { name: 'Desnutrição', value: activeGroup.desnutricao.rate, fill: '#2563eb' }
     ];
   }, [activeGroup]);
@@ -165,7 +162,7 @@ export default function DemographicsSection() {
       </div>
 
       {/* 2. Top-tier KPI Cards Grid (Average Ages - Clean Visual) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
         {/* KPI Peso Adequado (Teal) */}
         <KpiCard
@@ -191,12 +188,20 @@ export default function DemographicsSection() {
           tooltip="Idade média dos indivíduos com diagnóstico de sobrepeso nesta região."
         />
 
+        {/* KPI Magreza (Sky) */}
+        <KpiCard
+          label="Idade Média · Magreza"
+          value={demoData.globalAvgAgeMag}
+          accentColor="text-sky-600 dark:text-sky-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de magreza nesta região."
+        />
+
         {/* KPI Desnutrição (Blue) */}
         <KpiCard
           label="Idade Média · Desnutrição"
           value={demoData.globalAvgAgeDes}
           accentColor="text-blue-600 dark:text-blue-400"
-          tooltip="Idade média dos indivíduos com quadro clínico de magreza ou desnutrição."
+          tooltip="Idade média dos indivíduos com quadro clínico de magreza ou desnutrição extrema."
         />
       </div>
 
@@ -266,7 +271,7 @@ export default function DemographicsSection() {
             <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
               Análise Epidemiológica por Gênero
             </h3>
-            <div className="flex items-center gap-3 text-[10px] font-extrabold text-slate-500 dark:text-zinc-400">
+            <div className="flex items-center gap-3 text-[10px] font-extrabold text-slate-550 dark:text-zinc-400">
               <span className="flex items-center gap-1"><span className="w-2.5 h-1 rounded-sm bg-blue-500" />Meninos</span>
               <span className="flex items-center gap-1"><span className="w-2.5 h-1 rounded-sm bg-rose-500" />Meninas</span>
             </div>
@@ -301,6 +306,16 @@ export default function DemographicsSection() {
               activeGroup.sobrepeso.pctMasculino,
               activeGroup.sobrepeso.pctFeminino,
               "text-amber-600 dark:text-amber-400",
+              "border-slate-200/50 dark:border-zinc-800/50"
+            )}
+
+            {/* Magreza Gênero */}
+            {renderGenderBarCard(
+              "Magreza",
+              activeGroup.magreza.rate,
+              activeGroup.magreza.pctMasculino,
+              activeGroup.magreza.pctFeminino,
+              "text-sky-600 dark:text-sky-400",
               "border-slate-200/50 dark:border-zinc-800/50"
             )}
 

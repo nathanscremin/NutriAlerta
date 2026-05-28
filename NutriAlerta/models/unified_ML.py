@@ -27,11 +27,17 @@ def criar_tendencias(df_master):
     df = df_master.copy()
     df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
 
+    if 'Obesidade_Grave_Pct' in df.columns and 'Obesidade_Pct' in df.columns:
+        df['Obesidade_Total_Pct'] = df['Obesidade_Pct'] + df['Obesidade_Grave_Pct']
+    else:
+        df['Obesidade_Total_Pct'] = df.get('Obesidade_Pct', 0.0)
+
     metricas = [
-        ('Obesidade_Pct', 'Tendencia_Obesidade', 'Obesidade_Ano_Anterior', 'Delta_Obesidade'),
-        ('Magreza_Pct', 'Tendencia_Desnutricao', 'Desnutricao_Ano_Anterior', 'Delta_Desnutricao'),
-        ('Sobrepeso_Pct', 'Tendencia_Sobrepeso', 'Sobrepeso_Ano_Anterior', 'Delta_Sobrepeso'),
+        ('Magreza_Acentuada_Pct', 'Tendencia_Desnutricao', 'Desnutricao_Ano_Anterior', 'Delta_Desnutricao'),
+        ('Magreza_Pct', 'Tendencia_Magreza', 'Magreza_Ano_Anterior', 'Delta_Magreza'),
         ('Eutrofia_Pct', 'Tendencia_Eutrofia', 'Eutrofia_Ano_Anterior', 'Delta_Eutrofia'),
+        ('Sobrepeso_Pct', 'Tendencia_Sobrepeso', 'Sobrepeso_Ano_Anterior', 'Delta_Sobrepeso'),
+        ('Obesidade_Total_Pct', 'Tendencia_Obesidade', 'Obesidade_Ano_Anterior', 'Delta_Obesidade'),
     ]
 
     for fonte, tendencia, anterior, delta in metricas:
@@ -74,21 +80,23 @@ def treinar_modelo_indicador(df_modelo, coluna_anterior, coluna_delta):
 def normalizar_percentuais(df):
     for idx, row in df.iterrows():
         valores = np.array([
-            max(0.0, float(row['Tendencia_Obesidade'])),
             max(0.0, float(row['Tendencia_Desnutricao'])),
-            max(0.0, float(row['Tendencia_Sobrepeso'])),
+            max(0.0, float(row['Tendencia_Magreza'])),
             max(0.0, float(row['Tendencia_Eutrofia'])),
+            max(0.0, float(row['Tendencia_Sobrepeso'])),
+            max(0.0, float(row['Tendencia_Obesidade'])),
         ])
         total = float(valores.sum())
         if total > 0:
             valores = (valores / total) * 100
         else:
-            valores = np.array([12.0, 3.0, 15.0, 70.0])
+            valores = np.array([2.0, 3.0, 70.0, 15.0, 10.0])
 
-        df.at[idx, 'Tendencia_Obesidade'] = float(np.round(valores[0], 2))
-        df.at[idx, 'Tendencia_Desnutricao'] = float(np.round(valores[1], 2))
-        df.at[idx, 'Tendencia_Sobrepeso'] = float(np.round(valores[2], 2))
-        df.at[idx, 'Tendencia_Eutrofia'] = float(np.round(valores[3], 2))
+        df.at[idx, 'Tendencia_Desnutricao'] = float(np.round(valores[0], 2))
+        df.at[idx, 'Tendencia_Magreza'] = float(np.round(valores[1], 2))
+        df.at[idx, 'Tendencia_Eutrofia'] = float(np.round(valores[2], 2))
+        df.at[idx, 'Tendencia_Sobrepeso'] = float(np.round(valores[3], 2))
+        df.at[idx, 'Tendencia_Obesidade'] = float(np.round(valores[4], 2))
 
     return df
 
@@ -105,18 +113,21 @@ def gerar_projecoes(df_master, modelos):
         anterior = {
             'obesidade': 'Obesidade_Ano_Anterior',
             'desnutricao': 'Desnutricao_Ano_Anterior',
+            'magreza': 'Magreza_Ano_Anterior',
             'sobrepeso': 'Sobrepeso_Ano_Anterior',
             'eutrofia': 'Eutrofia_Ano_Anterior',
         }[nome]
         tendencia = {
             'obesidade': 'Tendencia_Obesidade',
             'desnutricao': 'Tendencia_Desnutricao',
+            'magreza': 'Tendencia_Magreza',
             'sobrepeso': 'Tendencia_Sobrepeso',
             'eutrofia': 'Tendencia_Eutrofia',
         }[nome]
         delta_col = {
             'obesidade': 'Delta_Predito_Obesidade',
             'desnutricao': 'Delta_Predito_Desnutricao',
+            'magreza': 'Delta_Predito_Magreza',
             'sobrepeso': 'Delta_Predito_Sobrepeso',
             'eutrofia': 'Delta_Predito_Eutrofia',
         }[nome]
@@ -135,18 +146,21 @@ def gerar_projecoes(df_master, modelos):
         anterior = {
             'obesidade': 'Obesidade_Ano_Anterior',
             'desnutricao': 'Desnutricao_Ano_Anterior',
+            'magreza': 'Magreza_Ano_Anterior',
             'sobrepeso': 'Sobrepeso_Ano_Anterior',
             'eutrofia': 'Eutrofia_Ano_Anterior',
         }[nome]
         tendencia = {
             'obesidade': 'Tendencia_Obesidade',
             'desnutricao': 'Tendencia_Desnutricao',
+            'magreza': 'Tendencia_Magreza',
             'sobrepeso': 'Tendencia_Sobrepeso',
             'eutrofia': 'Tendencia_Eutrofia',
         }[nome]
         delta_col = {
             'obesidade': 'Delta_Predito_Obesidade',
             'desnutricao': 'Delta_Predito_Desnutricao',
+            'magreza': 'Delta_Predito_Magreza',
             'sobrepeso': 'Delta_Predito_Sobrepeso',
             'eutrofia': 'Delta_Predito_Eutrofia',
         }[nome]
@@ -161,6 +175,7 @@ def gerar_projecoes(df_master, modelos):
     df_hist['Status'] = 'DADO HISTÓRICO'
     df_hist['Delta_Predito_Obesidade'] = 0.0
     df_hist['Delta_Predito_Desnutricao'] = 0.0
+    df_hist['Delta_Predito_Magreza'] = 0.0
     df_hist['Delta_Predito_Sobrepeso'] = 0.0
     df_hist['Delta_Predito_Eutrofia'] = 0.0
 
@@ -184,10 +199,11 @@ def run_pipeline(df_master=None):
 
     modelos = {}
     for nome, anterior, delta in [
-        ('obesidade', 'Obesidade_Ano_Anterior', 'Delta_Obesidade'),
         ('desnutricao', 'Desnutricao_Ano_Anterior', 'Delta_Desnutricao'),
+        ('magreza', 'Magreza_Ano_Anterior', 'Delta_Magreza'),
         ('sobrepeso', 'Sobrepeso_Ano_Anterior', 'Delta_Sobrepeso'),
         ('eutrofia', 'Eutrofia_Ano_Anterior', 'Delta_Eutrofia'),
+        ('obesidade', 'Obesidade_Ano_Anterior', 'Delta_Obesidade'),
     ]:
         modelo, features = treinar_modelo_indicador(df_master, anterior, delta)
         modelos[nome] = {'modelo': modelo, 'features': features}
@@ -195,9 +211,16 @@ def run_pipeline(df_master=None):
     df_consolidado = gerar_projecoes(df_master, modelos)
 
     df_final_futura = df_consolidado.copy()
+    df_final_futura['Magreza_Acentuada_Pct'] = df_final_futura['Tendencia_Desnutricao']
+    df_final_futura['Magreza_Pct'] = df_final_futura['Tendencia_Magreza']
     df_final_futura['Eutrofia_Pct'] = df_final_futura['Tendencia_Eutrofia']
     df_final_futura['Sobrepeso_Pct'] = df_final_futura['Tendencia_Sobrepeso']
-    df_final_futura['Delta_Predito'] = df_final_futura['Delta_Predito_Obesidade']
+    df_final_futura['Obesidade_Pct'] = df_final_futura['Tendencia_Obesidade']
+    if 'Obesidade_Grave_Pct' in df_final_futura.columns:
+        future_mask = df_final_futura['Status'] == 'PREVISÃO FUTURA'
+        df_final_futura.loc[future_mask, 'Obesidade_Grave_Pct'] = 0.0
+
+    df_final_futura['Delta_Predito'] = df_final_futura.get('Delta_Predito_Obesidade', 0.0)
     df_final_futura['Delta_Obesidade'] = df_final_futura['Delta_Predito_Obesidade']
 
     caminho_obesidade = obter_caminho_salvamento('NutriAlerta_Projecao_Futura.csv')
@@ -206,6 +229,15 @@ def run_pipeline(df_master=None):
     df_final_futura.to_csv(caminho_obesidade_2, index=False)
 
     df_final_desnutricao = df_consolidado.copy()
+    df_final_desnutricao['Magreza_Acentuada_Pct'] = df_final_desnutricao['Tendencia_Desnutricao']
+    df_final_desnutricao['Magreza_Pct'] = df_final_desnutricao['Tendencia_Magreza']
+    df_final_desnutricao['Eutrofia_Pct'] = df_final_desnutricao['Tendencia_Eutrofia']
+    df_final_desnutricao['Sobrepeso_Pct'] = df_final_desnutricao['Tendencia_Sobrepeso']
+    df_final_desnutricao['Obesidade_Pct'] = df_final_desnutricao['Tendencia_Obesidade']
+    if 'Obesidade_Grave_Pct' in df_final_desnutricao.columns:
+        future_mask = df_final_desnutricao['Status'] == 'PREVISÃO FUTURA'
+        df_final_desnutricao.loc[future_mask, 'Obesidade_Grave_Pct'] = 0.0
+
     df_final_desnutricao['Delta_Predito'] = df_final_desnutricao['Delta_Predito_Desnutricao']
     df_final_desnutricao['Delta_Desnutricao'] = df_final_desnutricao['Delta_Predito_Desnutricao']
 

@@ -127,32 +127,7 @@ export default function ExpertView() {
     }
   }, [selectedPoi]);
 
-  // Multadores dinâmicos baseados nas camadas ativas de POIs
-  const { multObs, multDes } = React.useMemo(() => {
-    let mObs = 1;
-    let mDes = 1;
-
-    const hasSupermarket = activePoiTypes.includes('Alimentação - Mercado');
-    const hasFastFood = activePoiTypes.includes('Alimentação - Restaurante/Fast-food');
-    const hasSport = activePoiTypes.includes('Esporte e Lazer');
-
-    if (hasSupermarket && !hasFastFood) {
-      mObs *= 0.90;
-      mDes *= 0.95;
-    }
-    if (hasFastFood && !hasSupermarket) {
-      mObs *= 1.15;
-    }
-    if (hasSport) {
-      mObs *= 0.92;
-    }
-    if (activePoiTypes.length === 0) {
-      mObs *= 1.05;
-    }
-    return { multObs: mObs, multDes: mDes };
-  }, [activePoiTypes]);
-
-  // Dado temporal reativo com suporte a análise hierárquica multinível e efeitos das camadas de POIs
+  // Dado temporal reativo com suporte a análise hierárquica multinível
   const activeTemporalData = React.useMemo(() => {
     const baseSource = buildScopedTemporalSeries({
       analysisLevel,
@@ -166,57 +141,14 @@ export default function ExpertView() {
       bairroMetrics
     });
 
-    return baseSource.map(d => {
-      const scaleDes = Number((d.desnutricao * multDes).toFixed(2));
-      const scaleObs = Number((d.obesidade * multObs).toFixed(2));
-      const scaleSob = Number(((d.sobrepeso || 0) * ((multObs + 1) / 2)).toFixed(2));
-      const beforeSum = (d.desnutricao || 0) + (d.obesidade || 0) + (d.sobrepeso || 0);
-      const afterSum = scaleDes + scaleObs + scaleSob;
-      const baseEut = d.eutrofia !== undefined ? d.eutrofia : (100 - beforeSum);
-      const scaleEut = Math.max(10, Number((baseEut - (afterSum - beforeSum)).toFixed(2)));
-      
-      const rawObj = {
-        desnutricao: scaleDes,
-        obesidade: scaleObs,
-        sobrepeso: scaleSob,
-        eutrofia: scaleEut
-      };
-      
-      const sum = rawObj.desnutricao + rawObj.sobrepeso + rawObj.obesidade + rawObj.eutrofia;
-      const norm = {
-        desnutricao: Number(((rawObj.desnutricao / sum) * 100).toFixed(2)),
-        sobrepeso: Number(((rawObj.sobrepeso / sum) * 100).toFixed(2)),
-        obesidade: Number(((rawObj.obesidade / sum) * 100).toFixed(2)),
-        eutrofia: Number(((rawObj.eutrofia / sum) * 100).toFixed(2))
-      };
-      const diff = Number((100 - (norm.desnutricao + norm.sobrepeso + norm.obesidade + norm.eutrofia)).toFixed(2));
-      if (diff !== 0) {
-        let maxK: keyof typeof norm = 'eutrofia';
-        let maxV = norm[maxK];
-        (Object.keys(norm) as Array<keyof typeof norm>).forEach(k => {
-          if (norm[k] > maxV) {
-            maxV = norm[k];
-            maxK = k;
-          }
-        });
-        norm[maxK] = Number((norm[maxK] + diff).toFixed(2));
-      }
-
-      return {
-        ...d,
-        desnutricao: norm.desnutricao,
-        obesidade: norm.obesidade,
-        sobrepeso: norm.sobrepeso,
-        eutrofia: norm.eutrofia
-      };
-    });
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics, multDes, multObs]);
+    return baseSource;
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics]);
 
   // Encontra os dados do ano selecionado
   const cleanYear = anoSelecionado.replace('★', '').trim();
-  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
+  const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   // Pega a projeção de 2027
-  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
+  const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
 
   const isPrevisao = anoSelecionado.includes('★');
 
@@ -240,6 +172,7 @@ export default function ExpertView() {
   // Configuração baseada no indicador selecionado
   const isObs = indicador === 'obesidade';
   const isDes = indicador === 'desnutricao';
+  const isMag = indicador === 'magreza';
   const isSob = indicador === 'sobrepeso';
   const isEut = indicador === 'eutrofia';
 
@@ -278,30 +211,6 @@ export default function ExpertView() {
     };
   }, [isEut, isDes, isSob]);
 
-  const mainValue = Number((isObs ? dadosAno.obesidade : isDes ? dadosAno.desnutricao : isSob ? dadosAno.sobrepeso || 0 : dadosAno.eutrofia || 0).toFixed(2));
-  const mainProj = Number((isObs ? dadosProj.obesidade : isDes ? dadosProj.desnutricao : isSob ? dadosProj.sobrepeso || 0 : dadosProj.eutrofia || 0).toFixed(2));
-
-  // Mapping of primary indicator to secondary indicator label & value (resolves issue #3)
-  let secondaryLabel = 'Obesidade';
-  let secondaryValue = dadosAno.obesidade;
-
-  if (isEut) {
-    secondaryLabel = 'Sobrepeso';
-    secondaryValue = dadosAno.sobrepeso;
-  } else if (isObs) {
-    secondaryLabel = 'Desnutrição';
-    secondaryValue = dadosAno.desnutricao;
-  } else if (isDes) {
-    secondaryLabel = 'Obesidade';
-    secondaryValue = dadosAno.obesidade;
-  } else if (isSob) {
-    secondaryLabel = 'Obesidade';
-    secondaryValue = dadosAno.obesidade;
-  }
-
-  const delta = (mainProj - mainValue).toFixed(2);
-  const isAlta = Number(delta) > 0;
-
   // Determina o próximo ano para cálculo de crescimento relativo
   const isEndYear = cleanYear === '2027';
   const targetYear = isEndYear ? '2027' : (parseInt(cleanYear, 10) + 1).toString();
@@ -311,46 +220,188 @@ export default function ExpertView() {
   const baseRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === baseYear) || dadosAno;
   const targetRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === targetYear) || dadosProj;
 
-  // Valores principais para crescimento
-  const mainBaseValue = Number(isObs ? baseRecord.obesidade : isDes ? baseRecord.desnutricao : isSob ? baseRecord.sobrepeso || 0 : baseRecord.eutrofia || 0);
-  const mainTargetValue = Number(isObs ? targetRecord.obesidade : isDes ? targetRecord.desnutricao : isSob ? targetRecord.sobrepeso || 0 : targetRecord.eutrofia || 0);
+  // Mapeamento de candidatos para busca de extremos no modo Global
+  const candidateIndicators = [
+    {
+      id: 'desnutricao',
+      label: 'Desnutrição',
+      value: Number(dadosAno.desnutricao.toFixed(2)),
+      proj: Number(dadosProj.desnutricao.toFixed(2)),
+      base: Number(baseRecord.desnutricao.toFixed(2)),
+      target: Number(targetRecord.desnutricao.toFixed(2)),
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50/50 dark:bg-blue-955/20',
+      border: 'border-blue-100 dark:border-blue-900/40',
+      bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+    },
+    {
+      id: 'magreza',
+      label: 'Magreza',
+      value: Number(dadosAno.magreza.toFixed(2)),
+      proj: Number(dadosProj.magreza.toFixed(2)),
+      base: Number((baseRecord.magreza || 0).toFixed(2)),
+      target: Number((targetRecord.magreza || 0).toFixed(2)),
+      color: 'text-sky-600 dark:text-sky-400',
+      bg: 'bg-sky-50/50 dark:bg-sky-955/20',
+      border: 'border-sky-100 dark:border-sky-900/40',
+      bullet: 'bg-sky-550 shadow-[0_0_8px_rgba(56,189,248,0.5)]'
+    },
+    {
+      id: 'sobrepeso',
+      label: 'Sobrepeso',
+      value: Number(dadosAno.sobrepeso.toFixed(2)),
+      proj: Number(dadosProj.sobrepeso.toFixed(2)),
+      base: Number((baseRecord.sobrepeso || 0).toFixed(2)),
+      target: Number((targetRecord.sobrepeso || 0).toFixed(2)),
+      color: 'text-amber-600 dark:text-amber-400',
+      bg: 'bg-amber-50/50 dark:bg-amber-955/20',
+      border: 'border-amber-100 dark:border-amber-900/40',
+      bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+    },
+    {
+      id: 'obesidade',
+      label: 'Obesidade',
+      value: Number(dadosAno.obesidade.toFixed(2)),
+      proj: Number(dadosProj.obesidade.toFixed(2)),
+      base: Number(baseRecord.obesidade.toFixed(2)),
+      target: Number(targetRecord.obesidade.toFixed(2)),
+      color: 'text-rose-600 dark:text-rose-455',
+      bg: 'bg-rose-50/50 dark:bg-rose-955/20',
+      border: 'border-rose-100 dark:border-rose-900/40',
+      bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+    }
+  ];
+
+  const getSeverityLevel = (value: number, indicator: string) => {
+    if (indicator === 'desnutricao') {
+      if (value < 1.5) return 0;
+      if (value < 2.5) return 1;
+      if (value < 3.5) return 2;
+      if (value < 4.5) return 3;
+      return 4;
+    } else if (indicator === 'magreza') {
+      if (value < 12) return 0;
+      if (value < 15) return 1;
+      if (value < 18) return 2;
+      if (value < 21) return 3;
+      return 4;
+    } else if (indicator === 'sobrepeso') {
+      if (value < 12) return 0;
+      if (value < 15) return 1;
+      if (value < 18) return 2;
+      if (value < 21) return 3;
+      return 4;
+    } else {
+      // Obesidade
+      if (value < 7) return 0;
+      if (value < 10) return 1;
+      if (value < 13) return 2;
+      if (value < 16) return 3;
+      return 4;
+    }
+  };
+
+  const sortedCandidates = [...candidateIndicators].sort((a, b) => {
+    const lvlA = getSeverityLevel(a.value, a.id);
+    const lvlB = getSeverityLevel(b.value, b.id);
+    return lvlB - lvlA || b.value - a.value;
+  });
+
+  const isGlobal = indicador === 'global';
+
+  // Configurações do Indicador Principal
+  const mainValue = isGlobal 
+    ? sortedCandidates[0].value 
+    : Number((isObs ? dadosAno.obesidade : isDes ? dadosAno.desnutricao : isMag ? dadosAno.magreza : isSob ? dadosAno.sobrepeso || 0 : dadosAno.eutrofia || 0).toFixed(2));
+
+  const mainProj = isGlobal 
+    ? sortedCandidates[0].proj 
+    : Number((isObs ? dadosProj.obesidade : isDes ? dadosProj.desnutricao : isMag ? dadosProj.magreza : isSob ? dadosProj.sobrepeso || 0 : dadosProj.eutrofia || 0).toFixed(2));
+
+  const mainBaseValue = isGlobal
+    ? sortedCandidates[0].base
+    : Number(isObs ? baseRecord.obesidade : isDes ? baseRecord.desnutricao : isMag ? baseRecord.magreza || 0 : isSob ? baseRecord.sobrepeso || 0 : baseRecord.eutrofia || 0);
+
+  const mainTargetValue = isGlobal
+    ? sortedCandidates[0].target
+    : Number(isObs ? targetRecord.obesidade : isDes ? targetRecord.desnutricao : isMag ? targetRecord.magreza || 0 : isSob ? targetRecord.sobrepeso || 0 : targetRecord.eutrofia || 0);
 
   // Crescimento relativo em %
   const growthPercent = mainBaseValue > 0 
     ? (((mainTargetValue - mainBaseValue) / mainBaseValue) * 100).toFixed(2)
     : "0.00";
 
-  const mainColor = isEut
-    ? 'text-teal-600 dark:text-teal-400'
-    : indicador === 'desnutricao' 
-      ? 'text-blue-600 dark:text-blue-400' 
-      : indicador === 'sobrepeso' 
-        ? 'text-amber-600 dark:text-amber-400' 
-        : 'text-rose-600 dark:text-rose-400';
-        
-  const mainBg = isEut
-    ? 'bg-teal-50/50 dark:bg-teal-950/20'
-    : indicador === 'desnutricao' 
-      ? 'bg-blue-50/50 dark:bg-blue-950/20' 
-      : indicador === 'sobrepeso' 
-        ? 'bg-amber-50/50 dark:bg-amber-950/20' 
-        : 'bg-rose-50/50 dark:bg-rose-950/20';
-        
-  const mainBorder = isEut
-    ? 'border-teal-100'
-    : indicador === 'desnutricao' 
-      ? 'border-blue-100' 
-      : indicador === 'sobrepeso' 
-        ? 'border-amber-100' 
-        : 'border-rose-100';
-        
-  const mainLabel = isEut
-    ? 'Peso Adequado'
-    : indicador === 'desnutricao' 
-      ? 'Desnutrição' 
-      : indicador === 'sobrepeso' 
-        ? 'Sobrepeso' 
-        : 'Obesidade';
+  const mainColor = isGlobal
+    ? sortedCandidates[0].color
+    : isEut
+      ? 'text-teal-600 dark:text-teal-400'
+      : indicador === 'desnutricao' 
+        ? 'text-blue-600 dark:text-blue-400' 
+        : indicador === 'magreza'
+          ? 'text-sky-600 dark:text-sky-400'
+          : indicador === 'sobrepeso' 
+            ? 'text-amber-600 dark:text-amber-400' 
+            : 'text-rose-600 dark:text-rose-400';
+          
+  const mainBg = isGlobal
+    ? sortedCandidates[0].bg
+    : isEut
+      ? 'bg-teal-50/50 dark:bg-teal-955/20'
+      : indicador === 'desnutricao' 
+        ? 'bg-blue-50/50 dark:bg-blue-955/20'
+        : indicador === 'magreza'
+          ? 'bg-sky-50/50 dark:bg-sky-955/20'
+          : indicador === 'sobrepeso' 
+            ? 'bg-amber-50/50 dark:bg-amber-955/20' 
+            : 'bg-rose-50/50 dark:bg-rose-955/20';
+          
+  const mainBorder = isGlobal
+    ? sortedCandidates[0].border
+    : isEut
+      ? 'border-teal-100'
+      : indicador === 'desnutricao' 
+        ? 'border-blue-100' 
+        : indicador === 'magreza'
+          ? 'border-sky-100'
+          : indicador === 'sobrepeso' 
+            ? 'border-amber-100' 
+            : 'border-rose-100';
+          
+  const mainLabel = isGlobal
+    ? sortedCandidates[0].label
+    : isEut
+      ? 'Peso Adequado'
+      : indicador === 'desnutricao' 
+        ? 'Desnutrição' 
+        : indicador === 'magreza'
+          ? 'Magreza'
+          : indicador === 'sobrepeso' 
+            ? 'Sobrepeso' 
+            : 'Obesidade';
+
+  // Configurações do Indicador Secundário
+  let secondaryLabel = '';
+  let secondaryValue = 0;
+
+  if (isGlobal) {
+    secondaryLabel = sortedCandidates[3].label;
+    secondaryValue = sortedCandidates[3].value;
+  } else if (isObs) {
+    secondaryLabel = 'Sobrepeso';
+    secondaryValue = dadosAno.sobrepeso;
+  } else if (isSob) {
+    secondaryLabel = 'Obesidade';
+    secondaryValue = dadosAno.obesidade;
+  } else if (isDes) {
+    secondaryLabel = 'Magreza';
+    secondaryValue = dadosAno.magreza;
+  } else if (isMag) {
+    secondaryLabel = 'Desnutrição';
+    secondaryValue = dadosAno.desnutricao;
+  }
+
+  const delta = (mainProj - mainValue).toFixed(2);
+  const isAlta = Number(delta) > 0;
 
   // Compute dynamic ranking from loaded regional data
   const currentYearRegions = regionalData && regionalData[cleanYear] 
@@ -364,9 +415,11 @@ export default function ExpertView() {
             ? reg.delta_obesidade 
             : isDes
               ? reg.delta_desnutricao
-              : isSob
-                ? reg.delta_sobrepeso || 0
-                : reg.delta_eutrofia || 0;
+              : isMag
+                ? reg.delta_magreza || 0
+                : isSob
+                  ? reg.delta_sobrepeso || 0
+                  : reg.delta_eutrofia || 0;
           return {
             name: reg.nome.replace('UBS ', '').replace('USF ', ''),
             delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
@@ -413,20 +466,12 @@ export default function ExpertView() {
     ? (avaliadosVal >= 1000 ? `${(avaliadosVal / 1000).toFixed(1)}K` : String(avaliadosVal))
     : 'N/D';
 
-  // Compute dynamic distribution averages for selected year
-  let eutrofiaAvg = Number(dadosAno.eutrofia.toFixed(1));
-  let sobrepesoAvg = Number(dadosAno.sobrepeso.toFixed(1));
-  let obesidadeAvg = Number(dadosAno.obesidade.toFixed(1));
-  let desnutricaoAvg = Number(dadosAno.desnutricao.toFixed(1));
-
-  // Normalização para a soma ser exatamente 100%
-  const totalSum = eutrofiaAvg + sobrepesoAvg + obesidadeAvg + desnutricaoAvg;
-  if (totalSum > 0) {
-    eutrofiaAvg = Number((eutrofiaAvg / totalSum * 100).toFixed(1));
-    sobrepesoAvg = Number((sobrepesoAvg / totalSum * 100).toFixed(1));
-    obesidadeAvg = Number((obesidadeAvg / totalSum * 100).toFixed(1));
-    desnutricaoAvg = Number((desnutricaoAvg / totalSum * 100).toFixed(1));
-  }
+  // Distribution values from model data
+  const eutrofiaAvg = Number(dadosAno.eutrofia.toFixed(1));
+  const sobrepesoAvg = Number(dadosAno.sobrepeso.toFixed(1));
+  const obesidadeAvg = Number(dadosAno.obesidade.toFixed(1));
+  const desnutricaoAvg = Number(dadosAno.desnutricao.toFixed(1));
+  const magrezaAvg = Number(dadosAno.magreza.toFixed(1));
 
   const cleanSelectedBairro = analysisLevel === 'bairro'
     ? (getParentUbsForBairroName(selectedBairroName) || selectedUbs || '').replace('UBS ', '').replace('USF ', '')
@@ -457,7 +502,7 @@ export default function ExpertView() {
       </div>
 
         {/* ── KPI Cards ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${isEut ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
           <KpiCard
             label={`Avaliados (${anoSelecionado})`}
             value={avaliadosStr}
@@ -490,15 +535,17 @@ export default function ExpertView() {
             tooltip="Prevalência percentual (%) estimada pela IA para a qual o indicador caminha no próximo período."
             invertTrendColor={isEut}
           />
-          <KpiCard
-            label={`${secondaryLabel} · ${anoSelecionado}`}
-            value={`${secondaryValue.toFixed(2)}%`}
-            sub={`Indicador secundário em ${cleanYear}`}
-            accentColor="text-slate-600 dark:text-zinc-350"
-            bgColor="bg-white dark:bg-[#1c1c1e]"
-            borderColor="border-slate-200 dark:border-[#2c2c2e]"
-            tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado de forma comparativa."
-          />
+          {!isEut && (
+            <KpiCard
+              label={`${secondaryLabel} · ${anoSelecionado}`}
+              value={`${secondaryValue.toFixed(2)}%`}
+              sub={`Indicador secundário em ${cleanYear}`}
+              accentColor="text-slate-600 dark:text-zinc-350"
+              bgColor="bg-white dark:bg-[#1c1c1e]"
+              borderColor="border-slate-200 dark:border-[#2c2c2e]"
+              tooltip="Taxa de prevalência do segundo indicador nutricional acompanhado de forma comparativa."
+            />
+          )}
         </div>
 
         {/* ── Seção 1: Mapa de Calor (Imersivo e Largura Total) ── */}
@@ -666,7 +713,8 @@ export default function ExpertView() {
                         { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#10b981' },
                         { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#f59e0b' },
                         { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' },
-                        { name: 'Magreza', value: desnutricaoAvg, fill: '#3b82f6' }
+                        { name: 'Magreza', value: magrezaAvg, fill: '#38bdf8' },
+                        { name: 'Desnutrição', value: desnutricaoAvg, fill: '#3b82f6' }
                       ]}
                       innerRadius="58%"
                       outerRadius="80%"
@@ -808,6 +856,9 @@ export default function ExpertView() {
                     <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
                       <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#3b82f6" floodOpacity="0.45" />
                     </filter>
+                    <filter id="glow-sky" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#38bdf8" floodOpacity="0.45" />
+                    </filter>
                     <filter id="glow-teal" x="-20%" y="-20%" width="140%" height="140%">
                       <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d9488" floodOpacity="0.45" />
                     </filter>
@@ -847,6 +898,19 @@ export default function ExpertView() {
                       ? <circle cx={props.cx} cy={props.cy} r={isSob ? 5 : 3} fill="none" stroke="#f59e0b" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isSob ? 1 : 0.3} />
                       : <circle cx={props.cx} cy={props.cy} r={isSob ? 4 : 2} fill="#f59e0b" strokeOpacity={isSob ? 1 : 0.3} />}
                     activeDot={{ r: 6, fill: '#fff', stroke: '#f59e0b', strokeWidth: 3 }}
+                  />
+                  <Line
+                    type="monotone"
+                    name="% Magreza"
+                    dataKey="magreza"
+                    stroke="#38bdf8"
+                    strokeWidth={isMag ? 3 : 1.5}
+                    strokeOpacity={isMag ? 1 : 0.3}
+                    filter={isMag ? "url(#glow-sky)" : undefined}
+                    dot={(props: any) => props.payload.isPrevisao
+                      ? <circle cx={props.cx} cy={props.cy} r={isMag ? 5 : 3} fill="none" stroke="#38bdf8" strokeWidth={2} strokeDasharray="3 1" strokeOpacity={isMag ? 1 : 0.3} />
+                      : <circle cx={props.cx} cy={props.cy} r={isMag ? 4 : 2} fill="#38bdf8" strokeOpacity={isMag ? 1 : 0.3} />}
+                    activeDot={{ r: 6, fill: '#fff', stroke: '#38bdf8', strokeWidth: 3 }}
                   />
                   <Line
                     type="monotone"

@@ -198,6 +198,7 @@ export default function Sidebar() {
 
     return {
       avgObs: formatPct(scopeMetrics.obesidade),
+      avgMag: formatPct(scopeMetrics.magreza),
       avgDes: formatPct(scopeMetrics.desnutricao),
       avgSob: formatPct(scopeMetrics.sobrepeso),
       avgEut: formatPct(scopeMetrics.eutrofia),
@@ -525,6 +526,7 @@ export default function Sidebar() {
               <div className="space-y-1.5">
                 {[
                   { id: 'desnutricao', label: 'Desnutrição', color: 'text-blue-500',  dot: 'bg-blue-500/80 dark:bg-blue-400/90' },
+                  { id: 'magreza',     label: 'Magreza',     color: 'text-sky-500',  dot: 'bg-sky-500/80 dark:bg-sky-400/90' },
                   { id: 'eutrofia',   label: 'Peso Adequado', color: 'text-emerald-500', dot: 'bg-emerald-500/80 dark:bg-emerald-400/90' },
                   { id: 'sobrepeso',  label: 'Sobrepeso',  color: 'text-amber-500', dot: 'bg-amber-500/80 dark:bg-amber-400/90' },
                   { id: 'obesidade', label: 'Obesidade', color: 'text-red-500', dot: 'bg-red-500/80 dark:bg-red-400/90' },
@@ -563,6 +565,7 @@ export default function Sidebar() {
                 <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
                 <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
                 <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
+                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-sky-500" />}    label="Magreza" value={hudMetrics.avgMag} color="text-sky-600 dark:text-sky-400" />
                 <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição" value={hudMetrics.avgDes}  color="text-blue-600 dark:text-blue-400" />
                 <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />}    label="Avaliados" value={hudMetrics.evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
                 <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-600" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-600 dark:text-teal-400" />

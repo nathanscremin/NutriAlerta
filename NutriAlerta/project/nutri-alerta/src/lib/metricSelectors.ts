@@ -2,6 +2,7 @@ import type { AnalysisLevel } from '@/store/useAppStore';
 
 export type NutritionMetrics = {
   desnutricao: number;
+  magreza: number;
   obesidade: number;
   sobrepeso: number;
   eutrofia: number;
@@ -17,6 +18,7 @@ export interface ScopedNutritionParams {
   temporalData: Array<{
     ano: string;
     desnutricao: number;
+    magreza: number;
     obesidade: number;
     sobrepeso: number;
     eutrofia: number;
@@ -29,6 +31,7 @@ export interface ScopedNutritionParams {
 
 const DEFAULT_METRICS = {
   desnutricao: 2.62,
+  magreza: 0,
   obesidade: 12.93,
   sobrepeso: 15.2,
   eutrofia: 61.55
@@ -43,6 +46,7 @@ function sanitizeMetrics(record: Partial<NutritionMetrics> | null | undefined) {
 
   return {
     desnutricao: Number.isFinite(Number(record.desnutricao)) ? Number(record.desnutricao) : base.desnutricao,
+    magreza: Number.isFinite(Number(record.magreza)) ? Number(record.magreza) : base.magreza,
     obesidade: Number.isFinite(Number(record.obesidade)) ? Number(record.obesidade) : base.obesidade,
     sobrepeso: Number.isFinite(Number(record.sobrepeso)) ? Number(record.sobrepeso) : base.sobrepeso,
     eutrofia: Number.isFinite(Number(record.eutrofia)) ? Number(record.eutrofia) : base.eutrofia,
@@ -86,7 +90,7 @@ export function getScopedNutritionMetrics(params: ScopedNutritionParams): Nutrit
       return sanitizeMetrics(bairroRecord);
     }
 
-    const parentUbs = selectedBairroName ? bairroMetrics[selectedBairroName]?.regiao_ubs : null;
+    const parentUbs = selectedBairroName ? (bairroMetrics[selectedBairroName]?.regiao_ubs || selectedUbs) : selectedUbs;
     const fallbackRecord = parentUbs ? regionalData[year]?.[parentUbs] : null;
     return sanitizeMetrics(fallbackRecord || globalMetrics);
   }
@@ -96,7 +100,7 @@ export function getScopedNutritionMetrics(params: ScopedNutritionParams): Nutrit
     return sanitizeMetrics(schoolRecord);
   }
 
-  const parentUbs = selectedSchoolName ? schoolMetrics[selectedSchoolName]?.regiao_ubs : null;
+  const parentUbs = selectedSchoolName ? (schoolMetrics[selectedSchoolName]?.regiao_ubs || selectedUbs) : selectedUbs;
   const fallbackRecord = parentUbs ? regionalData[year]?.[parentUbs] : null;
   return sanitizeMetrics(fallbackRecord || globalMetrics);
 }
