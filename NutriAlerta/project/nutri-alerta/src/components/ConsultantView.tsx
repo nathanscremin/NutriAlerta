@@ -264,7 +264,8 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
-        const ubsRecord = (bName && bairroMetrics[bName]?.regiao_ubs) ? normalizeUbsKey(bairroMetrics[bName].regiao_ubs, regionalData[cleanYr] || {}) : null;
+        const parentUbsName = (bName && bairroMetrics[bName]?.regiao_ubs) || selectedUbs;
+        const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
         return {
           ano: yr,
@@ -280,7 +281,8 @@ export default function ConsultantView() {
       baseSource = yearsList.map(yr => {
         const cleanYr = yr.replace('★', '').trim();
         const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
-        const ubsRecord = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) ? normalizeUbsKey(schoolMetrics[schoolName].regiao_ubs, regionalData[cleanYr] || {}) : null;
+        const parentUbsName = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) || selectedUbs;
+        const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
         const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
         return {
           ano: yr,
