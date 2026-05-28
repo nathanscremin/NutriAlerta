@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 interface Message {
   role: 'user' | 'bot';
   text: string;
+  thinking?: string | null;
 }
 
 const SESSION_KEY = 'nutribot_especialista_session';
@@ -93,6 +94,15 @@ function ThinkingBubble({ thinking }: { thinking: string }) {
     </div>
   );
 }
+
+const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
+  if (!data || !name) return undefined;
+  if (data[name]) return data[name];
+  const normalize = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019"]/g, '').toLowerCase().trim();
+  const normalizedName = normalize(name);
+  const key = Object.keys(data).find(k => normalize(k) === normalizedName);
+  return key ? data[key] : undefined;
+};
 
 export default function ConsultantView() {
   const { 
@@ -741,8 +751,7 @@ export default function ConsultantView() {
             <>
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
-                const ubsData = regionalData[cleanYear]?.[ubs.nome] ?? regionalData[cleanYear]?.[normalizeQuotes(ubs.nome)];
-                console.log('UBS lookup:', ubs.nome, '→', ubsData ? 'FOUND' : 'NOT FOUND');
+                const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
                 let val = ubsData ? ubsData[indicador] : (indicador === 'desnutricao' ? 2.62 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
 
                 let finalVal = 0;

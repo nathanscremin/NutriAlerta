@@ -268,7 +268,7 @@ export async function POST(req: NextRequest) {
     const { sessionId, message, context } = await req.json();
     console.log('📥 screenData recebido:', JSON.stringify(context?.screenData, null, 2));
     console.log('🤖 genAI configurado:', !!genAI);
-
+    
     if (!sessionId || !message || !context) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
     }
@@ -301,19 +301,25 @@ export async function POST(req: NextRequest) {
       const historyForAPI = [...historyFromDB];
 
 const model = genAI.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3.5-flash',
   systemInstruction: {
     role: "system",
     parts: [{ text: systemInstruction }]
-  },
+  }
+});
+
+const chat = model.startChat({ 
+  history: historyForAPI,
   generationConfig: {
-    thinkingConfig: { thinkingBudget: 800 }  
+    thinkingConfig: { thinkingBudget: 8000 }
   } as any
 });
-const chat = model.startChat({ history: historyForAPI });
+      
 const result = await chat.sendMessage(message);
 
 const parts = result.response.candidates?.[0]?.content?.parts ?? [];
+// Adicionando console.log
+console.log('🧠 parts:', JSON.stringify(parts.map((p: any) => ({ thought: p.thought, len: p.text?.length }))));
 const thinking = parts
   .filter((p: any) => p.thought === true)
   .map((p: any) => p.text)
@@ -332,7 +338,7 @@ const text = parts
         }
       }
 
-      return NextResponse.json({ response: text, thinking: thinking || null });
+  return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
