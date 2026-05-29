@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2, Hospital, Home, School } from 'lucide-react';
+import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2, Hospital, Home, School, ChevronDown, MoreVertical, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
@@ -53,7 +53,7 @@ function saveMessages(msgs: Message[]) {
 
 function getRiskBadge(value: number, indicator: string) {
   if (indicator === 'eutrofia') {
-    if (value >= 68.0) return { label: 'Peso Saudável', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
+    if (value >= 68.0) return { label: 'Peso Adequado', bg: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/50' };
     if (value >= 55.0) return { label: 'Atenção Preventiva', bg: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50' };
     return { label: 'Desvio Crítico', bg: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/50' };
   }
@@ -111,7 +111,7 @@ const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
 
 export default function ConsultantView() {
   const { 
-    anoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
+    anoSelecionado, setAnoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
     temporalData, regionalData, yearsList, activePoiTypes,
     analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName,
     setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName, setSelection,
@@ -124,6 +124,9 @@ export default function ConsultantView() {
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [pendingContext, setPendingContext] = useState<string | null>(null);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const [isIndicatorOpen, setIsIndicatorOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const prevContextRef = useRef<string>('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -464,67 +467,52 @@ export default function ConsultantView() {
       <div className="w-[60%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col md:flex-row md:items-center gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
+        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
           <div className="flex items-center gap-3">
-            <div className="bg-teal-50/60 dark:bg-teal-955/20 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/50 flex items-center justify-center shadow-sm">
+            <div className="bg-teal-50/60 dark:bg-teal-955/20 p-2.5 rounded-xl border border-teal-100 dark:border-teal-900/50 flex items-center justify-center shadow-sm shrink-0">
               <Sparkles className="w-5 h-5 text-teal-600 dark:text-teal-500" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-slate-850 dark:text-[#f5f5f7] flex items-center gap-1.5">
+              <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] flex items-center gap-1.5 leading-none">
                 NutriBot
                 <Sparkles className="w-4 h-4 text-amber-500" />
               </h2>
-              <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">NutriBot de Apoio à Decisão Epidemiológica · Rio Claro</p>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 mt-1">
+                Apoio à decisão epidemiológica
+              </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2 md:ml-auto">
-            <div className={`text-[9.5px] font-black uppercase px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 ${
-              analysisLevel !== 'municipio' 
-                ? 'text-teal-700 dark:text-teal-400 bg-teal-50/80 dark:bg-teal-955/20 border-teal-100 dark:border-teal-900/60 font-bold' 
-                : 'text-slate-550 dark:text-zinc-450 bg-slate-100/50 dark:bg-zinc-800 border-slate-200/60 dark:border-zinc-800'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${analysisLevel !== 'municipio' ? 'bg-teal-500 animate-pulse' : 'bg-slate-400'}`} />
-              Sinal: {
-                analysisLevel === 'escola' ? `Escola: ${selectedSchoolName}` :
-                analysisLevel === 'bairro' ? `Bairro: ${selectedBairroName}` :
-                analysisLevel === 'ubs' ? `UBS: ${selectedUbs}` : 'Rio Claro (Geral)'
-              }
-            </div>
-            <div className="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-teal-750 dark:text-teal-450 bg-teal-50/80 dark:bg-teal-955/20 px-2.5 py-1.5 rounded-xl border border-teal-100 dark:border-teal-900/60 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
-              Online
-            </div>
-            <button
-              onClick={clearConversation}
-              disabled={clearing || loading}
-              title="Apagar histórico local"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-zinc-850 border border-slate-200 dark:border-zinc-800 shadow-sm transition-all cursor-pointer disabled:opacity-40"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="flex items-center bg-slate-100/60 dark:bg-zinc-900 border border-slate-200/50 dark:border-zinc-800 rounded-xl p-0.5 gap-0.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] md:ml-auto">
-            {[
-              { id: 'obesidade', label: 'Obesidade' },
-              { id: 'sobrepeso', label: 'Sobrepeso' },
-              { id: 'eutrofia', label: 'Peso Saudável' },
-              { id: 'magreza', label: 'Magreza' },
-              { id: 'desnutricao', label: 'Desnutrição' },
-            ].map(({ id, label }) => (
+          <div className="flex items-center gap-2">
+            {/* Menu de Ações (3 Pontinhos para apagar histórico) */}
+            <div className="relative">
               <button
-                key={id}
-                onClick={() => setIndicador(id)}
-                className={`px-2.5 py-1.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wide transition-all duration-300 cursor-pointer ${
-                  indicador === id
-                    ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-sm'
-                    : 'text-slate-555 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
-                }`}
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-805 transition-colors cursor-pointer flex items-center justify-center shadow-sm"
+                title="Opções do Chat"
               >
-                {label}
+                <MoreVertical className="w-3.5 h-3.5" />
               </button>
-            ))}
+              
+              {isMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-[1000]" onClick={() => setIsMenuOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-40 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                    <button
+                      onClick={() => {
+                        clearConversation();
+                        setIsMenuOpen(false);
+                      }}
+                      disabled={clearing || loading}
+                      className="w-full text-left px-3.5 py-2.5 text-xs font-semibold text-red-655 dark:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-900/60 transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Apagar histórico</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -594,115 +582,194 @@ export default function ConsultantView() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKey}
               placeholder="Faça uma pergunta sobre os dados epidemiológicos..."
-              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-2xl py-3.5 pl-5 pr-14 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder:text-slate-400 dark:placeholder:text-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-2xl py-3.5 pl-5 pr-16 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder:text-slate-405 dark:placeholder:text-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] cursor-text"
             />
             <button
               onClick={sendMessage}
               disabled={loading}
-              className="absolute right-2 top-2 bottom-2 aspect-square bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 disabled:opacity-40 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer active:scale-95 text-white"
+              className="absolute right-1.5 top-1.5 bottom-1.5 aspect-square bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 disabled:opacity-40 rounded-full flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer active:scale-95 text-white"
             >
-              <Send className="w-4 h-4 text-white" />
+              <Send className="w-3.5 h-3.5 text-white" />
             </button>
           </div>
-          <p className="text-[9px] font-black tracking-widest text-slate-400 dark:text-zinc-500 mt-3 text-center uppercase">
-            IA baseada nos dados reais Nutri for Schools/CNES de Rio Claro
+          <p className="text-[9.5px] font-black tracking-wider text-slate-400 dark:text-zinc-550 mt-3 text-center uppercase leading-relaxed">
+            IA baseada nos dados reais Nutri for Schools/CNES de Rio Claro · O NutriBot é uma inteligência artificial e pode cometer erros. Confirme as informações críticas.
           </p>
         </div>
       </div>
 
-      {/* Right: Geographic Selection Panel */}
+      {/* Right: Unified Geographic Selection Panel */}
       <div className="w-[40%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
         
-        {/* Level Tabs */}
-        <div className="p-4 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-          <div className="flex bg-slate-200/40 dark:bg-zinc-850 p-1 rounded-xl">
-            {[
-              { id: 'municipio', label: 'Geral', icon: Globe },
-              { id: 'ubs', label: 'UBS', icon: Hospital },
-              { id: 'bairro', label: 'Bairro', icon: Home },
-              { id: 'escola', label: 'Escola', icon: School }
-            ].map((lvl) => {
-              const Icon = lvl.icon;
-              return (
-                <button
-                  key={lvl.id}
-                  onClick={() => { setAnalysisLevel(lvl.id as any); setSearchQuery(''); }}
-                  className={`flex-1 flex flex-col items-center py-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all duration-350 cursor-pointer ${
-                    analysisLevel === lvl.id
-                      ? 'bg-white dark:bg-zinc-800 text-teal-700 dark:text-teal-400 shadow-sm'
-                      : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-[#f5f5f7] hover:bg-slate-200/35 dark:hover:bg-zinc-800/30'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 mb-1 ${analysisLevel === lvl.id ? 'text-teal-655 dark:text-teal-400' : 'text-slate-405 dark:text-zinc-500'}`} />
-                  {lvl.label}
-                </button>
-              );
-            })}
+        {/* Permanent Search Bar Header */}
+        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50 flex flex-col gap-4">
+          
+          {/* Selectors Row: Indicator (State) on Left, Year on Right */}
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            {/* Seletor de Estado (Indicador) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsIndicatorOpen(!isIndicatorOpen)}
+                className="w-full flex items-center justify-between gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+              >
+                <span className="truncate">
+                  {indicador === 'obesidade' && 'Obesidade'}
+                  {indicador === 'sobrepeso' && 'Sobrepeso'}
+                  {indicador === 'eutrofia' && 'Peso Adequado'}
+                  {indicador === 'magreza' && 'Magreza'}
+                  {indicador === 'desnutricao' && 'Desnutrição'}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555 shrink-0" />
+              </button>
+
+              {isIndicatorOpen && (
+                <>
+                  <div className="fixed inset-0 z-[1000]" onClick={() => setIsIndicatorOpen(false)} />
+                  <div className="absolute left-0 right-0 mt-1.5 w-full bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {[
+                      { id: 'obesidade', label: 'Obesidade' },
+                      { id: 'sobrepeso', label: 'Sobrepeso' },
+                      { id: 'eutrofia', label: 'Peso Adequado' },
+                      { id: 'magreza', label: 'Magreza' },
+                      { id: 'desnutricao', label: 'Desnutrição' },
+                    ].map(({ id, label }) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setIndicador(id);
+                          setIsIndicatorOpen(false);
+                        }}
+                        className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                          indicador === id
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                            : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Seletor de Ano */}
+            <div className="relative">
+              <button
+                onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
+                className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2.5 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+              >
+                <span className="flex-1 text-left">{anoSelecionado}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />
+              </button>
+
+              {isYearDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-[1000]" onClick={() => setIsYearDropdownOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-28 max-h-32 overflow-y-auto bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {yearsList.map((yr) => (
+                      <button
+                        key={yr}
+                        onClick={() => {
+                          setAnoSelecionado(yr);
+                          setIsYearDropdownOpen(false);
+                        }}
+                        className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                          anoSelecionado === yr
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                            : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        {yr}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-black tracking-wider uppercase flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-teal-500 shrink-0" />
+              <span className="font-extrabold text-slate-900 dark:text-white">Filtro de Localidade</span>
+            </h3>
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">
+              Selecione uma UBS, bairro ou escola para refinar o contexto do NutriBot
+            </p>
+          </div>
+          
+          <div className="relative mt-0.5">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Pesquisar UBS, Bairro ou Escola..."
+              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 pr-9 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] cursor-text"
+            />
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-zinc-300 cursor-pointer p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600" />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* List Header */}
-        <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50">
-          <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] tracking-wider uppercase">
-            {analysisLevel === 'municipio' && 'Todo o Município'}
-            {analysisLevel === 'ubs' && 'Unidades de Saúde (UBS/USF)'}
-            {analysisLevel === 'bairro' && 'Setores e Bairros'}
-            {analysisLevel === 'escola' && 'Escolas Analisadas'}
-          </h3>
-          <p className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 mt-1">
-            {analysisLevel === 'municipio' && 'Visão consolidada de Rio Claro (Ano: ' + cleanYear + ')'}
-            {analysisLevel === 'ubs' && 'Selecione uma UBS para cruzar os dados no chatbot (Ano: ' + cleanYear + ')'}
-            {analysisLevel === 'bairro' && 'Selecione um bairro censitário monitorado (Ano: ' + cleanYear + ')'}
-            {analysisLevel === 'escola' && 'Selecione uma das escolas analisadas (Ano: ' + cleanYear + ')'}
-          </p>
-          
-          {analysisLevel !== 'municipio' && (
-            <div className="relative mt-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450 dark:text-zinc-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder={
-                  analysisLevel === 'ubs' ? "Pesquisar UBS/USF..." :
-                  analysisLevel === 'bairro' ? "Pesquisar Bairro..." : "Pesquisar Escola..."
-                }
-                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-9 pr-4 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/25 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* List content */}
+        {/* Unified Scrollable categorized list */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800/80 scrollbar-thin">
           
-          {analysisLevel === 'municipio' && (
-            <div
-              onClick={() => setAnalysisLevel('municipio')}
-              className="p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]"
-            >
-              <div className="p-2 rounded-xl border border-teal-200/50 dark:border-teal-905/65 shrink-0 bg-teal-50/60 dark:bg-teal-955/20 text-teal-600 dark:text-teal-400 shadow-sm">
-                <Globe className="w-4 h-4" />
+          {/* CATEGORIA 1: CONSOLIDADO MUNICIPAL (GERAL) */}
+          {('geral'.includes(searchQuery.toLowerCase()) || 'rio claro'.includes(searchQuery.toLowerCase()) || searchQuery.trim() === '') && (
+            <div>
+              <div className="px-4 py-2 text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20 tracking-wider">
+                Consolidado Municipal
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
-                    {geralBadge.label}
-                  </span>
+              <div
+                onClick={() => setSelection('municipio', null, null, null)}
+                className={`p-4 flex items-start gap-3.5 cursor-pointer transition-all duration-300 relative ${
+                  analysisLevel === 'municipio'
+                    ? 'bg-gradient-to-r from-teal-50/20 to-transparent dark:from-teal-955/10 dark:to-transparent border-l-4 border-l-teal-500 shadow-[inset_1px_0_0_rgba(13,148,136,0.1)]'
+                    : 'hover:bg-slate-50/40 dark:hover:bg-zinc-800/20 border-l-4 border-l-transparent'
+                }`}
+              >
+                <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${
+                  analysisLevel === 'municipio'
+                    ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-400'
+                    : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
+                }`}>
+                  <Globe className="w-4 h-4" />
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 font-bold">
-                  <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{geralVal}%</strong></span>
-                  <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliadosStr}</strong></span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <h4 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] truncate">Geral (Todo o Município)</h4>
+                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${geralBadge.bg} shrink-0`}>
+                      {geralBadge.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-555 dark:text-zinc-400 font-bold">
+                    <span>{mainLabel.toUpperCase()}: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{geralVal}%</strong></span>
+                    <span>Avaliados: <strong className="text-slate-700 dark:text-zinc-250 font-extrabold">{totalAvaliadosStr}</strong></span>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {analysisLevel === 'ubs' && (
-            <>
+          {/* CATEGORIA 2: UNIDADES DE SAÚDE (UBS/USF) */}
+          {filteredUbs.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">
+                Unidades de Saúde (UBS/USF)
+              </div>
               {filteredUbs.map(ubs => {
-                const isSelected = selectedUbs === ubs.nome;
+                const isSelected = selectedUbs === ubs.nome && analysisLevel === 'ubs';
                 const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
                 const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
                 const finalVal = ubsData && typeof ubsData[indicador] === 'number'
@@ -736,7 +803,7 @@ export default function ConsultantView() {
                         ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' 
                         : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'
                     }`}>
-                      <MapPin className="w-4 h-4" />
+                      <Hospital className="w-4 h-4 text-teal-550" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -753,16 +820,17 @@ export default function ConsultantView() {
                   </div>
                 );
               })}
-              {filteredUbs.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhuma unidade de saúde encontrada.</div>
-              )}
-            </>
+            </div>
           )}
 
-          {analysisLevel === 'bairro' && (
-            <>
+          {/* CATEGORIA 3: SETORES E BAIRROS */}
+          {filteredBairros.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">
+                Setores e Bairros
+              </div>
               {filteredBairros.map(b => {
-                const isSelected = selectedBairroName === b.nome;
+                const isSelected = selectedBairroName === b.nome && analysisLevel === 'bairro';
                 const parentUbs = b.parentUbs;
                 const ubsData = normalizeUbsKey(parentUbs, regionalData[cleanYear] || {});
                 const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
@@ -786,7 +854,7 @@ export default function ConsultantView() {
                     }`}
                   >
                     <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${isSelected ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'}`}>
-                      <MapPin className="w-4 h-4 text-emerald-500" />
+                      <Home className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -801,16 +869,17 @@ export default function ConsultantView() {
                   </div>
                 );
               })}
-              {filteredBairros.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhum bairro encontrado.</div>
-              )}
-            </>
+            </div>
           )}
 
-          {analysisLevel === 'escola' && (
-            <>
+          {/* CATEGORIA 4: ESCOLAS MONITORADAS */}
+          {filteredSchools.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-[9px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">
+                Escolas Analisadas
+              </div>
               {filteredSchools.map(s => {
-                const isSelected = selectedSchoolName === s.nome;
+                const isSelected = selectedSchoolName === s.nome && analysisLevel === 'escola';
                 const parentUbs = s.regiao_ubs || '';
                 const ubsRecord = parentUbs 
                 ? normalizeUbsKey(parentUbs, regionalData[cleanYear] || {})
@@ -836,7 +905,7 @@ export default function ConsultantView() {
                     }`}
                   >
                     <div className={`p-2 rounded-xl border shrink-0 transition-colors duration-250 ${isSelected ? 'bg-teal-50/60 dark:bg-teal-955/20 border-teal-200/50 dark:border-teal-900/60 text-teal-600 dark:text-teal-455' : 'bg-slate-50/80 dark:bg-zinc-900/40 border-slate-200/50 dark:border-zinc-800 text-slate-450 dark:text-zinc-500'}`}>
-                      <MapPin className="w-4 h-4 text-blue-500" />
+                      <School className="w-4 h-4 text-blue-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -851,10 +920,14 @@ export default function ConsultantView() {
                   </div>
                 );
               })}
-              {filteredSchools.length === 0 && (
-                <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">Nenhuma escola encontrada.</div>
-              )}
-            </>
+            </div>
+          )}
+
+          {/* VAZIO DE BUSCA */}
+          {filteredUbs.length === 0 && filteredBairros.length === 0 && filteredSchools.length === 0 && (
+            <div className="p-8 text-center text-xs text-slate-400 dark:text-zinc-500 italic">
+              Nenhum local encontrado correspondente a "{searchQuery}"
+            </div>
           )}
 
         </div>

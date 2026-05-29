@@ -156,26 +156,6 @@ export default function UrbanConflictSection() {
             )}
           </div>
 
-          {/* Insight dinâmico ancorado */}
-          <div className="relative mt-3">
-            {/* Visual Anchor Arrow pointing to the PieChart */}
-            <div className={`absolute -top-1 left-12 w-2 h-2 rotate-45 border-t border-l z-10 ${
-              Number(ratioRisco) > 20
-                ? 'bg-red-50 dark:bg-[#1b1114] border-red-100/50 dark:border-red-900/30'
-                : 'bg-emerald-50 dark:bg-[#111a15] border-emerald-100/50 dark:border-emerald-900/30'
-            }`} />
-            
-            <div className={`rounded-xl p-3 border text-[10px] leading-relaxed font-semibold transition-colors duration-200 shadow-sm relative z-0 ${
-              Number(ratioRisco) > 20
-                ? 'bg-red-50/55 dark:bg-red-955/10 border-red-100/60 dark:border-red-900/40 text-red-700 dark:text-red-400'
-                : 'bg-emerald-50/55 dark:bg-emerald-955/10 border-emerald-100/60 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-450'
-            }`}>
-              {Number(ratioRisco) > 20
-                ? `⚠️ ${ratioRisco}% da infraestrutura mapeada nesta região é composta por estabelecimentos de fast-food e conveniência. Recomenda-se incentivar opções de alimentação saudável.`
-                : `✅ Excelente equilíbrio territorial com ${(100 - Number(ratioRisco)).toFixed(1)}% de opções saudáveis e áreas de lazer ativas.`
-              }
-            </div>
-          </div>
         </div>
       </div>
     </div>

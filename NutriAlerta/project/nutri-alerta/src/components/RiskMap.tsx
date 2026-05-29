@@ -35,32 +35,32 @@ const Tooltip       = dynamic(() => import('react-leaflet').then(m => m.Tooltip)
 
 const getChoroplethColor = (value: number, indicator: string) => {
   if (indicator === 'desnutricao') {
-    if (value < 1.5) return '#dbeafe';
+    if (value < 1.5) return '#bfdbfe';
     if (value < 2.5) return '#93c5fd';
     if (value < 3.5) return '#3b82f6';
     if (value < 4.5) return '#1d4ed8';
     return '#1e3a8a';
   } else if (indicator === 'magreza') {
-    if (value < 12) return '#eff6ff';
+    if (value < 12) return '#bae6fd';
     if (value < 15) return '#7dd3fc';
     if (value < 18) return '#38bdf8';
     if (value < 21) return '#0ea5e9';
     return '#0369a1';
   } else if (indicator === 'eutrofia') {
-    if (value < 55) return '#d1fae5';
-    if (value < 60) return '#6ee7b7';
+    if (value < 55) return '#064e3b';
+    if (value < 60) return '#047857';
     if (value < 65) return '#10b981';
-    if (value < 70) return '#047857';
-    return '#064e3b';
+    if (value < 70) return '#6ee7b7';
+    return '#a7f3d0';
   } else if (indicator === 'sobrepeso') {
-    if (value < 12) return '#fef3c7';
+    if (value < 12) return '#fde68a';
     if (value < 15) return '#fcd34d';
     if (value < 18) return '#f59e0b';
     if (value < 21) return '#b45309';
     return '#78350f';
   } else {
     // Obesidade
-    if (value < 7) return '#fee2e2';
+    if (value < 7) return '#fecaca';
     if (value < 10) return '#fca5a5';
     if (value < 13) return '#ef4444';
     if (value < 16) return '#b91c1c';
@@ -115,7 +115,7 @@ const getIndicatorLegend = (indicator: string, darkMode?: boolean) => {
 
   if (indicator === 'desnutricao') {
     return [
-      ['< 1,5%', '#dbeafe'],
+      ['< 1,5%', '#bfdbfe'],
       ['1,5% – 2,5%', '#93c5fd'],
       ['2,5% – 3,5%', '#3b82f6'],
       ['3,5% – 4,5%', '#1d4ed8'],
@@ -125,7 +125,7 @@ const getIndicatorLegend = (indicator: string, darkMode?: boolean) => {
 
   if (indicator === 'magreza') {
     return [
-      ['< 12%', '#eff6ff'],
+      ['< 12%', '#bae6fd'],
       ['12% – 15%', '#7dd3fc'],
       ['15% – 18%', '#38bdf8'],
       ['18% – 21%', '#0ea5e9'],
@@ -135,17 +135,17 @@ const getIndicatorLegend = (indicator: string, darkMode?: boolean) => {
 
   if (indicator === 'eutrofia') {
     return [
-      ['< 55%', '#d1fae5'],
-      ['55% – 60%', '#6ee7b7'],
+      ['< 55%', '#064e3b'],
+      ['55% – 60%', '#047857'],
       ['60% – 65%', '#10b981'],
-      ['65% – 70%', '#047857'],
-      ['≥ 70%', '#064e3b']
+      ['65% – 70%', '#6ee7b7'],
+      ['≥ 70%', '#a7f3d0']
     ];
   }
 
   if (indicator === 'sobrepeso') {
     return [
-      ['< 12%', '#fef3c7'],
+      ['< 12%', '#fde68a'],
       ['12% – 15%', '#fcd34d'],
       ['15% – 18%', '#f59e0b'],
       ['18% – 21%', '#b45309'],
@@ -154,7 +154,7 @@ const getIndicatorLegend = (indicator: string, darkMode?: boolean) => {
   }
 
   return [
-    ['< 7%', '#fee2e2'],
+    ['< 7%', '#fecaca'],
     ['7% – 10%', '#fca5a5'],
     ['10% – 13%', '#ef4444'],
     ['13% – 16%', '#b91c1c'],
@@ -329,10 +329,15 @@ export default function RiskMap() {
         const ubsName = feature.properties?.nome_bairro || '';
         const bairroName = feature.properties?.nome_real_bairro || ubsName;
 
-        if (analysisLevel === 'bairro' && selectedBairroName === bairroName) {
-          setSelection('municipio', null, null, null);
-        } else {
+        if (analysisLevel === 'ubs' && selectedUbs === ubsName) {
+          // Clique secundário na mesma região: abre o bairro correspondente
           setSelection('bairro', ubsName, bairroName, null);
+        } else if (analysisLevel === 'bairro' && selectedBairroName === bairroName) {
+          // Clique de reset no bairro ativo: volta para a UBS
+          setSelection('ubs', ubsName, null, null);
+        } else {
+          // Primeiro clique ou clique em outra região: abre a UBS
+          setSelection('ubs', ubsName, null, null);
         }
       },
     });
@@ -481,7 +486,7 @@ export default function RiskMap() {
           minZoom={10}
           maxZoom={18}
           style={{ height: '100%', width: '100%', background: mapBackground }}
-          zoomControl={true}
+          zoomControl={false}
         >
           <TileLayer
             key={darkMode ? 'dark-tiles' : 'light-tiles'}
@@ -524,7 +529,7 @@ export default function RiskMap() {
             const metrics = pRegiao ? getBairroMetrics(pRegiao, pRegiao) : null;
             
             const cleanYear = anoSelecionado.replace('★', '').trim();
-            const schoolRecord = isSchool ? schoolMetrics[poi.nome]?.anos[cleanYear] : null;
+            const schoolRecord = isSchool ? schoolMetrics[poi.nome]?.anos?.[cleanYear] : null;
 
             const dDes = schoolRecord ? safeNumber(schoolRecord.desnutricao, metrics?.des ?? 2.62) : (metrics?.des ?? 2.62);
             const dMag = schoolRecord ? safeNumber(schoolRecord.magreza, metrics?.mag ?? 0) : (metrics?.mag ?? 0);

@@ -231,7 +231,7 @@ function CompareTooltip({ active, payload, label }: CompareTooltipProps) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function UbsComparisonSection() {
-  const { regionalData, temporalData, yearsList, darkMode, indicador, selectedBairro, schoolMetrics } = useAppStore();
+  const { regionalData, temporalData, yearsList, darkMode, indicador, selectedBairro, schoolMetrics, anoSelecionado, setAnoSelecionado } = useAppStore();
 
   const [mounted, setMounted] = useState(false);
   React.useEffect(() => { setMounted(true); }, []);
@@ -242,10 +242,11 @@ export default function UbsComparisonSection() {
       .sort((a, b) => a.replace(/^(UBS|USF)\s/, '').localeCompare(b.replace(/^(UBS|USF)\s/, ''))),
   []);
 
-  const [ubsA, setUbsA] = useState<string>('UBS Jardim Chervezon "Dr. Nicolino Maziotti"');
-  const [ubsB, setUbsB] = useState<string>('UBS Vila Cristina "Dr. Sílvio Arnaldo Piva"');
+  const [ubsA, setUbsA] = useState<string | null>(null);
+  const [ubsB, setUbsB] = useState<string | null>(null);
   const [openA, setOpenA] = useState(false);
   const [openB, setOpenB] = useState(false);
+  const [isYearOpen, setIsYearOpen] = useState(false);
 
   // Usa ref para evitar stale closure no effect do selectedBairro
   const ubsARef = useRef(ubsA);
@@ -272,7 +273,8 @@ export default function UbsComparisonSection() {
   const activeIndConfig = useMemo(() => INDICATORS.find(i => i.id === activeIndicator) ?? INDICATORS[1], [activeIndicator]);
 
   // getStats estabilizado com useCallback para evitar recriação a cada render
-  const getStats = useCallback((ubsName: string, year: string): UbsStats => {
+  const getStats = useCallback((ubsName: string | null, year: string): UbsStats => {
+    if (!ubsName) return { obs: 0, mag: 0, des: 0, sob: 0, eut: 0, total: 0 };
     const cleanYear = year.replace('★', '').trim();
     const safeSchoolMetrics = schoolMetrics || {};
     const metrics = getScopedNutritionMetrics({
@@ -295,13 +297,16 @@ export default function UbsComparisonSection() {
     return { obs: metrics.obesidade, mag: metrics.magreza ?? 0, des: metrics.desnutricao, sob: metrics.sobrepeso, eut: metrics.eutrofia, total: ubsTotal || 350 };
   }, [regionalData, temporalData, schoolMetrics]);
 
-  const statsA = useMemo(() => getStats(ubsA, '2025'), [getStats, ubsA]);
-  const statsB = useMemo(() => getStats(ubsB, '2025'), [getStats, ubsB]);
+  const cleanYear = anoSelecionado.replace('★', '').trim();
 
-  const demoA = useMemo(() => getDemographicsForUbs(ubsA, '2025', statsA.des, statsA.sob, statsA.obs, statsA.eut, statsA.mag), [ubsA, statsA]);
-  const demoB = useMemo(() => getDemographicsForUbs(ubsB, '2025', statsB.des, statsB.sob, statsB.obs, statsB.eut, statsB.mag), [ubsB, statsB]);
+  const statsA = useMemo(() => ubsA ? getStats(ubsA, cleanYear) : null, [getStats, ubsA, cleanYear]);
+  const statsB = useMemo(() => ubsB ? getStats(ubsB, cleanYear) : null, [getStats, ubsB, cleanYear]);
+
+  const demoA = useMemo(() => ubsA && statsA ? getDemographicsForUbs(ubsA, cleanYear, statsA.des, statsA.sob, statsA.obs, statsA.eut, statsA.mag) : null, [ubsA, statsA, cleanYear]);
+  const demoB = useMemo(() => ubsB && statsB ? getDemographicsForUbs(ubsB, cleanYear, statsB.des, statsB.sob, statsB.obs, statsB.eut, statsB.mag) : null, [ubsB, statsB, cleanYear]);
 
   const chartData = useMemo(() => {
+    if (!ubsA || !ubsB) return [];
     const keyMap = { obesidade: 'obs', magreza: 'mag', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
     const k = keyMap[activeIndicator];
     return yearsList.map(yr => {
@@ -317,27 +322,70 @@ export default function UbsComparisonSection() {
     });
   }, [getStats, ubsA, ubsB, yearsList, activeIndicator]);
 
+  const hasSelection = ubsA !== null && ubsB !== null;
+
   // Valor principal do indicador ativo para o placar central
   const activeKeyMap = { obesidade: 'obs', magreza: 'mag', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
   const activeKey = activeKeyMap[activeIndicator];
-  const valA = statsA[activeKey];
-  const valB = statsB[activeKey];
+  const valA = statsA ? statsA[activeKey] : 0;
+  const valB = statsB ? statsB[activeKey] : 0;
   const diff = Math.abs(valA - valB);
-  const aLeads = activeIndicator === 'eutrofia' ? valA >= valB : valA <= valB;
+
+  // A comparação global do estado nutricional da UBS é baseada em quem tem a maior taxa de Peso Adequado (eutrofia)
+  const eutA = statsA ? statsA.eut : 0;
+  const eutB = statsB ? statsB.eut : 0;
+  const aLeads = eutA >= eutB;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* ── Cabeçalho ── */}
-      <div className="flex items-center gap-2.5">
-        <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+      {/* ── Cabeçalho Equivalente e Proporcional com Seletor de Ano ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
         <div>
-          <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-            Comparador de Unidades de Saúde
-          </h3>
-          <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium mt-0.5">
-            Análise lado a lado entre duas UBS · Nutri for Schools 2025
+          <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
+            <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+            <span>Comparador de Unidades de Saúde</span>
+          </h2>
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
+            Análise lado a lado entre duas UBS · Nutri for Schools {anoSelecionado}
           </p>
+        </div>
+
+        {/* Seletor de Ano Customizado */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => setIsYearOpen(!isYearOpen)}
+              className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+            >
+              <span className="flex-1 text-left">{anoSelecionado}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />
+            </button>
+
+            {isYearOpen && (
+              <>
+                <div className="fixed inset-0 z-[1000]" onClick={() => setIsYearOpen(false)} />
+                <div className="absolute right-0 mt-1.5 w-28 max-h-32 overflow-y-auto bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {yearsList.map((yr) => (
+                    <button
+                      key={yr}
+                      onClick={() => {
+                        setAnoSelecionado(yr);
+                        setIsYearOpen(false);
+                      }}
+                      className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                        anoSelecionado === yr
+                          ? 'bg-teal-55 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                          : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                      }`}
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -379,200 +427,218 @@ export default function UbsComparisonSection() {
         />
       </div>
 
-      {/* ── Placar central do indicador ativo ── */}
-      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 overflow-hidden bg-white dark:bg-[#111116]">
-        {/* Barra de cor do indicador */}
-        <div className="h-1 w-full" style={{ background: activeIndConfig.color }} />
+      {/* ── Placar central e gráficos condicionados à seleção ── */}
+      {!hasSelection ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800/80 bg-white/40 dark:bg-zinc-955/5 p-12 text-center flex flex-col items-center justify-center gap-4 transition-all duration-300">
+          <div className="w-14 h-14 rounded-full bg-slate-50 dark:bg-zinc-900/60 flex items-center justify-center text-slate-400 dark:text-zinc-550 shadow-inner">
+            <Activity className="w-6 h-6 animate-pulse text-teal-500" />
+          </div>
+          <div className="max-w-md space-y-1.5">
+            <h4 className="text-sm font-black text-slate-700 dark:text-zinc-300 uppercase tracking-wider">Aguardando Comparação</h4>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-500 font-bold leading-relaxed">
+              Selecione a <span className="text-teal-600 dark:text-teal-400">Unidade A</span> e a <span className="text-indigo-500 dark:text-indigo-400">Unidade B</span> nos seletores acima para visualizar a análise comparativa de indicadores e o histórico de evolução temporal.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* ── Placar central do indicador ativo ── */}
+          <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 overflow-hidden bg-white dark:bg-[#111116] animate-in fade-in duration-300">
+            {/* Barra de cor do indicador */}
+            <div className="h-1 w-full" style={{ background: activeIndConfig.color }} />
 
-        <div className="grid grid-cols-[1fr_auto_1fr]">
-          {/* Painel A */}
-          <div className={`p-5 flex flex-col items-center gap-2 border-r border-slate-100 dark:border-zinc-800/50 ${aLeads ? 'bg-teal-50/40 dark:bg-teal-950/10' : ''}`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-teal-500 inline-block" /> Unidade A
-            </span>
-            <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
-              {valA.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-500">%</span>
-            </span>
-            <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-              <Users className="w-3 h-3" /> {statsA.total} alunos
-            </span>
-            {aLeads && (
-              <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 rounded-full">
-                Melhor resultado
+            <div className="grid grid-cols-[1fr_auto_1fr]">
+              {/* Painel A */}
+              <div className={`p-5 flex flex-col items-center gap-2 border-r border-slate-100 dark:border-zinc-800/50 ${aLeads ? 'bg-teal-50/40 dark:bg-teal-950/10' : ''}`}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
+                </span>
+                <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
+                  {valA.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-550">%</span>
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                  <Users className="w-3 h-3" /> {statsA?.total || 0} alunos
+                </span>
+                {aLeads && (
+                  <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-55/35 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 rounded-full mt-1">
+                    Melhor Estado Geral
+                  </span>
+                )}
+              </div>
+
+              {/* Centro: diferença */}
+              <div className="px-4 py-5 flex flex-col items-center justify-center gap-1 min-w-[80px]">
+                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Δ Diferença</p>
+                <span className="text-xl font-black font-mono" style={{ color: activeIndConfig.color }}>
+                  {diff.toFixed(1)}<span className="text-xs">pp</span>
+                </span>
+                <p className="text-[8px] text-center font-bold text-slate-400 dark:text-zinc-600 leading-tight">
+                  {activeIndConfig.label}
+                </p>
+              </div>
+
+              {/* Painel B */}
+              <div className={`p-5 flex flex-col items-center gap-2 border-l border-slate-100 dark:border-zinc-800/50 ${!aLeads ? 'bg-indigo-50/40 dark:bg-indigo-950/10' : ''}`}>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" /> Unidade B
+                </span>
+                <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
+                  {valB.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-550">%</span>
+                </span>
+                <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
+                  <Users className="w-3 h-3" /> {statsB?.total || 0} alunos
+                </span>
+                {!aLeads && (
+                  <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-55/35 border border-indigo-200/50 dark:border-indigo-800/40 px-2 py-0.5 rounded-full mt-1">
+                    Melhor Estado Geral
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Comparação linha a linha de todos os indicadores ── */}
+          <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 space-y-4 animate-in fade-in duration-300">
+            {/* Cabeçalho das colunas */}
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-2 border-b border-slate-100 dark:border-zinc-800/50">
+              <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
               </span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Indicador</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 justify-end">
+                Unidade B <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />
+              </span>
+            </div>
+
+            {statsA && statsB && INDICATORS.map(ind => {
+              const styles = INDICATOR_STYLES[ind.tailwind];
+              const a = statsA[ind.key as keyof UbsStats] as number;
+              const b = statsB[ind.key as keyof UbsStats] as number;
+              return (
+                <MetricRow
+                  key={ind.id}
+                  label={ind.label}
+                  valueA={a}
+                  valueB={b}
+                  colorStyle={styles}
+                  lowerIsBetter={ind.id !== 'eutrofia'}
+                />
+              );
+            })}
+
+            {/* Linha separadora com dados de alunos */}
+            {statsA && statsB && (
+              <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
+                  <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{statsA.total}</span>
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Total Alunos</span>
+                <div className="flex flex-col gap-0.5 items-end">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
+                  <span className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">{statsB.total}</span>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Centro: diferença */}
-          <div className="px-4 py-5 flex flex-col items-center justify-center gap-1 min-w-[80px]">
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Δ Diferença</p>
-            <span className="text-xl font-black font-mono" style={{ color: activeIndConfig.color }}>
-              {diff.toFixed(1)}<span className="text-xs">pp</span>
-            </span>
-            <p className="text-[8px] text-center font-bold text-slate-400 dark:text-zinc-600 leading-tight">
-              {activeIndConfig.label}
-            </p>
+          {/* ── Gráfico temporal ── */}
+          <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-wider">
+                  Evolução Histórica · {activeIndConfig.label}
+                </h4>
+                <p className="text-[9px] text-slate-400 dark:text-zinc-600 font-semibold mt-0.5">
+                  2010–2025 · Projeções <span className="text-amber-500">★</span> 2026–2027
+                </p>
+              </div>
+              <div className="flex items-center gap-4 text-[10px] font-bold">
+                <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
+                  <span className="w-5 h-[3px] bg-teal-500 rounded-full inline-block" /> Unidade A
+                </span>
+                <span className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
+                  <span className="w-5 h-[3px] rounded-full inline-block border-t-[2px] border-dashed border-indigo-500" /> Unidade B
+                </span>
+              </div>
+            </div>
+
+            <div className="h-52">
+              {mounted ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                    <defs>
+                      <filter id="cmp-glow-a" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d9488" floodOpacity="0.4" />
+                      </filter>
+                      <filter id="cmp-glow-b" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#6366f1" floodOpacity="0.4" />
+                      </filter>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="ano"
+                      tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 9, fontWeight: 'bold' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 9, fontWeight: 'bold' }}
+                      tickLine={false}
+                      axisLine={false}
+                      unit="%"
+                    />
+                    <Tooltip content={<CompareTooltip />} />
+                    <ReferenceLine
+                      x="2025"
+                      stroke={darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}
+                      strokeDasharray="4 3"
+                      label={{ value: 'Prev. →', fill: darkMode ? '#52525b' : '#94a3b8', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="A"
+                      name={ubsA || 'Unidade A'}
+                      stroke="#0d9488"
+                      strokeWidth={2.5}
+                      filter="url(#cmp-glow-a)"
+                      dot={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        return payload?.isPrevisao
+                          ? <circle key={`a-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#0d9488" strokeWidth={2} strokeDasharray="3 1" />
+                          : <circle key={`a-${cx}`} cx={cx} cy={cy} r={3} fill="#0d9488" />;
+                      }}
+                      activeDot={{ r: 5, fill: '#fff', stroke: '#0d9488', strokeWidth: 2.5 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="B"
+                      name={ubsB || 'Unidade B'}
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      strokeDasharray="5 4"
+                      filter="url(#cmp-glow-b)"
+                      dot={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        return payload?.isPrevisao
+                          ? <circle key={`b-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#6366f1" strokeWidth={2} strokeDasharray="3 1" />
+                          : <circle key={`b-${cx}`} cx={cx} cy={cy} r={3} fill="#6366f1" />;
+                      }}
+                      activeDot={{ r: 5, fill: '#fff', stroke: '#6366f1', strokeWidth: 2.5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full rounded-xl bg-slate-50 dark:bg-zinc-800/20" />
+              )}
+            </div>
           </div>
-
-          {/* Painel B */}
-          <div className={`p-5 flex flex-col items-center gap-2 border-l border-slate-100 dark:border-zinc-800/50 ${!aLeads ? 'bg-indigo-50/40 dark:bg-indigo-950/10' : ''}`}>
-            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Unidade B
-            </span>
-            <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
-              {valB.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-500">%</span>
-            </span>
-            <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-              <Users className="w-3 h-3" /> {statsB.total} alunos
-            </span>
-            {!aLeads && (
-              <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/50 dark:border-indigo-800/40 px-2 py-0.5 rounded-full">
-                Melhor resultado
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Comparação linha a linha de todos os indicadores ── */}
-      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 space-y-4">
-        {/* Cabeçalho das colunas */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pb-2 border-b border-slate-100 dark:border-zinc-800/50">
-          <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
-          </span>
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Indicador</span>
-          <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 justify-end">
-            Unidade B <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />
-          </span>
-        </div>
-
-        {INDICATORS.map(ind => {
-          const styles = INDICATOR_STYLES[ind.tailwind];
-          const a = statsA[ind.key as keyof UbsStats] as number;
-          const b = statsB[ind.key as keyof UbsStats] as number;
-          return (
-            <MetricRow
-              key={ind.id}
-              label={ind.label}
-              valueA={a}
-              valueB={b}
-              colorStyle={styles}
-              lowerIsBetter={ind.id !== 'eutrofia'}
-            />
-          );
-        })}
-
-        {/* Linha separadora com dados de alunos */}
-        <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
-            <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{statsA.total}</span>
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Total Alunos</span>
-          <div className="flex flex-col gap-0.5 items-end">
-            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
-            <span className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">{statsB.total}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Gráfico temporal ── */}
-      <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-wider">
-              Evolução Histórica · {activeIndConfig.label}
-            </h4>
-            <p className="text-[9px] text-slate-400 dark:text-zinc-600 font-semibold mt-0.5">
-              2010–2025 · Projeções <span className="text-amber-500">★</span> 2026–2027
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-[10px] font-bold">
-            <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
-              <span className="w-5 h-[3px] bg-teal-500 rounded-full inline-block" /> A
-            </span>
-            <span className="flex items-center gap-1.5 text-indigo-500 dark:text-indigo-400">
-              <span className="w-5 h-[3px] rounded-full inline-block border-t-[2px] border-dashed border-indigo-500" /> B
-            </span>
-          </div>
-        </div>
-
-        <div className="h-52">
-          {mounted ? (
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                <defs>
-                  <filter id="cmp-glow-a" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0d9488" floodOpacity="0.4" />
-                  </filter>
-                  <filter id="cmp-glow-b" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#6366f1" floodOpacity="0.4" />
-                  </filter>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="ano"
-                  tick={{ fill: darkMode ? '#71717a' : '#94a3b8', fontSize: 10, fontWeight: 700 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{ fill: darkMode ? '#71717a' : '#94a3b8', fontSize: 10, fontWeight: 700 }}
-                  tickLine={false}
-                  axisLine={false}
-                  unit="%"
-                />
-                <Tooltip content={<CompareTooltip />} />
-                <ReferenceLine
-                  x="2025"
-                  stroke={darkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'}
-                  strokeDasharray="4 3"
-                  label={{ value: 'Prev. →', fill: darkMode ? '#52525b' : '#94a3b8', fontSize: 9, position: 'insideTopRight', fontWeight: 'bold' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="A"
-                  name={ubsA}
-                  stroke="#0d9488"
-                  strokeWidth={2.5}
-                  filter="url(#cmp-glow-a)"
-                  dot={(props: any) => {
-                    const { cx, cy, payload } = props;
-                    return payload?.isPrevisao
-                      ? <circle key={`a-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#0d9488" strokeWidth={2} strokeDasharray="3 1" />
-                      : <circle key={`a-${cx}`} cx={cx} cy={cy} r={3} fill="#0d9488" />;
-                  }}
-                  activeDot={{ r: 5, fill: '#fff', stroke: '#0d9488', strokeWidth: 2.5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="B"
-                  name={ubsB}
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  strokeDasharray="5 4"
-                  filter="url(#cmp-glow-b)"
-                  dot={(props: any) => {
-                    const { cx, cy, payload } = props;
-                    return payload?.isPrevisao
-                      ? <circle key={`b-${cx}`} cx={cx} cy={cy} r={4} fill="none" stroke="#6366f1" strokeWidth={2} strokeDasharray="3 1" />
-                      : <circle key={`b-${cx}`} cx={cx} cy={cy} r={3} fill="#6366f1" />;
-                  }}
-                  activeDot={{ r: 5, fill: '#fff', stroke: '#6366f1', strokeWidth: 2.5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="w-full h-full rounded-xl bg-slate-50 dark:bg-zinc-800/20" />
-          )}
-        </div>
-      </div>
-
+        </>
+      )}
     </div>
   );
 }

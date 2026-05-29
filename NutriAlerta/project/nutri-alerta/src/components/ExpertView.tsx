@@ -5,12 +5,12 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
   LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine, BarChart, Bar
 } from 'recharts';
-import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, Sparkles, CheckCircle2, Search, ChevronDown, Calendar, Hospital, Home, School, Globe, ShieldCheck, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
 import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
-import { buildScopedTemporalSeries } from '@/lib/metricSelectors';
+import { buildScopedTemporalSeries, getScopedNutritionMetrics } from '@/lib/metricSelectors';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -89,19 +89,208 @@ const POI_CATEGORIES = [
 
 export default function ExpertView() {
   const { 
-    anoSelecionado, indicador, selectedPoi, selectedBairro, setSelectedPoi,
+    anoSelecionado, setAnoSelecionado,
+    indicador, setIndicador,
+    selectedPoi, setSelectedPoi,
+    selectedBairro,
     temporalData, regionalData, yearsList, activePoiTypes, setActivePoiTypes,
-    darkMode, sidebarCollapsed, setSidebarCollapsed,
-    analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName,
-    setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName,
+    darkMode,
+    analysisLevel, setAnalysisLevel,
+    selectedUbs, setSelectedUbs,
+    selectedBairroName, setSelectedBairroName,
+    selectedSchoolName, setSelectedSchoolName,
+    setSelection,
     schoolMetrics, bairroMetrics
   } = useAppStore();
 
+  const cleanYear = anoSelecionado.replace('★', '').trim();
+  const isPrevisao = anoSelecionado.includes('★');
+
   const [isLayersOpen, setIsLayersOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
+  const [isIndicatorOpen, setIsIndicatorOpen] = React.useState(false);
+  const [isYearOpen, setIsYearOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const searchDropdownRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Sincroniza a busca caso o escopo de análise mude globalmente (ex: clicado no mapa)
+  React.useEffect(() => {
+    if (analysisLevel === 'ubs') {
+      setSearchQuery(selectedUbs || '');
+    } else if (analysisLevel === 'bairro') {
+      setSearchQuery(selectedBairroName || '');
+    } else if (analysisLevel === 'escola') {
+      setSearchQuery(selectedSchoolName || '');
+    } else {
+      setSearchQuery('');
+    }
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
+
+  // Fecha o menu de sugestões de busca ao clicar fora
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Processamento de listas para busca
+  const ubsList = React.useMemo(() => {
+    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
+      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
+      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
+      return nameA.localeCompare(nameB);
+    });
+  }, []);
+
+  const uniqueBairrosList = React.useMemo(() => {
+    const bairrosGeoJSON = getVoronoiGeoJSON();
+    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
+    const setNames = new Set<string>();
+    const list: Array<{ nome: string; parentUbs: string }> = [];
+    bairrosGeoJSON.features.forEach((feat: any) => {
+      const name = feat.properties?.nome_real_bairro;
+      const ubs = feat.properties?.nome_bairro;
+      if (name && !setNames.has(name)) {
+        setNames.add(name);
+        list.push({ nome: name, parentUbs: ubs || '' });
+      }
+    });
+    return list.sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  const schoolsList = React.useMemo(() => {
+    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  const filteredUbs = React.useMemo(() => {
+    return ubsList.filter(u =>
+      u.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [ubsList, searchQuery]);
+
+  const filteredBairros = React.useMemo(() => {
+    let list = uniqueBairrosList;
+    if (searchQuery.trim() === '' && selectedUbs) {
+      list = list.filter(b => b.parentUbs === selectedUbs);
+    }
+    return list.filter(b =>
+      b.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [uniqueBairrosList, selectedUbs, searchQuery]);
+
+  const filteredSchools = React.useMemo(() => {
+    let list = schoolsList;
+    if (searchQuery.trim() === '') {
+      if (selectedBairroName) {
+        list = list.filter(s => s.bairro === selectedBairroName);
+      } else if (selectedUbs) {
+        list = list.filter(s => s.regiao_ubs === selectedUbs);
+      }
+    }
+    return list.filter(s =>
+      s.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
+
+  // Rótulo dinâmico e métricas consolidadas do escopo
+  const activeLabel = React.useMemo(() => {
+    if (analysisLevel === 'escola' && selectedSchoolName) {
+      return selectedSchoolName.replace('E.M.E.F. ', '').replace('E.E. ', '').replace('E.M. ', '').split(' “')[0];
+    }
+    if (analysisLevel === 'bairro' && selectedBairroName) {
+      return selectedBairroName;
+    }
+    if (analysisLevel === 'ubs' && selectedUbs) {
+      return selectedUbs.replace('UBS ', '').replace('USF ', '').split(' “')[0];
+    }
+    return 'Rio Claro';
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs]);
+
+  const scopeMetrics = React.useMemo(() => {
+    return getScopedNutritionMetrics({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics,
+    });
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
+
+  const hudMetrics = React.useMemo(() => {
+    let avaliados = 0;
+    let subUnitLabel = "UBS monitoradas";
+    let subUnitValue = String(ubsList.length);
+
+    if (analysisLevel === 'escola' && selectedSchoolName) {
+      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
+      avaliados = data?.total_avaliados || 0;
+      subUnitLabel = "Tipo de Escola";
+      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
+      subUnitValue = schoolInfo?.categoria || "Educação";
+    } else if (analysisLevel === 'bairro' && selectedBairroName) {
+      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
+      avaliados = data?.total_avaliados || 0;
+      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
+      subUnitLabel = "Escolas no bairro";
+      subUnitValue = String(schoolCount);
+    } else if (analysisLevel === 'ubs' && selectedUbs) {
+      let ubsTotal = 0;
+      Object.values(schoolMetrics).forEach((sch: any) => {
+        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
+          ubsTotal += sch.anos[cleanYear].total_avaliados;
+        }
+      });
+      avaliados = ubsTotal || regionalData[cleanYear]?.[selectedUbs]?.total_avaliados || 0;
+      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
+      subUnitLabel = "Escolas na região";
+      subUnitValue = String(schoolCount);
+    } else {
+      let totalSchoolAvaliados = 0;
+      Object.values(schoolMetrics).forEach((sch: any) => {
+        if (sch.anos?.[cleanYear]?.total_avaliados) {
+          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
+        }
+      });
+      avaliados = totalSchoolAvaliados || 0;
+      subUnitLabel = "UBS monitoradas";
+      subUnitValue = String(ubsList.length);
+    }
+
+    const formatPct = (val: number) => {
+      if (val === undefined || val === null || isNaN(val)) return 'N/D';
+      return `${val.toFixed(2)}%`;
+    };
+
+    const formatAval = (val: number) => {
+      if (isPrevisao) return 'Projetado';
+      if (!val) return 'N/D';
+      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
+    };
+
+    return {
+      avgObs: formatPct(scopeMetrics.obesidade),
+      avgMag: formatPct(scopeMetrics.magreza),
+      avgDes: formatPct(scopeMetrics.desnutricao),
+      avgSob: formatPct(scopeMetrics.sobrepeso),
+      avgEut: formatPct(scopeMetrics.eutrofia),
+      evaluatedStr: formatAval(avaliados),
+      subUnitLabel,
+      subUnitValue
+    };
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, scopeMetrics, regionalData, schoolMetrics, ubsList, schoolsList, bairroMetrics, isPrevisao]);
 
   // Helper to get parent UBS for a neighborhood
   const getParentUbsForBairroName = React.useCallback((bName: string | null): string | null => {
@@ -144,29 +333,25 @@ export default function ExpertView() {
     return baseSource;
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics]);
 
-  // Encontra os dados do ano selecionado
-  const cleanYear = anoSelecionado.replace('★', '').trim();
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   // Pega a projeção de 2027
   const dadosProj = activeTemporalData.find(d => d.ano === '2027 ★') || activeTemporalData.find(d => d.ano.includes('2027')) || activeTemporalData[activeTemporalData.length - 1] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
 
-  const isPrevisao = anoSelecionado.includes('★');
-
   // Dynamic header title based on current selection level
   const displayTitle = React.useMemo(() => {
     if (analysisLevel === 'municipio') {
-      return 'Rio Claro — Painel Epidemiológico';
+      return 'Mapa de Risco';
     }
     if (analysisLevel === 'ubs' && selectedUbs) {
-      return `${selectedUbs} — Painel Epidemiológico`;
+      return `${selectedUbs}`;
     }
     if (analysisLevel === 'bairro' && selectedBairroName) {
-      return `Bairro ${selectedBairroName} — Painel Epidemiológico`;
+      return `Bairro ${selectedBairroName}`;
     }
     if (analysisLevel === 'escola' && selectedSchoolName) {
-      return `${selectedSchoolName} — Painel Epidemiológico`;
+      return `${selectedSchoolName}`;
     }
-    return 'Rio Claro — Painel Epidemiológico';
+    return 'Mapa de Risco';
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
 
   // Configuração baseada no indicador selecionado
@@ -491,13 +676,105 @@ export default function ExpertView() {
       {/* ── Cabeçalho da view ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div>
-             <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">{displayTitle}</h2>
-          </div>
+          {displayTitle && (
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">{displayTitle}</h2>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
+                Visualização espacial e preditiva da prevalência de indicadores nutricionais por sub-região · Nutri for Schools {anoSelecionado}
+              </p>
+            </div>
+          )}
         </div>
-        <div className={`flex items-center gap-2 text-[10px] ${situationStyles.text} ${situationStyles.bg} border ${situationStyles.border} rounded-lg px-3 py-2 shadow-sm font-black`}>
-          <span className={`w-2 h-2 rounded-full ${situationStyles.bullet} animate-pulse`} />
-          {isPrevisao ? `★ PREVISÃO DE IA: ${cleanYear}` : `DADO REAL: ${cleanYear}`}
+        <div className="flex items-center gap-3">
+          {/* Indicador Principal Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsIndicatorOpen(!isIndicatorOpen)}
+              className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-55 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+            >
+              <span className={`w-2 h-2 rounded-full ${
+                indicador === 'desnutricao' ? 'bg-blue-500' :
+                indicador === 'magreza' ? 'bg-sky-500' :
+                indicador === 'eutrofia' ? 'bg-emerald-500' :
+                indicador === 'sobrepeso' ? 'bg-amber-500' : 'bg-red-500'
+              }`} />
+              <span>{
+                indicador === 'desnutricao' ? 'Desnutrição' :
+                indicador === 'magreza' ? 'Magreza' :
+                indicador === 'eutrofia' ? 'Peso Adequado' :
+                indicador === 'sobrepeso' ? 'Sobrepeso' : 'Obesidade'
+              }</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 ml-1" />
+            </button>
+
+            {isIndicatorOpen && (
+              <>
+                <div className="fixed inset-0 z-[1000]" onClick={() => setIsIndicatorOpen(false)} />
+                <div className="absolute right-0 mt-1.5 w-44 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] overflow-hidden divide-y divide-slate-100 dark:divide-zinc-900/60">
+                  {[
+                    { id: 'desnutricao', label: 'Desnutrição', dot: 'bg-blue-500' },
+                    { id: 'magreza', label: 'Magreza', dot: 'bg-sky-500' },
+                    { id: 'eutrofia', label: 'Peso Adequado', dot: 'bg-emerald-500' },
+                    { id: 'sobrepeso', label: 'Sobrepeso', dot: 'bg-amber-500' },
+                    { id: 'obesidade', label: 'Obesidade', dot: 'bg-red-500' }
+                  ].map((ind) => (
+                    <button
+                      key={ind.id}
+                      onClick={() => {
+                        setIndicador(ind.id as any);
+                        setIsIndicatorOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                        indicador === ind.id
+                          ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                          : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${ind.dot}`} />
+                      <span className="flex-1">{ind.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Ano de Referência Dropdown */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setIsYearOpen(!isYearOpen)}
+                className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-55 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+              >
+                <span className="flex-1 text-left">{anoSelecionado}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />
+              </button>
+
+              {isYearOpen && (
+                <>
+                  <div className="fixed inset-0 z-[1000]" onClick={() => setIsYearOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-28 max-h-32 overflow-y-auto bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {yearsList.map((yr) => (
+                      <button
+                        key={yr}
+                        onClick={() => {
+                          setAnoSelecionado(yr);
+                          setIsYearOpen(false);
+                        }}
+                        className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                          anoSelecionado === yr
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                            : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        {yr}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -552,7 +829,151 @@ export default function ExpertView() {
         <div className="relative bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300 h-[480px] w-full">
           {/* Mapa de Risco - Preenche toda a área */}
           <div className="w-full h-full relative">
-            <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-2">
+            {/* Unified Search Box floating on top of Map */}
+            <div ref={searchDropdownRef} className="absolute top-4 left-4 z-[1001] w-72">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchOpen(true);
+                    if (e.target.value === '') {
+                      setSelection('municipio', null, null, null);
+                    }
+                  }}
+                  onFocus={() => setIsSearchOpen(true)}
+                  placeholder="Pesquisar região, UBS ou escola..."
+                  className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 pr-12 py-2.5 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-lg backdrop-blur-sm cursor-text"
+                />
+
+                {searchQuery ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                      setSelection('municipio', null, null, null);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Search Suggestions Dropdown */}
+              {isSearchOpen && (
+                <div className="absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-sm border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl z-[1002] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {/* Option for General reset */}
+                  <button
+                    onClick={() => {
+                      setSelection('municipio', null, null, null);
+                      setSearchQuery('');
+                      setIsSearchOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2.5 text-[11px] font-black text-teal-655 dark:text-teal-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-teal-700 dark:hover:text-teal-350 transition-colors flex items-center gap-1.5 border-none bg-transparent cursor-pointer"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Rio Claro - Geral</span>
+                  </button>
+
+                  {/* Categoria: UBS */}
+                  {filteredUbs.length > 0 && (
+                    <div>
+                      <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20 tracking-wider">Unidades de Saúde</div>
+                      {filteredUbs.map(u => (
+                        <button
+                          key={u.nome}
+                          onClick={() => {
+                            setSelection('ubs', u.nome, null, null);
+                            setSearchQuery(u.nome);
+                            setIsSearchOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2 ${
+                            selectedUbs === u.nome && analysisLevel === 'ubs'
+                              ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-655 dark:text-teal-400'
+                              : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900'
+                          }`}
+                        >
+                          <Hospital className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
+                          <span className="truncate">{u.nome}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Categoria: Bairros */}
+                  {filteredBairros.length > 0 && (
+                    <div>
+                      <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20 tracking-wider">Bairros</div>
+                      {filteredBairros.map(b => (
+                        <button
+                          key={b.nome}
+                          onClick={() => {
+                            setSelection('bairro', b.parentUbs || null, b.nome, null);
+                            setSearchQuery(b.nome);
+                            setIsSearchOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex gap-2 ${
+                            selectedBairroName === b.nome
+                              ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-655 dark:text-teal-400'
+                              : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900'
+                          }`}
+                        >
+                          <Home className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="block font-bold truncate text-slate-800 dark:text-zinc-200 leading-tight">{b.nome}</span>
+                            <span className="block text-[8.5px] text-slate-400 dark:text-zinc-500 font-bold uppercase mt-0.5">UBS: {b.parentUbs.replace('UBS ', '').replace('USF ', '')}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Categoria: Escolas */}
+                  {filteredSchools.length > 0 && (
+                    <div>
+                      <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-950/20 tracking-wider">Escolas</div>
+                      {filteredSchools.map(s => (
+                        <button
+                          key={s.nome}
+                          onClick={() => {
+                            setSelection('escola', s.regiao_ubs || null, s.bairro || null, s.nome);
+                            setSearchQuery(s.nome);
+                            setIsSearchOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex gap-2 ${
+                            selectedSchoolName === s.nome
+                              ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-655 dark:text-teal-400'
+                              : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900'
+                          }`}
+                        >
+                          <School className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="block font-bold text-slate-800 dark:text-zinc-200 leading-tight truncate">{s.nome}</span>
+                            <span className="block text-[8.5px] text-slate-455 dark:text-zinc-500 font-bold uppercase mt-0.5">
+                              {s.bairro ? `${s.bairro} · ` : ''}UBS: {(s.regiao_ubs || '').replace('UBS ', '').replace('USF ', '')}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {filteredUbs.length === 0 && filteredBairros.length === 0 && filteredSchools.length === 0 && (
+                    <div className="px-3.5 py-4 text-center text-slate-400 dark:text-zinc-500 text-[11px] italic">
+                      Nenhum resultado encontrado para "{searchQuery}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="absolute top-4 left-[305px] z-10 pointer-events-none flex flex-col gap-2">
               <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
                 Mapa de Risco por Região
               </span>
@@ -605,25 +1026,29 @@ export default function ExpertView() {
                 {/* Lista de Checkboxes de Camadas */}
                 <div className="space-y-1">
                   {POI_CATEGORIES.map(({ id, label, color }) => {
-                    const isActive = activePoiTypes.includes(id);
+                    const isActive = id === 'UBS' ? true : activePoiTypes.includes(id);
+                    const isUbs = id === 'UBS';
                     return (
                       <button
                         key={id}
-                        onClick={() => togglePoi(id)}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all border ${
+                        disabled={isUbs}
+                        onClick={() => !isUbs && togglePoi(id)}
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all border border-solid ${
                           isActive
-                            ? 'bg-white dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-[#f5f5f7] shadow-sm'
+                            ? 'bg-white dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-[#f5f5f7] shadow-sm font-extrabold'
                             : 'bg-transparent border-transparent text-slate-500 dark:text-zinc-450 hover:bg-slate-50 dark:hover:bg-zinc-900/30 hover:text-slate-700 dark:hover:text-zinc-300'
-                        }`}
+                        } ${isUbs ? 'cursor-default opacity-90' : 'cursor-pointer'}`}
                       >
                         <span className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
                         <span className="truncate">{label}</span>
-                        <input
-                          type="checkbox"
-                          checked={isActive}
-                          readOnly
-                          className="ml-auto w-3.5 h-3.5 rounded text-teal-600 border-slate-350 dark:border-zinc-700 focus:ring-teal-500 focus:ring-opacity-20 pointer-events-none accent-teal-600"
-                        />
+                        {!isUbs && (
+                          <input
+                            type="checkbox"
+                            checked={isActive}
+                            readOnly
+                            className="ml-auto w-3.5 h-3.5 rounded text-teal-600 border-slate-350 dark:border-zinc-700 focus:ring-teal-500 focus:ring-opacity-20 pointer-events-none accent-teal-600"
+                          />
+                        )}
                       </button>
                     );
                   })}
@@ -754,7 +1179,7 @@ export default function ExpertView() {
                       <Info className="w-3.5 h-3.5" />
                       <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-56 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
                         {isEut 
-                          ? 'Ranking das UBSs/Regiões ordenadas pelo maior aumento no percentual de peso saudável no período.'
+                          ? 'Ranking das UBSs/Regiões ordenadas pelo maior aumento no percentual de peso adequado no período.'
                           : 'Ranking das UBSs/Regiões ordenadas pelo maior avanço ou aumento na taxa de prevalência de risco nutricional.'}
                       </div>
                     </div>
@@ -949,6 +1374,44 @@ export default function ExpertView() {
         {/* ── Seção: Conflito Urbano / Infraestrutura ── */}
         <UrbanConflictSection />
 
+        {/* ── Seção 4: Resumo Epidemiológico & Fontes (Rodapé Unificado) ── */}
+        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-6 mt-6 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300 w-full">
+          {/* Left: Summary Title */}
+          <div className="flex flex-col gap-1 text-center lg:text-left shrink-0">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-450 dark:text-zinc-500">Resumo Territorial</span>
+            <span className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wide">
+              {activeLabel} &middot; {anoSelecionado}
+            </span>
+            <p className="text-[9px] text-slate-400 dark:text-zinc-550 leading-relaxed font-bold tracking-wide mt-1">
+              Fonte: Nutri for Schools/CNES &middot; Status: Dados reais + ML (2026–2027)
+            </p>
+          </div>
+
+          {/* Right: Metrics Grid */}
+          <div className="flex flex-wrap items-center justify-center lg:justify-end gap-3 flex-1 w-full lg:w-auto">
+            <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />} label="Desnutrição" value={hudMetrics.avgDes} color="text-blue-600 dark:text-blue-400 font-extrabold" />
+            <MetricRow icon={<Activity className="w-3.5 h-3.5 text-sky-500" />} label="Magreza" value={hudMetrics.avgMag} color="text-sky-600 dark:text-sky-400 font-extrabold" />
+            <MetricRow icon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400 font-extrabold" />
+            <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400 font-extrabold" />
+            <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400 font-extrabold" />
+            <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />} label="Avaliados" value={hudMetrics.evaluatedStr} color="text-slate-700 dark:text-zinc-300 font-extrabold" />
+            <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-650 dark:text-teal-400" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-700 dark:text-teal-400 font-extrabold" />
+          </div>
+        </div>
+
     </motion.div>
   );
 }
+
+function MetricRow({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50/50 dark:bg-zinc-950/20 rounded-xl border border-slate-200/50 dark:border-zinc-800/40 hover:bg-slate-100/50 dark:hover:bg-zinc-900/30 transition-colors">
+      {icon}
+      <div className="flex flex-col text-left">
+        <span className="text-[8px] text-slate-450 dark:text-zinc-550 uppercase font-extrabold leading-none">{label}</span>
+        <span className={`text-[11px] font-black font-mono mt-0.5 tabular-nums ${color}`}>{value}</span>
+      </div>
+    </div>
+  );
+}
+

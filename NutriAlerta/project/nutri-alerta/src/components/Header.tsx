@@ -68,15 +68,6 @@ export default function Header() {
       
       {/* Brand Section */}
       <div className="flex items-center gap-4">
-        {sidebarCollapsed && (
-          <button
-            onClick={() => setSidebarCollapsed(false)}
-            className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all duration-200 cursor-pointer flex items-center justify-center"
-            title="Expandir barra lateral"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
         <motion.div 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -126,7 +117,7 @@ export default function Header() {
           title={darkMode ? "Modo Claro" : "Modo Escuro"}
         >
           {darkMode ? (
-            <Sun className="w-5 h-5 text-amber-400" />
+            <Sun className="w-5 h-5 text-emerald-500" />
           ) : (
             <Moon className="w-5 h-5 text-slate-600" />
           )}

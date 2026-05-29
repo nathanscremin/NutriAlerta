@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
 import ExpertView from '@/components/ExpertView';
 import ConsultantView from '@/components/ConsultantView';
 import DemographicsSection from '@/components/DemographicsSection';
@@ -66,8 +65,6 @@ export default function Dashboard() {
       <Header />
       
       <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar />
-        
         <main className="flex-1 relative overflow-y-auto bg-background transition-colors duration-300">
           <AnimatePresence mode="wait">
             {viewMode === 'map' && <ExpertView key="map" />}
