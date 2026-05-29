@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
 import ReactMarkdown from 'react-markdown';
-
+// forçar commit
 interface Message {
   role: 'user' | 'bot';
   text: string;
