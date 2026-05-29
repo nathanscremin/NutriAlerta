@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
 import ReactMarkdown from 'react-markdown';
-
+// forçar commit
 interface Message {
   role: 'user' | 'bot';
   text: string;
@@ -98,7 +98,12 @@ function ThinkingBubble({ thinking }: { thinking: string }) {
 const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
   if (!data || !name) return undefined;
   if (data[name]) return data[name];
-  const normalize = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019"']/g, '').toLowerCase().trim();
+  const normalize = (s: string) =>
+    s.normalize("NFD")
+     .replace(/[\u0300-\u036f]/g, "")
+     .replace(/[\u201c\u201d\u2018\u2019"']/g, '')
+     .toLowerCase()
+     .trim();
   const normalizedName = normalize(name);
   const key = Object.keys(data).find(k => normalize(k) === normalizedName);
   return key ? data[key] : undefined;
@@ -699,9 +704,10 @@ export default function ConsultantView() {
               {filteredUbs.map(ubs => {
                 const isSelected = selectedUbs === ubs.nome;
                 const ubsData = normalizeUbsKey(ubs.nome, regionalData[cleanYear] || {});
+                const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
                 const finalVal = ubsData && typeof ubsData[indicador] === 'number'
                   ? ubsData[indicador]
-                  : (indicador === 'desnutricao' ? 2.62 : indicador === 'magreza' ? 0.0 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2);
+                  : ((globalRec as any)[indicador] ?? (indicador === 'desnutricao' ? 2.62 : indicador === 'magreza' ? 0.0 : indicador === 'obesidade' ? 12.93 : indicador === 'sobrepeso' ? 16.3 : 61.2));
                 const badge = getRiskBadge(finalVal, indicador);
                 
                 let ubsTotalEvaluated = 0;
