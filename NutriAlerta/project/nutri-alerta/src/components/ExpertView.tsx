@@ -1151,7 +1151,17 @@ export default function ExpertView() {
                       dataKey="value"
                       stroke="none"
                       cornerRadius={4}
-                    />
+                    >
+                      {[
+                        { name: 'Desnutrição', fill: '#3b82f6' },
+                        { name: 'Magreza', fill: '#38bdf8' },
+                        { name: 'Peso Adequado', fill: '#10b981' },
+                        { name: 'Sobrepeso', fill: '#f59e0b' },
+                        { name: 'Obesidade', fill: '#ef4444' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
                       itemStyle={{ fontWeight: 'bold' }}
@@ -1161,6 +1171,10 @@ export default function ExpertView() {
                       iconType="circle"
                       iconSize={8}
                       wrapperStyle={{ fontSize: '11px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '10px', fontWeight: 'bold' }}
+                      itemSorter={(item: any) => {
+                        const order = ['Desnutrição', 'Magreza', 'Peso Adequado', 'Sobrepeso', 'Obesidade'];
+                        return order.indexOf(item.value);
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

@@ -60,10 +60,10 @@ export const MOCK_TEMPORAL = DADOS_TEMPORAIS
 
 // Distribuição nutricional média de 2025 (Fonte: dados reais Nutri for Schools)
 export const MOCK_DISTRIBUICAO = [
+  { name: 'Magreza / Desnutrição',   value:  4, fill: '#3b82f6' },
   { name: 'Peso Adequado (Eutrofia)', value: 58, fill: '#10b981' },
   { name: 'Sobrepeso',               value: 21, fill: '#f59e0b' },
   { name: 'Obesidade (Geral)',        value: 17, fill: '#ef4444' },
-  { name: 'Magreza / Desnutrição',   value:  4, fill: '#3b82f6' },
 ];
 
 export const RANKING_ACELERACAO = [...MOCK_ESCOLAS]
