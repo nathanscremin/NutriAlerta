@@ -9,7 +9,7 @@ import DemographicsSection from '@/components/DemographicsSection';
 import UbsComparisonSection from '@/components/UbsComparisonSection';
 import ChatbotWidget from '@/components/ChatbotWidget';
 import { useAppStore } from '@/store/useAppStore';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Dashboard() {
   const { viewMode, initializeData, darkMode, setViewMode } = useAppStore();
@@ -69,14 +69,28 @@ export default function Dashboard() {
           <AnimatePresence mode="wait">
             {viewMode === 'map' && <ExpertView key="map" />}
             {viewMode === 'schools' && (
-              <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+              <motion.div
+                key="schools"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="p-6 space-y-6 max-w-7xl mx-auto w-full"
+              >
                 <DemographicsSection />
-              </div>
+              </motion.div>
             )}
             {viewMode === 'comparison' && (
-              <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+              <motion.div
+                key="comparison"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="p-6 space-y-6 max-w-7xl mx-auto w-full"
+              >
                 <UbsComparisonSection />
-              </div>
+              </motion.div>
             )}
             {viewMode === 'consultant' && <ConsultantView key="consultant" />}
           </AnimatePresence>

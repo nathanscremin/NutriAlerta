@@ -76,7 +76,7 @@ export default function Header() {
           <NutriAlertaLogo className="w-5 h-5 text-white" />
         </motion.div>
         <div className="ml-1">
-          <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">NutriAlerta</h1>
+          <h1 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">NutriAlerta</h1>
           <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium tracking-wide uppercase">Rio Claro · SP</p>
         </div>
       </div>

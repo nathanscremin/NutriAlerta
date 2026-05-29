@@ -4,7 +4,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 type ViewMode = 'map' | 'schools' | 'comparison' | 'consultant' | 'data-entry';
 
-export type PoiType = 'UBS' | 'Pronto-Atendimento' | 'Saúde Mental' | 'Vigilância Sanitária' | 'Educação' | 'Esporte e Lazer' | 'Alimentação - Restaurante/Fast-food' | 'Alimentação - Mercado';
+export type PoiType = 'UBS' | 'Pronto-Atendimento' | 'Saúde Mental' | 'Vigilância Sanitária' | 'Educação' | 'Esporte e Lazer' | 'Alimentação - Restaurante' | 'Alimentação - Fast-food' | 'Alimentação - Mercado';
 
 export type AnalysisLevel = 'municipio' | 'ubs' | 'bairro' | 'escola';
 
@@ -201,7 +201,7 @@ export const useAppStore = create<AppState>()(
       setAnoSelecionado: (ano) => set({ anoSelecionado: ano }),
       indicador: 'obesidade',
       setIndicador: (ind) => set({ indicador: ind }),
-      activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante/Fast-food', 'Alimentação - Mercado'],
+      activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante', 'Alimentação - Fast-food', 'Alimentação - Mercado'],
       setActivePoiTypes: (types) => set({ activePoiTypes: types }),
       selectedPoi: null,
       setSelectedPoi: (poi) => set({ selectedPoi: poi }),
@@ -268,6 +268,16 @@ export const useAppStore = create<AppState>()(
     {
       name: 'nutrialerta-ui-state',
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 1 || !persistedState || persistedState.activePoiTypes?.includes('Alimentação - Restaurante/Fast-food')) {
+          return {
+            ...persistedState,
+            activePoiTypes: ['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária', 'Educação', 'Esporte e Lazer', 'Alimentação - Restaurante', 'Alimentação - Fast-food', 'Alimentação - Mercado']
+          };
+        }
+        return persistedState;
+      },
       // Persiste só o que faz sentido — dados de API são sempre buscados frescos
       partialize: (state) => ({
         viewMode: state.viewMode,

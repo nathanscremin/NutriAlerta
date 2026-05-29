@@ -83,7 +83,8 @@ const POI_CATEGORIES = [
   { id: 'UBS' as const, label: 'Saúde (UBS/UPA)', color: 'bg-red-500' },
   { id: 'Educação' as const, label: 'Educação', color: 'bg-blue-500' },
   { id: 'Esporte e Lazer' as const, label: 'Esporte & Lazer', color: 'bg-green-500' },
-  { id: 'Alimentação - Restaurante/Fast-food' as const, label: 'Restaurantes/Fast-Food', color: 'bg-orange-500' },
+  { id: 'Alimentação - Restaurante' as const, label: 'Restaurantes (Saudável)', color: 'bg-emerald-500' },
+  { id: 'Alimentação - Fast-food' as const, label: 'Fast-Foods (Risco)', color: 'bg-orange-500' },
   { id: 'Alimentação - Mercado' as const, label: 'Mercados', color: 'bg-purple-500' },
 ];
 
@@ -340,7 +341,7 @@ export default function ExpertView() {
   // Dynamic header title based on current selection level
   const displayTitle = React.useMemo(() => {
     if (analysisLevel === 'municipio') {
-      return 'Mapa de Risco';
+      return 'MAPA DE RISCO';
     }
     if (analysisLevel === 'ubs' && selectedUbs) {
       return `${selectedUbs}`;
@@ -351,7 +352,7 @@ export default function ExpertView() {
     if (analysisLevel === 'escola' && selectedSchoolName) {
       return `${selectedSchoolName}`;
     }
-    return 'Mapa de Risco';
+    return 'MAPA DE RISCO';
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
 
   // Configuração baseada no indicador selecionado
@@ -678,7 +679,10 @@ export default function ExpertView() {
         <div className="flex items-center gap-4">
           {displayTitle && (
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">{displayTitle}</h2>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight flex items-center gap-2">
+                <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+                <span>{displayTitle}</span>
+              </h2>
               <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
                 Visualização espacial e preditiva da prevalência de indicadores nutricionais por sub-região · Nutri for Schools {anoSelecionado}
               </p>
@@ -992,7 +996,7 @@ export default function ExpertView() {
             className={`absolute top-4 right-4 z-[1000] p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-lg ${
               isLayersOpen
                 ? 'bg-teal-600 border-teal-500 text-white shadow-teal-500/10'
-                : 'bg-white/95 dark:bg-[#1c1c1e]/95 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/80'
+                : 'bg-white/95 dark:bg-[#1c1c1e]/95 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f5f7] hover:bg-slate-55 dark:hover:bg-zinc-800/80'
             }`}
             title="Ver Camadas e Detalhes"
           >
@@ -1007,7 +1011,7 @@ export default function ExpertView() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className="absolute top-4 right-4 bottom-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-4 space-y-4 overflow-y-auto shrink-0 scrollbar-thin"
+                className="absolute top-16 right-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-3.5 space-y-3 max-h-[calc(100%-80px)] overflow-y-auto shrink-0 scrollbar-thin"
               >
                 {/* Header do Painel */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-900/60 pb-2">
@@ -1033,7 +1037,7 @@ export default function ExpertView() {
                         key={id}
                         disabled={isUbs}
                         onClick={() => !isUbs && togglePoi(id)}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all border border-solid ${
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border border-solid ${
                           isActive
                             ? 'bg-white dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-[#f5f5f7] shadow-sm font-extrabold'
                             : 'bg-transparent border-transparent text-slate-500 dark:text-zinc-450 hover:bg-slate-50 dark:hover:bg-zinc-900/30 hover:text-slate-700 dark:hover:text-zinc-300'
@@ -1059,7 +1063,7 @@ export default function ExpertView() {
                 {/* Detalhes do Ponto Selecionado */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-555 uppercase tracking-widest leading-none mb-3 block">Detalhes do Ponto</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-555 uppercase tracking-widest leading-none mb-2.5 block">Detalhes do Ponto</span>
                     
                     {selectedPoi ? (
                       <div className="bg-white dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/55 rounded-xl p-3 space-y-2.5 text-slate-800 dark:text-zinc-200 animate-in fade-in duration-200">
@@ -1070,7 +1074,7 @@ export default function ExpertView() {
                             </h4>
                             <button
                               onClick={() => setSelectedPoi(null)}
-                              className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+                              className="text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1081,23 +1085,23 @@ export default function ExpertView() {
                             <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">{selectedPoi.categoria}</span>
                           </div>
 
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-450 leading-normal">
+                          <p className="text-[10px] text-slate-400 dark:text-zinc-455 leading-normal">
                             Ponto de interesse integrado via geoprocessamento. Pronto para análise pelo modelo preditivo de IA e intervenção no território.
                           </p>
                         </div>
 
-                        <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
-                          <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[9px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer">
-                            Mais Info
-                          </button>
-                          <button className="flex-1 hover:bg-teal-700 text-[9px] text-white font-bold py-1.5 rounded-md transition-colors bg-teal-600 cursor-pointer">
-                            Simular
+                        <div className="pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
+                          <button
+                            onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(`${selectedPoi.nome} Rio Claro`)}`, '_blank')}
+                            className="w-full bg-slate-55 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[10px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer text-center"
+                          >
+                            Mais Informações
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-400 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
-                        <div className="mb-2 text-slate-400 dark:text-zinc-500 flex justify-center"><MapPin className="w-5 h-5" /></div>
+                      <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center text-[9.5px] text-slate-400 dark:text-zinc-555 transition-all duration-300 min-h-[95px]">
+                        <div className="mb-1 text-slate-400 dark:text-zinc-555 flex justify-center"><MapPin className="w-4.5 h-4.5" /></div>
                         <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
                       </div>
                     )}
@@ -1135,11 +1139,11 @@ export default function ExpertView() {
                   <PieChart>
                     <Pie
                       data={[
+                        { name: 'Desnutrição', value: desnutricaoAvg, fill: '#3b82f6' },
+                        { name: 'Magreza', value: magrezaAvg, fill: '#38bdf8' },
                         { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#10b981' },
                         { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#f59e0b' },
-                        { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' },
-                        { name: 'Magreza', value: magrezaAvg, fill: '#38bdf8' },
-                        { name: 'Desnutrição', value: desnutricaoAvg, fill: '#3b82f6' }
+                        { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' }
                       ]}
                       innerRadius="58%"
                       outerRadius="80%"

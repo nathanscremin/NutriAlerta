@@ -610,7 +610,7 @@ export default function ConsultantView() {
             <div className="relative">
               <button
                 onClick={() => setIsIndicatorOpen(!isIndicatorOpen)}
-                className="w-full flex items-center justify-between gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+                className="w-full flex items-center justify-between gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
               >
                 <span className="truncate">
                   {indicador === 'obesidade' && 'Obesidade'}
@@ -627,11 +627,11 @@ export default function ConsultantView() {
                   <div className="fixed inset-0 z-[1000]" onClick={() => setIsIndicatorOpen(false)} />
                   <div className="absolute left-0 right-0 mt-1.5 w-full bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
                     {[
-                      { id: 'obesidade', label: 'Obesidade' },
-                      { id: 'sobrepeso', label: 'Sobrepeso' },
-                      { id: 'eutrofia', label: 'Peso Adequado' },
-                      { id: 'magreza', label: 'Magreza' },
                       { id: 'desnutricao', label: 'Desnutrição' },
+                      { id: 'magreza', label: 'Magreza' },
+                      { id: 'eutrofia', label: 'Peso Adequado' },
+                      { id: 'sobrepeso', label: 'Sobrepeso' },
+                      { id: 'obesidade', label: 'Obesidade' },
                     ].map(({ id, label }) => (
                       <button
                         key={id}
@@ -657,7 +657,7 @@ export default function ConsultantView() {
             <div className="relative">
               <button
                 onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
-                className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2.5 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+                className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
               >
                 <span className="flex-1 text-left">{anoSelecionado}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />

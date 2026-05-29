@@ -10,7 +10,7 @@ import {
   PieChart, Pie
 } from 'recharts';
 import { 
-  Info, Mars, Venus, ChevronDown, Search, Globe, Hospital, Home, School, X
+  Info, Mars, Venus, ChevronDown, Search, Globe, Hospital, Home, School, X, Activity
 } from 'lucide-react';
 
 // ── Custom Tooltip for Recharts Prevalence Bar Chart ───────────────────────────
@@ -216,8 +216,9 @@ export default function DemographicsSection() {
       {/* 1. Dashboard Header (Sem ícones decorativos ou badges de escopo/tags) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
         <div>
-          <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-            Análise Escolar
+          <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
+            <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+            <span>Análise Escolar</span>
           </h2>
           <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
             Indicadores demográficos, idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
@@ -676,11 +677,11 @@ function KpiCard({
   accentColor: string; tooltip?: string;
 }) {
   return (
-    <div className="relative rounded-xl p-5 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-all duration-300 group overflow-hidden">
-      <div className="text-[11px] text-slate-550 dark:text-zinc-400 uppercase tracking-wider mb-2.5 font-extrabold flex items-center justify-between relative z-10">
-        <span>{label}</span>
+    <div className="relative z-10 hover:z-20 rounded-xl p-5 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between h-[105px]">
+      <div className="text-[11px] text-slate-550 dark:text-zinc-400 uppercase tracking-wider font-extrabold flex items-start justify-between gap-1.5 relative z-10 w-full">
+        <span className="leading-tight break-words max-w-[85%]">{label}</span>
         {tooltip && (
-          <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7]">
+          <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] shrink-0 mt-0.5">
             <Info className="w-3.5 h-3.5" />
             <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1002] font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
               {tooltip}
@@ -689,7 +690,7 @@ function KpiCard({
         )}
       </div>
 
-      <div className="flex items-baseline gap-1 relative z-10">
+      <div className="flex items-baseline gap-1 relative z-10 mt-auto">
         <h3 className={`text-3xl font-black tracking-tight ${accentColor}`}>{value}</h3>
         <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
       </div>

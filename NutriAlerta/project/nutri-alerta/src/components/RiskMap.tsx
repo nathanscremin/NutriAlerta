@@ -487,6 +487,7 @@ export default function RiskMap() {
           maxZoom={18}
           style={{ height: '100%', width: '100%', background: mapBackground }}
           zoomControl={false}
+          attributionControl={false}
         >
           <TileLayer
             key={darkMode ? 'dark-tiles' : 'light-tiles'}
@@ -494,7 +495,7 @@ export default function RiskMap() {
               ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
               : "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
             }
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            attribution=""
           />
           <MapController />
           {bairros && (

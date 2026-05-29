@@ -75,102 +75,7 @@ export const RANKING_ACELERACAO = [...MOCK_ESCOLAS]
 
 export type InfraPoint = { nome: string; tipo: string; lat: number; lon: number; grupo: 'risco' | 'protetivo'; };
 
-export const MERCADOS_GERAIS: InfraPoint[] = [
-  { nome: 'Supermercado Furkim', tipo: 'supermarket', lat: -22.3762855, lon: -47.5518907, grupo: 'protetivo' },
-  { nome: 'Supermercado Tetra', tipo: 'supermarket', lat: -22.3870598, lon: -47.5531562, grupo: 'protetivo' },
-  { nome: 'Alvimar Guedes', tipo: 'supermarket', lat: -22.3829758, lon: -47.5642162, grupo: 'protetivo' },
-  { nome: 'Supermercado da Rosa', tipo: 'supermarket', lat: -22.4084055, lon: -47.6021985, grupo: 'protetivo' },
-  { nome: 'Casa&Vida', tipo: 'wholesale', lat: -22.4228324, lon: -47.5663048, grupo: 'protetivo' },
-  { nome: 'Mercado Família', tipo: 'supermarket', lat: -22.387285, lon: -47.6139328, grupo: 'protetivo' },
-  { nome: 'Paulistão Atacadista', tipo: 'wholesale', lat: -22.3847316, lon: -47.5564681, grupo: 'protetivo' },
-  { nome: 'Covabra Supermercados', tipo: 'supermarket', lat: -22.3842458, lon: -47.5730971, grupo: 'protetivo' },
-  { nome: 'Assaí Atacadista', tipo: 'supermarket', lat: -22.4149934, lon: -47.5749365, grupo: 'protetivo' },
-  { nome: 'Supermercado Covabra', tipo: 'supermarket', lat: -22.4007914, lon: -47.5683947, grupo: 'protetivo' },
-  { nome: 'Qualidade Supermercado', tipo: 'supermarket', lat: -22.4067551, lon: -47.5711652, grupo: 'protetivo' },
-  { nome: 'Padaria Claret', tipo: 'bakery', lat: -22.407357, lon: -47.5722133, grupo: 'protetivo' },
-  { nome: 'Supermercado Brasil Frios', tipo: 'supermarket', lat: -22.3920434, lon: -47.5596618, grupo: 'protetivo' },
-  { nome: 'Savegnano Supermercados', tipo: 'supermarket', lat: -22.4237938, lon: -47.5628518, grupo: 'protetivo' },
-  { nome: 'Examine Supermercados (1)', tipo: 'supermarket', lat: -22.4010829, lon: -47.5847635, grupo: 'protetivo' },
-  { nome: 'Supermercado Tropical (1)', tipo: 'supermarket', lat: -22.395533, lon: -47.5836803, grupo: 'protetivo' },
-  { nome: 'Examine Supermercados (2)', tipo: 'supermarket', lat: -22.3874351, lon: -47.5802755, grupo: 'protetivo' },
-  { nome: 'Supermercado Tropical (2)', tipo: 'supermarket', lat: -22.3946047, lon: -47.5733196, grupo: 'protetivo' },
-  { nome: 'Matos Supermercado', tipo: 'supermarket', lat: -22.3755504, lon: -47.57965, grupo: 'protetivo' },
-  { nome: 'Examine Supermercados (3)', tipo: 'supermarket', lat: -22.4357071, lon: -47.5819898, grupo: 'protetivo' },
-  { nome: 'Big Bem Supermercado', tipo: 'supermarket', lat: -22.4199925, lon: -47.5839687, grupo: 'protetivo' },
-  { nome: 'Pães & Doces 5 Estrelas', tipo: 'bakery', lat: -22.4217892, lon: -47.5830643, grupo: 'protetivo' },
-  { nome: 'Supermercado Tropical (3)', tipo: 'supermarket', lat: -22.4296013, lon: -47.5819891, grupo: 'protetivo' },
-  { nome: 'Atacadão', tipo: 'supermarket', lat: -22.4180339, lon: -47.5803487, grupo: 'protetivo' },
-  { nome: 'Supermercado Santo Antônio', tipo: 'supermarket', lat: -22.3810621, lon: -47.5874412, grupo: 'protetivo' },
-  { nome: 'Supermercados Savegnago', tipo: 'supermarket', lat: -22.3819109, lon: -47.5477645, grupo: 'protetivo' },
-  { nome: 'Padaria Village', tipo: 'bakery', lat: -22.3755407, lon: -47.5520178, grupo: 'protetivo' },
-  { nome: 'Supermercado Jóia', tipo: 'supermarket', lat: -22.3693396, lon: -47.5394383, grupo: 'protetivo' },
-  { nome: 'Padaria Vila Alemã', tipo: 'bakery', lat: -22.3893022, lon: -47.5546693, grupo: 'protetivo' },
-  { nome: 'Modelo Padaria', tipo: 'bakery', lat: -22.4227737, lon: -47.558267, grupo: 'protetivo' },
-];
 
-export const ESPORTE_LAZER: InfraPoint[] = [
-  { nome: 'Jardim Público', tipo: 'park', lat: -22.4100179, lon: -47.5603859, grupo: 'protetivo' },
-  { nome: 'Praça da Liberdade', tipo: 'park', lat: -22.4121623, lon: -47.562644, grupo: 'protetivo' },
-  { nome: 'Praça Vereador Silas Bianchini', tipo: 'park', lat: -22.3872396, lon: -47.5633751, grupo: 'protetivo' },
-  { nome: 'Bosque dos Angicos', tipo: 'park', lat: -22.3804147, lon: -47.5504651, grupo: 'protetivo' },
-  { nome: 'Praça Prof Dr. Antônio Christofoletti', tipo: 'park', lat: -22.3967193, lon: -47.5472359, grupo: 'protetivo' },
-  { nome: 'Praça Monumento Rio Claro', tipo: 'park', lat: -22.4174805, lon: -47.5750704, grupo: 'protetivo' },
-  { nome: 'Praça da Rodoviária Municipal', tipo: 'park', lat: -22.4171792, lon: -47.5753013, grupo: 'protetivo' },
-  { nome: 'Praça dos Ferroviários', tipo: 'park', lat: -22.4106598, lon: -47.5572635, grupo: 'protetivo' },
-  { nome: 'Parque do Jequitibás', tipo: 'park', lat: -22.4453753, lon: -47.5376753, grupo: 'protetivo' },
-  { nome: 'Parque Multiuso', tipo: 'park', lat: -22.4585435, lon: -47.527019, grupo: 'protetivo' },
-  { nome: 'Praça Theodor Koelle', tipo: 'park', lat: -22.4044288, lon: -47.5650428, grupo: 'protetivo' },
-  { nome: 'Praça Santa Cruz', tipo: 'park', lat: -22.4068878, lon: -47.5669011, grupo: 'protetivo' },
-  { nome: 'Espaço Livre', tipo: 'park', lat: -22.4062005, lon: -47.5651674, grupo: 'protetivo' },
-  { nome: 'Praça Dalva de Oliveira', tipo: 'park', lat: -22.413576, lon: -47.5704674, grupo: 'protetivo' },
-  { nome: 'Praça do jardim América', tipo: 'park', lat: -22.3840435, lon: -47.5553127, grupo: 'protetivo' },
-  { nome: 'Praça Jardim Leblon', tipo: 'park', lat: -22.4350076, lon: -47.5587027, grupo: 'protetivo' },
-  { nome: 'Praça Jardim Botânico', tipo: 'park', lat: -22.4323623, lon: -47.5610633, grupo: 'protetivo' },
-  { nome: 'Praça do Parque Universitário', tipo: 'park', lat: -22.3933023, lon: -47.5791001, grupo: 'protetivo' },
-  { nome: 'Praça Jardim Olinda', tipo: 'park', lat: -22.3898129, lon: -47.5798939, grupo: 'protetivo' },
-  { nome: 'Praça Capeça', tipo: 'park', lat: -22.4263645, lon: -47.5713813, grupo: 'protetivo' },
-  { nome: 'Praça Jardim Quitandinha', tipo: 'park', lat: -22.4280052, lon: -47.5721784, grupo: 'protetivo' },
-  { nome: 'Praça Jd. Itapuã', tipo: 'park', lat: -22.4384816, lon: -47.5613638, grupo: 'protetivo' },
-  { nome: 'Pracinha Pasetto', tipo: 'park', lat: -22.4020687, lon: -47.5749665, grupo: 'protetivo' },
-  { nome: 'Praça Rotary', tipo: 'park', lat: -22.4070571, lon: -47.5726154, grupo: 'protetivo' },
-  { nome: 'Praça Antonio Paes de Barros', tipo: 'park', lat: -22.4088672, lon: -47.5654163, grupo: 'protetivo' },
-  { nome: 'Praça Delfino da Silva Barbosa', tipo: 'park', lat: -22.407706, lon: -47.5648944, grupo: 'protetivo' },
-  { nome: 'Campo de futebol Lagoa Seca', tipo: 'pitch', lat: -22.3843182, lon: -47.5684916, grupo: 'protetivo' },
-  { nome: 'Ginásio da Lagoa Seca', tipo: 'pitch', lat: -22.3846531, lon: -47.5695446, grupo: 'protetivo' },
-  { nome: 'Campo Arco-íris', tipo: 'pitch', lat: -22.3773896, lon: -47.5517518, grupo: 'protetivo' },
-  { nome: 'Academia ao Ar Livre (1)', tipo: 'fitness_station', lat: -22.3843569, lon: -47.5509181, grupo: 'protetivo' },
-  { nome: 'Academia ao Ar Livre (2)', tipo: 'fitness_station', lat: -22.428157, lon: -47.577748, grupo: 'protetivo' },
-  { nome: 'Academia ao Ar Livre (3)', tipo: 'fitness_station', lat: -22.398058, lon: -47.5635354, grupo: 'protetivo' },
-  { nome: 'Academia ao Ar Livre (4)', tipo: 'fitness_station', lat: -22.3756703, lon: -47.5431585, grupo: 'protetivo' },
-];
-
-export const AMBIENTE_OBESOGENICO: InfraPoint[] = [
-  { nome: 'Subway', tipo: 'fast_food', lat: -22.3865925, lon: -47.5560987, grupo: 'risco' },
-  { nome: 'Bar e Lanchonete do Rafael', tipo: 'fast_food', lat: -22.4077455, lon: -47.5586846, grupo: 'risco' },
-  { nome: 'Brooks Hamburgueria', tipo: 'fast_food', lat: -22.4097342, lon: -47.5664329, grupo: 'risco' },
-  { nome: 'China in Box', tipo: 'fast_food', lat: -22.4136904, lon: -47.5717099, grupo: 'risco' },
-  { nome: 'Barão Burguer', tipo: 'fast_food', lat: -22.4036919, lon: -47.5657272, grupo: 'risco' },
-  { nome: 'Hermmanito Fast Food', tipo: 'fast_food', lat: -22.4218514, lon: -47.5565867, grupo: 'risco' },
-  { nome: 'Bella Capri Pizza e Pasta', tipo: 'restaurant', lat: -22.4189226, lon: -47.5601911, grupo: 'risco' },
-  { nome: 'Lanches Val', tipo: 'restaurant', lat: -22.3866271, lon: -47.5568934, grupo: 'risco' },
-  { nome: 'Sorveteria Vanilla Ice', tipo: 'restaurant', lat: -22.3889055, lon: -47.5578573, grupo: 'risco' },
-  { nome: 'Pizzaria Ypê', tipo: 'restaurant', lat: -22.3868722, lon: -47.55357, grupo: 'risco' },
-  { nome: 'Jack Brown', tipo: 'restaurant', lat: -22.4092951, lon: -47.5619963, grupo: 'risco' },
-  { nome: 'Cebola Brava Rotisserie', tipo: 'restaurant', lat: -22.4135002, lon: -47.5679233, grupo: 'risco' },
-  { nome: 'Seu Bentô', tipo: 'restaurant', lat: -22.4045381, lon: -47.5640158, grupo: 'risco' },
-  { nome: 'Restaurant China Express', tipo: 'restaurant', lat: -22.4034166, lon: -47.5649996, grupo: 'risco' },
-  { nome: 'Padoka\'s', tipo: 'restaurant', lat: -22.3716454, lon: -47.5403132, grupo: 'risco' },
-  { nome: 'Entreposto', tipo: 'convenience', lat: -22.4226909, lon: -47.5592579, grupo: 'risco' },
-  { nome: 'BR Mania', tipo: 'convenience', lat: -22.4229631, lon: -47.5605285, grupo: 'risco' },
-  { nome: 'Padaria e Casa de Carnes Paulista', tipo: 'convenience', lat: -22.395929, lon: -47.5923492, grupo: 'risco' },
-];
-
-// Proporção total para o gráfico donut de infraestrutura
-export const PROPORCAO_INFRAESTRUTURA = [
-  { name: 'Mercados & Padarias', value: MERCADOS_GERAIS.length, fill: '#10b981' },
-  { name: 'Parques & Esportes', value: ESPORTE_LAZER.length, fill: '#38bdf8' },
-  { name: 'Fast Food & Risco', value: AMBIENTE_OBESOGENICO.length, fill: '#f43f5e' },
-];
 
 export const UNIDADES_SAUDE = [
   { nome: "UBS Jardim Chervezon “Dr. Nicolino Maziotti”", categoria: "UBS", lat: -22.385236150603358, lon: -47.564888689845596 },
@@ -213,8 +118,23 @@ export interface Poi {
 }
 
 // Combine all for the Map
-// Filter out from extractedPois any points that are government infra to avoid duplicates
-const filteredExtracted = extractedPois.filter(p => !['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária'].includes(p.categoria));
+// Filter out from extractedPois any points that are government infra to avoid duplicates, and also filter out all "Desconhecido" points.
+const filteredExtracted = extractedPois.filter(p => 
+  !['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária'].includes(p.categoria) &&
+  p.nome !== 'Desconhecido'
+);
+
+export function classifyFoodCategory(nome: string): 'Alimentação - Restaurante' | 'Alimentação - Fast-food' {
+  const nameLower = nome.toLowerCase();
+  const fastFoodKeywords = [
+    'subway', 'mc', 'burger', 'burguer', 'habib', 'king', 'lanches', 
+    'lanchonete', 'lanchinete', 'hamburgueria', 'sorveteria', 'doces', 
+    'ice', 'mania', 'entreposto', 'fast', 'fast-food', 'fastfood', 
+    'conveniência', 'bar', 'lanchonete'
+  ];
+  const isFast = fastFoodKeywords.some(keyword => nameLower.includes(keyword));
+  return isFast ? 'Alimentação - Fast-food' : 'Alimentação - Restaurante';
+}
 
 export const ALL_POIS: Poi[] = [
   ...UNIDADES_SAUDE.map(u => ({ 
@@ -225,15 +145,68 @@ export const ALL_POIS: Poi[] = [
     lon: u.lon, 
     color: u.categoria === 'UBS' ? '#e74c3c' : u.categoria === 'Pronto-Atendimento' ? '#8e44ad' : '#c0392b' 
   })),
-  ...filteredExtracted.map((p, i) => ({ 
-    id: `extracted-${i}`, 
-    nome: p.nome === 'Desconhecido' ? p.categoria + ' (Mapeado)' : p.nome, 
-    categoria: p.categoria, 
-    lat: p.lat, 
-    lon: p.lon, 
-    color: p.color,
-    ...p 
-  }))
+  ...filteredExtracted.map((p, i) => {
+    let cat = p.categoria;
+    if (p.categoria === 'Alimentação - Restaurante/Fast-food') {
+      cat = classifyFoodCategory(p.nome === 'Desconhecido' ? p.categoria : p.nome);
+    }
+    return { 
+      ...p,
+      id: `extracted-${i}`, 
+      nome: p.nome === 'Desconhecido' ? cat + ' (Mapeado)' : p.nome, 
+      categoria: cat, 
+      lat: p.lat, 
+      lon: p.lon, 
+      color: cat === 'Alimentação - Restaurante' ? '#0d9488' : p.color
+    };
+  })
+];
+
+export const MERCADOS_GERAIS: InfraPoint[] = ALL_POIS
+  .filter(p => p.categoria === 'Alimentação - Mercado')
+  .map(p => ({
+    nome: p.nome,
+    tipo: 'supermarket',
+    lat: p.lat,
+    lon: p.lon,
+    grupo: 'protetivo' as const
+  }));
+
+export const RESTAURANTES_GERAIS: InfraPoint[] = ALL_POIS
+  .filter(p => p.categoria === 'Alimentação - Restaurante')
+  .map(p => ({
+    nome: p.nome,
+    tipo: 'restaurant',
+    lat: p.lat,
+    lon: p.lon,
+    grupo: 'protetivo' as const
+  }));
+
+export const ESPORTE_LAZER: InfraPoint[] = ALL_POIS
+  .filter(p => p.categoria === 'Esporte e Lazer')
+  .map(p => ({
+    nome: p.nome,
+    tipo: 'park',
+    lat: p.lat,
+    lon: p.lon,
+    grupo: 'protetivo' as const
+  }));
+
+export const AMBIENTE_OBESOGENICO: InfraPoint[] = ALL_POIS
+  .filter(p => p.categoria === 'Alimentação - Fast-food')
+  .map(p => ({
+    nome: p.nome,
+    tipo: 'fast_food',
+    lat: p.lat,
+    lon: p.lon,
+    grupo: 'risco' as const
+  }));
+
+export const PROPORCAO_INFRAESTRUTURA = [
+  { name: 'Mercados', value: MERCADOS_GERAIS.length, fill: '#10b981' },
+  { name: 'Restaurantes', value: RESTAURANTES_GERAIS.length, fill: '#0d9488' },
+  { name: 'Parques & Esportes', value: ESPORTE_LAZER.length, fill: '#38bdf8' },
+  { name: 'Fast Food & Risco', value: AMBIENTE_OBESOGENICO.length, fill: '#f43f5e' },
 ];
 
 // Mapeamento de âncoras virtuais - Removido por obsolescência (usando limites reais de bairros)

@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend
 } from 'recharts';
 import {
-  MERCADOS_GERAIS, ESPORTE_LAZER, AMBIENTE_OBESOGENICO
+  MERCADOS_GERAIS, RESTAURANTES_GERAIS, ESPORTE_LAZER, AMBIENTE_OBESOGENICO
 } from '@/lib/mockData';
 import { ShieldAlert, Utensils, Dumbbell, ShoppingCart, Info } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
@@ -17,15 +17,16 @@ const ConflictMap = dynamic(() => import('./ConflictMap'), { ssr: false, loading
   </div>
 ) });
 
-const totalProtetivo = MERCADOS_GERAIS.length + ESPORTE_LAZER.length;
+const totalProtetivo = MERCADOS_GERAIS.length + RESTAURANTES_GERAIS.length + ESPORTE_LAZER.length;
 const totalRisco = AMBIENTE_OBESOGENICO.length;
 const total = totalProtetivo + totalRisco;
-const ratioRisco = ((totalRisco / total) * 100).toFixed(1);
+const ratioRisco = total > 0 ? ((totalRisco / total) * 100).toFixed(1) : "0.0";
 
 const proporcaoLocal = [
-  { name: 'Restaurantes e Padarias', value: MERCADOS_GERAIS.length, fill: '#10b981' },
+  { name: 'Mercados', value: MERCADOS_GERAIS.length, fill: '#10b981' },
+  { name: 'Restaurantes', value: RESTAURANTES_GERAIS.length, fill: '#0d9488' },
   { name: 'Esporte e Lazer', value: ESPORTE_LAZER.length, fill: '#3b82f6' },
-  { name: 'Fast Food', value: AMBIENTE_OBESOGENICO.length, fill: '#ef4444' },
+  { name: 'Fast-Foods', value: AMBIENTE_OBESOGENICO.length, fill: '#ef4444' },
 ];
 
 export default function UrbanConflictSection() {
@@ -48,14 +49,22 @@ export default function UrbanConflictSection() {
       </div>
 
       {/* KPI cards da infraestrutura */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         <KpiCard
-          label="Restaurantes e Padarias"
+          label="Mercados (Saudável)"
           value={MERCADOS_GERAIS.length}
           icon={<ShoppingCart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
           colorClass="bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100/40 dark:border-emerald-900/35"
           textColor="text-emerald-700 dark:text-emerald-400"
-          tooltip="Mapeamento de restaurantes e padarias que servem como rede de alimentação e abastecimento saudável."
+          tooltip="Mapeamento de supermercados, mercados, quitandas e sacolões que servem como rede de alimentação saudável protetiva."
+        />
+        <KpiCard
+          label="Restaurantes (Saudável)"
+          value={RESTAURANTES_GERAIS.length}
+          icon={<Utensils className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
+          colorClass="bg-teal-50/50 dark:bg-teal-950/20 border-teal-100/40 dark:border-teal-900/35"
+          textColor="text-teal-700 dark:text-teal-400"
+          tooltip="Mapeamento de restaurantes saudáveis, trattorias, pizzarias e cafés que servem refeições saudáveis ou tradicionais preparadas."
         />
         <KpiCard
           label="Esporte e Lazer"
@@ -66,12 +75,12 @@ export default function UrbanConflictSection() {
           tooltip="Mapeamento de parques, praças e complexos esportivos para fomento de atividade física."
         />
         <KpiCard
-          label="Alimentação Rápida"
+          label="Fast-Foods & Risco"
           value={AMBIENTE_OBESOGENICO.length}
           icon={<Utensils className="w-4 h-4 text-red-600 dark:text-red-400" />}
           colorClass="bg-red-50/50 dark:bg-red-955/20 border-red-100/40 dark:border-red-900/35"
           textColor="text-red-700 dark:text-red-400"
-          tooltip="Mapeamento de lanchonetes e redes de alimentação rápida com predomínio de ultraprocessados."
+          tooltip="Mapeamento de lanchonetes, redes de fast-food, sorveterias e lojas de conveniência com predomínio de ultraprocessados de risco."
         />
         <KpiCard
           label="Índice de Concentração"
@@ -98,15 +107,19 @@ export default function UrbanConflictSection() {
           <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
             <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-[9px] font-bold">Alimentação Rápida / Conveniência</span>
+              <span className="text-[9px] font-bold">Fast-Foods & Conveniência (Risco)</span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="text-[9px] font-bold">Restaurantes / Padarias</span>
+              <span className="text-[9px] font-bold">Mercados (Saudável)</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-teal-600" />
+              <span className="text-[9px] font-bold">Restaurantes (Saudável)</span>
             </div>
             <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm text-slate-700 dark:text-zinc-300">
               <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="text-[9px] font-bold">Parques / Esportes</span>
+              <span className="text-[9px] font-bold">Parques, Esporte & Lazer</span>
             </div>
           </div>
           <ConflictMap />
@@ -118,7 +131,7 @@ export default function UrbanConflictSection() {
             Proporção de Infraestrutura
           </h3>
           <p className="text-[10px] text-slate-500 dark:text-zinc-400 mb-3 font-semibold">
-            Saudável (Mercados + Esportes) vs. Alternativas Rápidas
+            Saudável (Mercados, Restaurantes & Lazer) vs. Fast-Foods (Risco)
           </p>
           <div className="flex-1">
             {mounted ? (
