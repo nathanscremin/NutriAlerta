@@ -1,94 +1,168 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { getDemographicsForUbs, AgeGroupData } from '@/lib/demographics';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Users2, ShieldCheck, TrendingUp, TrendingDown, HelpCircle, AlertCircle } from 'lucide-react';
+import { getDemographicsForUbs } from '@/lib/demographics';
+import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
+import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
+import { motion } from 'framer-motion';
+import { 
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, Tooltip as RechartsTooltip,
+  PieChart, Pie
+} from 'recharts';
+import { 
+  Info, Mars, Venus, ChevronDown, Search, Globe, Hospital, Home, School, X, Activity
+} from 'lucide-react';
 
+// ── Custom Tooltip for Recharts Prevalence Bar Chart ───────────────────────────
+const CustomChartTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-zinc-800/80 rounded-xl p-3 shadow-lg text-xs transition-all">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="w-2.5 h-2.5 rounded-full" style={{ background: data.fill }} />
+        <span className="font-extrabold text-slate-800 dark:text-[#f5f5f7]">{data.name}</span>
+      </div>
+      <p className="text-slate-500 dark:text-zinc-400 font-semibold leading-none">
+        Prevalência: <span className="font-mono font-black text-slate-900 dark:text-white">{Number(data.value).toFixed(2)}%</span>
+      </p>
+    </div>
+  );
+};
 export default function DemographicsSection() {
   const { 
     analysisLevel, 
     selectedUbs, 
     selectedBairroName, 
     selectedSchoolName,
+    setSelection,
     anoSelecionado, 
+    setAnoSelecionado,
+    yearsList,
     temporalData, 
     regionalData, 
     schoolMetrics,
     bairroMetrics,
-    demographicData,
     darkMode 
   } = useAppStore();
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(2); // Padrão: Escolares (6 a 11 anos)
+  const [isYearOpen, setIsYearOpen] = useState(false);
+  const [isGenderStateOpen, setIsGenderStateOpen] = useState(false);
+
+  // States and refs for Search Bar
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sincroniza a busca caso o escopo de análise mude globalmente (ex: clicado no mapa)
+  useEffect(() => {
+    if (analysisLevel === 'ubs') {
+      setSearchQuery(selectedUbs || '');
+    } else if (analysisLevel === 'bairro') {
+      setSearchQuery(selectedBairroName || '');
+    } else if (analysisLevel === 'escola') {
+      setSearchQuery(selectedSchoolName || '');
+    } else {
+      setSearchQuery('');
+    }
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
+
+  // Fecha o menu de sugestões de busca ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Processamento de listas para busca
+  const ubsList = useMemo(() => {
+    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
+      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
+      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
+      return nameA.localeCompare(nameB);
+    });
+  }, []);
+
+  const uniqueBairrosList = useMemo(() => {
+    const bairrosGeoJSON = getVoronoiGeoJSON();
+    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
+    const setNames = new Set<string>();
+    const list: Array<{ nome: string; parentUbs: string }> = [];
+    bairrosGeoJSON.features.forEach((feat: any) => {
+      const name = feat.properties?.nome_real_bairro;
+      const ubs = feat.properties?.nome_bairro;
+      if (name && !setNames.has(name)) {
+        setNames.add(name);
+        list.push({ nome: name, parentUbs: ubs || '' });
+      }
+    });
+    return list.sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  const schoolsList = useMemo(() => {
+    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
+  }, []);
+
+  const filteredUbs = useMemo(() => {
+    return ubsList.filter(u =>
+      u.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [ubsList, searchQuery]);
+
+  const filteredBairros = useMemo(() => {
+    let list = uniqueBairrosList;
+    if (searchQuery.trim() === '' && selectedUbs) {
+      list = list.filter(b => b.parentUbs === selectedUbs);
+    }
+    return list.filter(b =>
+      b.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [uniqueBairrosList, selectedUbs, searchQuery]);
+
+  const filteredSchools = useMemo(() => {
+    let list = schoolsList;
+    if (searchQuery.trim() === '') {
+      if (selectedBairroName) {
+        list = list.filter(s => s.bairro === selectedBairroName);
+      } else if (selectedUbs) {
+        list = list.filter(s => s.regiao_ubs === selectedUbs);
+      }
+    }
+    return list.filter(s =>
+      s.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
   const cleanYear = anoSelecionado.replace('★', '').trim();
 
   // Encontra os baselines dinâmicos de taxas
   const rates = useMemo(() => {
-    // 1. Get the global record for this cleanYear
-    const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYear) || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 15.2, eutrofia: 58 };
-    const globalDes = globalRec.desnutricao;
-    const globalObs = globalRec.obesidade;
-    const globalSob = (globalRec as any).sobrepeso || 15.2;
-    const globalEut = (globalRec as any).eutrofia || 58;
-
-    let pDes = globalDes;
-    let pObs = globalObs;
-    let pSob = globalSob;
-    let pEut = globalEut;
-
-    if (analysisLevel === 'municipio') {
-      // Just keep global values
-    } else if (analysisLevel === 'ubs') {
-      const ubsName = selectedUbs;
-      const yrRecord = ubsName ? regionalData[cleanYear]?.[ubsName] : null;
-      pDes = yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalDes;
-      pObs = yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalObs;
-      pSob = yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : globalSob;
-      pEut = yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : globalEut;
-    } else if (analysisLevel === 'bairro') {
-      const bMetric = selectedBairroName ? bairroMetrics[selectedBairroName] : null;
-      const bYearData = bMetric?.anos?.[cleanYear];
-      if (bYearData) {
-        pDes = bYearData.desnutricao;
-        pObs = bYearData.obesidade;
-        pSob = bYearData.sobrepeso;
-        pEut = bYearData.eutrofia;
-      } else {
-        const parentUbs = bMetric?.regiao_ubs || selectedUbs;
-        const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
-        pDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
-        pObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
-        pSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
-        pEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
-      }
-    } else if (analysisLevel === 'escola') {
-      const sMetric = selectedSchoolName ? schoolMetrics[selectedSchoolName] : null;
-      const sYearData = sMetric?.anos?.[cleanYear];
-      if (sYearData) {
-        pDes = sYearData.desnutricao;
-        pObs = sYearData.obesidade;
-        pSob = sYearData.sobrepeso;
-        pEut = sYearData.eutrofia;
-      } else {
-        const parentUbs = sMetric?.regiao_ubs || selectedUbs;
-        const ubsRecord = parentUbs ? regionalData[cleanYear]?.[parentUbs] : null;
-        pDes = ubsRecord && typeof ubsRecord.desnutricao === 'number' ? ubsRecord.desnutricao : globalDes;
-        pObs = ubsRecord && typeof ubsRecord.obesidade === 'number' ? ubsRecord.obesidade : globalObs;
-        pSob = ubsRecord && typeof ubsRecord.sobrepeso === 'number' ? ubsRecord.sobrepeso : globalSob;
-        pEut = ubsRecord && typeof ubsRecord.eutrofia === 'number' ? ubsRecord.eutrofia : globalEut;
-      }
-    }
+    const scoped = getScopedNutritionMetrics({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics
+    });
 
     return {
-      des: Number(pDes.toFixed(2)),
-      obs: Number(pObs.toFixed(2)),
-      sob: Number(pSob.toFixed(2)),
-      eut: Number(pEut.toFixed(2))
+      des: Number(scoped.desnutricao.toFixed(2)),
+      mag: Number(scoped.magreza.toFixed(2)),
+      obs: Number(scoped.obesidade.toFixed(2)),
+      sob: Number(scoped.sobrepeso.toFixed(2)),
+      eut: Number(scoped.eutrofia.toFixed(2))
     };
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-  // Calcula os dados demográficos
+  // Calcula os dados demográficos determinísticos
   const demoData = useMemo(() => {
     const focusName = analysisLevel === 'escola' 
       ? selectedSchoolName 
@@ -98,216 +172,305 @@ export default function DemographicsSection() {
           ? selectedUbs 
           : 'Geral';
     
-    const key = `${focusName || 'Geral'}-${cleanYear}`;
-    if (demographicData && demographicData[key]) {
-      return demographicData[key];
-    }
-    
-    return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut);
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates, demographicData]);
+    return getDemographicsForUbs(focusName, cleanYear, rates.des, rates.sob, rates.obs, rates.eut, rates.mag);
+  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, cleanYear, rates]);
 
   const activeGroup = demoData.ageGroups[activeGroupIndex];
 
+  const genderStates = useMemo(() => [
+    { id: 'desnutricao', label: 'Desnutrição', data: activeGroup.desnutricao, color: 'text-blue-550 dark:text-blue-450', fill: '#3b82f6' },
+    { id: 'magreza', label: 'Magreza', data: activeGroup.magreza, color: 'text-sky-500', fill: '#38bdf8' },
+    { id: 'eutrofia', label: 'Peso Adequado', data: activeGroup.eutrofia, color: 'text-teal-600 dark:text-teal-400', fill: '#0d9488' },
+    { id: 'sobrepeso', label: 'Sobrepeso', data: activeGroup.sobrepeso, color: 'text-amber-500', fill: '#f59e0b' },
+    { id: 'obesidade', label: 'Obesidade', data: activeGroup.obesidade, color: 'text-rose-500', fill: '#f43f5e' }
+  ], [activeGroup]);
 
-  // Helper para renderizar a barra de progresso de gênero
-  const renderGenderBar = (label: string, rate: number, male: number, female: number, badgeBg: string) => {
-    const isMaleGreater = male > female;
-    const diff = Math.abs(male - female);
-    
-    return (
-      <div className="space-y-2 bg-slate-50/50 dark:bg-zinc-800/30 p-4 rounded-xl border border-slate-100 dark:border-zinc-800/40">
-        <div className="flex items-center justify-between text-xs font-semibold">
-          <span className="text-slate-700 dark:text-zinc-300 font-semibold">{label}</span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black text-slate-800 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded border dark:border-zinc-700/60">{rate.toFixed(2)}%</span>
-            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${badgeBg} border`}>
-              {diff <= 1 ? "Equilibrado" : isMaleGreater ? "Meninos +" : "Meninas +"}
-            </span>
-          </div>
-        </div>
+  const [genderStateId, setGenderStateId] = useState<string>('eutrofia');
 
-        {/* Barra de Progresso Dupla */}
-        <div className="relative h-3 w-full bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${male}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full bg-blue-500"
-            title={`Meninos: ${male}%`}
-          />
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${female}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full bg-red-500"
-            title={`Meninas: ${female}%`}
-          />
-        </div>
+  const selectedStateData = useMemo(() => {
+    return genderStates.find(s => s.id === genderStateId) || genderStates[2];
+  }, [genderStateId, genderStates]);
 
-        {/* Legenda das Porcentagens */}
-        <div className="flex justify-between text-[10px] font-semibold text-slate-500 dark:text-zinc-400">
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-            Meninos: {male}%
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-            Meninas: {female}%
-          </span>
-        </div>
-      </div>
-    );
-  };
+  const genderChartData = useMemo(() => {
+    return [
+      { name: 'Meninos', value: selectedStateData.data.pctMasculino, fill: '#3b82f6' },
+      { name: 'Meninas', value: selectedStateData.data.pctFeminino, fill: '#ef4444' }
+    ];
+  }, [selectedStateData]);
 
-  // Texto explicativo dinâmico baseado na faixa selecionada
-  const groupInsightText = useMemo(() => {
-    if (!demoData || !demoData.ageGroups || demoData.ageGroups.length < 4) return "";
-    
-    const g0 = demoData.ageGroups[0];
-    const g1 = demoData.ageGroups[1];
-    const g2 = demoData.ageGroups[2];
-    const g3 = demoData.ageGroups[3];
-
-    switch (activeGroupIndex) {
-      case 0:
-        return `Primeira Infância (0-2 anos): A desnutrição nesta fase está ligada ao aleitamento e introdução alimentar precoce. Meninos representam ${g0.desnutricao.pctMasculino}% do predomínio em desnutrição devido a maior suscetibilidade infecciosa no primeiro ano de vida (taxa de prevalência local de ${g0.desnutricao.rate.toFixed(2)}%).`;
-      case 1:
-        return `Pré-escolares (3-5 anos): A obesidade e sobrepeso começam a despontar. Fatores comportamentais influenciam o ganho ponderal nesta faixa, com predomínio de ${g1.sobrepeso.pctFeminino}% das meninas para sobrepeso (taxa de prevalência local de ${g1.sobrepeso.rate.toFixed(2)}%).`;
-      case 2:
-        return `Escolares (6-11 anos): O ambiente escolar e a facilidade de acesso a produtos ultraprocessados causam um pico de obesidade infantil nesta faixa, impactando predominantemente meninos com ${g2.obesidade.pctMasculino}% da prevalência (taxa de prevalência local de ${g2.obesidade.rate.toFixed(2)}%).`;
-      case 3:
-      default:
-        return `Adolescentes (12-18 anos): Marcada pelo estirão de crescimento. Observa-se que a prevalência de sobrepeso atinge principalmente as meninas com ${g3.sobrepeso.pctFeminino}% dos casos, impulsionada por fatores hormonais e fisiológicos do desenvolvimento (taxa de prevalência local de ${g3.sobrepeso.rate.toFixed(2)}%).`;
-    }
-  }, [activeGroupIndex, demoData]);
+  // Estrutura de dados para o gráfico Recharts da Faixa Etária Ativa
+  const chartData = useMemo(() => {
+    return [
+      { name: 'Desnutrição', value: activeGroup.desnutricao.rate, fill: '#2563eb' },
+      { name: 'Magreza', value: activeGroup.magreza.rate, fill: '#38bdf8' },
+      { name: 'Peso Adequado', value: activeGroup.eutrofia.rate, fill: '#0d9488' },
+      { name: 'Sobrepeso', value: activeGroup.sobrepeso.rate, fill: '#d97706' },
+      { name: 'Obesidade', value: activeGroup.obesidade.rate, fill: '#f43f5e' }
+    ];
+  }, [activeGroup]);
 
   return (
-    <div className="space-y-5 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 shadow-sm transition-colors duration-300">
+    <div className="space-y-6">
       
-      {/* Cabeçalho da Seção */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-zinc-800/80 pb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-xl text-indigo-600 dark:text-indigo-400 shadow-inner">
-            <Users2 className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
-              Análise Demográfica Escolar
-            </h3>
-            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
-              Idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
-            </p>
-          </div>
+      {/* 1. Dashboard Header (Sem ícones decorativos ou badges de escopo/tags) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
+        <div>
+          <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
+            <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+            <span>Análise Escolar</span>
+          </h2>
+          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
+            Indicadores demográficos, idade média e análise de gênero estruturadas em 4 faixas etárias · Nutri for Schools {anoSelecionado}
+          </p>
         </div>
 
-        {/* Selo do Indicador */}
-        <div className="text-[10px] text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-lg px-2.5 py-1.5 font-bold self-start sm:self-center shadow-sm">
-          Filtro: {
-            analysisLevel === 'escola'
-              ? `Escola ${selectedSchoolName}`
-              : analysisLevel === 'bairro'
-                ? `Bairro ${selectedBairroName}`
-                : analysisLevel === 'ubs'
-                  ? selectedUbs
-                  : 'Consolidado Rio Claro'
-          }
-        </div>
+        {/* Barra de Pesquisa e Seletor de Ano Customizado */}
+        <div className="flex items-center gap-3">
+          {/* Unified Search Box for region, UBS or school */}
+          <div ref={searchDropdownRef} className="relative w-72">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                  if (e.target.value === '') {
+                    setSelection('municipio', null, null, null);
+                  }
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+                placeholder="Pesquisar região, UBS ou escola..."
+                style={{ paddingRight: '44px' }}
+                className="w-full bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-805 rounded-xl pl-3.5 py-2 text-xs font-semibold text-slate-805 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-0 focus:border-teal-500 transition-all shadow-sm cursor-text"
+              />
 
+              {searchQuery ? (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                    setSelection('municipio', null, null, null);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200 z-10"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600" />
+                </div>
+              )}
+            </div>
+            
+            {/* Search Suggestions Dropdown */}
+            {isSearchOpen && (
+              <div className="absolute right-0 mt-1.5 w-72 max-h-60 overflow-y-auto bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-sm border border-slate-200 dark:border-zinc-800 rounded-xl shadow-2xl z-[1002] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Option for General reset */}
+                <button
+                  onClick={() => {
+                    setSelection('municipio', null, null, null);
+                    setSearchQuery('');
+                    setIsSearchOpen(false);
+                  }}
+                  className="w-full text-left px-3.5 py-2.5 text-[11px] font-black text-teal-655 dark:text-teal-400 hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-teal-700 dark:hover:text-teal-350 transition-colors flex items-center gap-1.5 border-none bg-transparent cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Rio Claro - Geral</span>
+                </button>
+
+                {/* Categoria: UBS */}
+                {filteredUbs.length > 0 && (
+                  <div>
+                    <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">Unidades de Saúde</div>
+                    {filteredUbs.map(u => (
+                      <button
+                        key={u.nome}
+                        onClick={() => {
+                          setSelection('ubs', u.nome, null, null);
+                          setSearchQuery(u.nome);
+                          setIsSearchOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2 ${
+                          selectedUbs === u.nome && analysisLevel === 'ubs'
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400'
+                            : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        <Hospital className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
+                        <span className="truncate">{u.nome}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Categoria: Bairros */}
+                {filteredBairros.length > 0 && (
+                  <div>
+                    <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">Bairros</div>
+                    {filteredBairros.map(b => (
+                      <button
+                        key={b.nome}
+                        onClick={() => {
+                          setSelection('bairro', b.parentUbs || null, b.nome, null);
+                          setSearchQuery(b.nome);
+                          setIsSearchOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex gap-2 ${
+                          selectedBairroName === b.nome
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400'
+                            : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        <Home className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="block font-bold truncate text-slate-800 dark:text-zinc-200 leading-tight">{b.nome}</span>
+                          <span className="block text-[8.5px] text-slate-400 dark:text-zinc-500 font-bold uppercase mt-0.5">UBS: {b.parentUbs.replace('UBS ', '').replace('USF ', '')}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Categoria: Escolas */}
+                {filteredSchools.length > 0 && (
+                  <div>
+                    <div className="px-3.5 py-1.5 text-[8.5px] font-black text-slate-400 dark:text-zinc-500 uppercase bg-slate-50/50 dark:bg-zinc-955/20 tracking-wider">Escolas</div>
+                    {filteredSchools.map(s => (
+                      <button
+                        key={s.nome}
+                        onClick={() => {
+                          setSelection('escola', s.regiao_ubs || null, s.bairro || null, s.nome);
+                          setSearchQuery(s.nome);
+                          setIsSearchOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-[11px] font-bold transition-colors border-none bg-transparent cursor-pointer flex gap-2 ${
+                          selectedSchoolName === s.nome
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400'
+                            : 'text-slate-655 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        <School className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="block font-bold text-slate-800 dark:text-zinc-200 leading-tight truncate">{s.nome}</span>
+                          <span className="block text-[8.5px] text-slate-455 dark:text-zinc-500 font-bold uppercase mt-0.5">
+                            {s.bairro ? `${s.bairro} · ` : ''}UBS: {(s.regiao_ubs || '').replace('UBS ', '').replace('USF ', '')}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {filteredUbs.length === 0 && filteredBairros.length === 0 && filteredSchools.length === 0 && (
+                  <div className="px-3.5 py-4 text-center text-slate-400 dark:text-zinc-500 text-[11px] italic">
+                    Nenhum resultado encontrado para "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setIsYearOpen(!isYearOpen)}
+              className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 w-28 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+            >
+              <span className="flex-1 text-left">{anoSelecionado}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />
+            </button>
+
+            {isYearOpen && (
+              <>
+                <div className="fixed inset-0 z-[1000]" onClick={() => setIsYearOpen(false)} />
+                <div className="absolute right-0 mt-1.5 w-28 max-h-32 overflow-y-auto bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {yearsList.map((yr) => (
+                    <button
+                      key={yr}
+                      onClick={() => {
+                        setAnoSelecionado(yr);
+                        setIsYearOpen(false);
+                      }}
+                      className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                        anoSelecionado === yr
+                          ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                          : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-55 dark:hover:bg-zinc-900/40'
+                      }`}
+                    >
+                      {yr}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Grid de Idades Médias Globais */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Top-tier KPI Cards Grid (Average Ages - Clean Visual) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         
-        {/* Card Peso Adequado */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100/40 dark:border-emerald-900/35 shrink-0 shadow-sm">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-500 uppercase tracking-widest font-bold block">Idade Média · Peso Adequado</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeEut}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Desnutrição (Blue) */}
+        <KpiCard
+          label="Idade Média · Desnutrição"
+          value={demoData.globalAvgAgeDes}
+          accentColor="text-blue-600 dark:text-blue-400"
+          tooltip="Idade média dos indivíduos com quadro clínico de magreza ou desnutrição extrema."
+        />
 
-        {/* Card Obesidade */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-red-50/50 dark:bg-red-955/20 text-red-650 dark:text-red-400 border border-red-100/40 dark:border-red-900/35 shrink-0 shadow-sm">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Obesidade</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeObs}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Magreza (Sky) */}
+        <KpiCard
+          label="Idade Média · Magreza"
+          value={demoData.globalAvgAgeMag}
+          accentColor="text-sky-600 dark:text-sky-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de magreza nesta região."
+        />
 
-        {/* Card Sobrepeso */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-955/20 text-amber-650 dark:text-amber-400 border border-amber-100/40 dark:border-amber-900/35 shrink-0 shadow-sm">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Sobrepeso</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeSob}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Peso Adequado (Teal) */}
+        <KpiCard
+          label="Idade Média · Peso Adequado"
+          value={demoData.globalAvgAgeEut}
+          accentColor="text-teal-600 dark:text-teal-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de peso adequado nesta localidade."
+        />
 
-        {/* Card Desnutrição */}
-        <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/[0.04] rounded-full blur-xl" />
-          </div>
-          <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-955/20 text-blue-650 dark:text-blue-450 border border-blue-100/40 dark:border-blue-900/35 shrink-0 shadow-sm">
-            <TrendingDown className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[9px] text-slate-450 dark:text-zinc-550 uppercase tracking-widest font-bold block">Idade Média · Desnutrição</span>
-            <div className="flex items-baseline gap-1 mt-1">
-              <h4 className="text-2xl font-black text-slate-800 dark:text-[#f5f5f7] tracking-tight">{demoData.globalAvgAgeDes}</h4>
-              <span className="text-[9px] font-bold text-slate-400 dark:text-zinc-555">anos</span>
-            </div>
-          </div>
-        </div>
+        {/* KPI Sobrepeso (Amber) */}
+        <KpiCard
+          label="Idade Média · Sobrepeso"
+          value={demoData.globalAvgAgeSob}
+          accentColor="text-amber-600 dark:text-amber-400"
+          tooltip="Idade média dos indivíduos com diagnóstico de sobrepeso nesta região."
+        />
 
+        {/* KPI Obesidade (Rose) */}
+        <KpiCard
+          label="Idade Média · Obesidade"
+          value={demoData.globalAvgAgeObs}
+          accentColor="text-rose-600 dark:text-rose-455"
+          tooltip="Idade média dos indivíduos com diagnóstico de obesidade clínica."
+        />
       </div>
 
-      {/* Seletor de Faixas Etárias (Tabs Interativas) */}
-      <div>
-        <span className="text-[10px] font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-widest block mb-2.5">
-          Escolha a Faixa Etária Escolar para Detalhar:
+      {/* 3. Seletor de Faixas Etárias (Interactive Rounded Tabs) */}
+      <div className="space-y-3">
+        <span className="text-[10px] font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest block leading-none">
+          Faixa Etária em Foco:
         </span>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/60 dark:border-zinc-800/80 p-1.5 rounded-2xl">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 bg-slate-50 dark:bg-zinc-900/30 border border-slate-200/50 dark:border-zinc-800/80 p-1.5 rounded-xl shadow-inner">
           {demoData.ageGroups.map((group, index) => {
             const isActive = activeGroupIndex === index;
             return (
               <button
                 key={group.faixa}
                 onClick={() => setActiveGroupIndex(index)}
-                className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all border duration-300 cursor-pointer ${
+                className={`flex flex-col items-center justify-center p-3 rounded-lg transition-all border duration-300 cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-650 dark:bg-indigo-600 border-indigo-700/40 text-white shadow-md'
-                    : 'bg-white dark:bg-[#121316] border-slate-200/50 dark:border-[#1f2229]/65 text-slate-650 dark:text-zinc-350 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
+                    ? 'bg-teal-600 dark:bg-teal-700 border-teal-700/30 text-white shadow-sm'
+                    : 'bg-white dark:bg-[#121316] border-slate-200/40 dark:border-zinc-800/60 text-slate-500 dark:text-zinc-400 hover:bg-slate-100/60 dark:hover:bg-zinc-800/60 hover:text-slate-800 dark:hover:text-[#f5f5f7]'
                 }`}
               >
-                <span className="text-[11px] font-bold">{group.label}</span>
-                <span className={`text-[9px] mt-0.5 font-semibold ${isActive ? 'text-indigo-100' : 'text-slate-450 dark:text-zinc-550'}`}>
+                <span className="text-[11px] font-black">{group.label}</span>
+                <span className={`text-[9.5px] mt-1 font-bold ${isActive ? 'text-teal-100' : 'text-slate-400 dark:text-zinc-550'}`}>
                   {group.sub}
                 </span>
               </button>
@@ -316,102 +479,221 @@ export default function DemographicsSection() {
         </div>
       </div>
 
-      {/* Mini-Dashboard de Prevalência da Faixa Etária Ativa */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`metrics-${activeGroupIndex}`}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.2 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2"
-        >
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Peso Adequado</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{activeGroup.eutrofia.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-550 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Desnutrição</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-blue-600 dark:text-blue-400">{activeGroup.desnutricao.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">Sobrepeso</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-amber-600 dark:text-amber-400">{activeGroup.sobrepeso.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-          <div className="bg-slate-50/50 dark:bg-zinc-900/10 border border-slate-200/40 dark:border-zinc-800/45 rounded-xl p-4 flex flex-col justify-between hover:shadow-sm transition-all">
-            <span className="text-[10px] text-rose-600 dark:text-rose-450 font-bold uppercase tracking-wider">Obesidade</span>
-            <div className="flex items-baseline gap-1 mt-1.5">
-              <h4 className="text-xl font-black text-rose-600 dark:text-rose-450">{activeGroup.obesidade.rate.toFixed(2)}%</h4>
-              <span className="text-[9px] text-slate-555 dark:text-zinc-500 font-semibold">da faixa</span>
-            </div>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Painel Reativo de Gêneros da Faixa Etária Ativa */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeGroupIndex}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
-          {renderGenderBar(
-            "Peso Adequado",
-            activeGroup.eutrofia.rate,
-            activeGroup.eutrofia.pctMasculino,
-            activeGroup.eutrofia.pctFeminino,
-            "bg-emerald-50/50 dark:bg-emerald-950/15 text-emerald-700 dark:text-emerald-400 border-emerald-100/40 dark:border-emerald-900/30"
-          )}
-          {renderGenderBar(
-            "Magreza / Desnutrição",
-            activeGroup.desnutricao.rate,
-            activeGroup.desnutricao.pctMasculino,
-            activeGroup.desnutricao.pctFeminino,
-            "bg-blue-50/50 dark:bg-blue-955/15 text-blue-700 dark:text-blue-450 border-blue-100/40 dark:border-blue-900/30"
-          )}
-          {renderGenderBar(
-            "Sobrepeso",
-            activeGroup.sobrepeso.rate,
-            activeGroup.sobrepeso.pctMasculino,
-            activeGroup.sobrepeso.pctFeminino,
-            "bg-amber-50/50 dark:bg-amber-955/15 text-amber-700 dark:text-amber-400 border-amber-100/40 dark:border-amber-900/30"
-          )}
-          {renderGenderBar(
-            "Obesidade",
-            activeGroup.obesidade.rate,
-            activeGroup.obesidade.pctMasculino,
-            activeGroup.obesidade.pctFeminino,
-            "bg-red-50/50 dark:bg-red-955/15 text-red-700 dark:text-red-405 border-red-100/40 dark:border-red-900/30"
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Bloco de Insight Epidemiológico Ancorado */}
-      <div className="relative mt-4">
-        {/* Visual Anchor Arrow pointing upwards towards the active gender bar */}
-        <div className="absolute -top-1.5 left-24 w-3.5 h-3.5 rotate-45 border-t border-l border-indigo-150/40 dark:border-indigo-900/40 bg-indigo-50/60 dark:bg-[#111124] z-10" />
+      {/* 4. Column Analytics Dashboard */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         
-        <div className="bg-indigo-50/60 dark:bg-indigo-955/10 border border-indigo-150/45 dark:border-indigo-900/40 p-4 rounded-xl flex gap-3 items-start leading-relaxed font-semibold transition-all relative z-0 shadow-[0_1px_3px_rgba(0,0,0,0.01)]">
-          <AlertCircle className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0 mt-0.5" />
-          <div className="text-[10px] text-indigo-900 dark:text-indigo-300 space-y-1">
-            <p className="font-black uppercase tracking-wider">Insight Nutricional - Faixa Ativa</p>
-            <p className="text-slate-600 dark:text-zinc-350 font-semibold leading-normal">{groupInsightText}</p>
+        {/* Prevalence & Graphical Chart Analysis */}
+        <div className="space-y-4 border border-slate-200/50 dark:border-zinc-800/80 p-5 rounded-xl bg-slate-50/20 dark:bg-zinc-900/5 transition-colors">
+          <div className="border-b border-slate-200/50 dark:border-zinc-800/70 pb-3">
+            <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-1">
+              <span>Distribuição e Prevalência Geral</span>
+              <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] normal-case tracking-normal">
+                <Info className="w-3.5 h-3.5" />
+                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold leading-relaxed text-center border dark:border-zinc-700">
+                  Prevalência registrada de cada indicador nutricional no ano selecionado.
+                </div>
+              </div>
+            </h3>
+          </div>
+
+          <div className="flex items-center justify-center min-h-[220px] w-full">
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(15,23,42,0.05)'} />
+                <XAxis type="number" unit="%" tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 9, fontWeight: 'bold' }} stroke={darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'} />
+                <YAxis dataKey="name" type="category" width={115} tick={{ fill: darkMode ? '#cbd5e1' : '#475569', fontSize: 11, fontWeight: 'bold' }} stroke={darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(15,23,42,0.1)'} />
+                <RechartsTooltip content={<CustomChartTooltip />} cursor={{ fill: darkMode ? 'rgba(255,255,255,0.02)' : 'rgba(15,23,42,0.02)' }} />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={16}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Gender Analysis Grid (Unified Donut Chart - Side-by-Side) */}
+        <div className="space-y-4 border border-slate-200/50 dark:border-zinc-800/80 p-5 rounded-xl bg-slate-50/20 dark:bg-zinc-900/5 transition-colors flex flex-col justify-between animate-in fade-in duration-300">
+          <div className="flex items-center justify-between border-b border-slate-200/50 dark:border-zinc-800/50 pb-3">
+            <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-1">
+              <span>Análise por Gênero</span>
+              <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] normal-case tracking-normal">
+                <Info className="w-3.5 h-3.5" />
+                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold leading-relaxed text-center border dark:border-zinc-700">
+                  Proporção de distribuição entre meninos (masculino) e meninas (feminino) para o indicador selecionado.
+                </div>
+              </div>
+            </h3>
+
+            {/* Dropdown Selector for Nutritional Indicator (Risk Map style) */}
+            <div className="relative">
+              <button
+                onClick={() => setIsGenderStateOpen(!isGenderStateOpen)}
+                className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+              >
+                <span className={`w-2 h-2 rounded-full ${
+                  genderStateId === 'desnutricao' ? 'bg-blue-500' :
+                  genderStateId === 'magreza' ? 'bg-sky-500' :
+                  genderStateId === 'eutrofia' ? 'bg-emerald-500' :
+                  genderStateId === 'sobrepeso' ? 'bg-amber-500' : 'bg-red-500'
+                }`} />
+                <span>{selectedStateData.label}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-550 shrink-0" />
+              </button>
+
+              {isGenderStateOpen && (
+                <>
+                  <div className="fixed inset-0 z-[1000]" onClick={() => setIsGenderStateOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-44 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] overflow-hidden divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {genderStates.map((state) => (
+                      <button
+                        key={state.id}
+                        onClick={() => {
+                          setGenderStateId(state.id);
+                          setIsGenderStateOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer ${
+                          genderStateId === state.id
+                            ? 'bg-teal-50/40 dark:bg-teal-955/10 text-teal-600 dark:text-teal-400 font-extrabold'
+                            : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${
+                          state.id === 'desnutricao' ? 'bg-blue-500' :
+                          state.id === 'magreza' ? 'bg-sky-500' :
+                          state.id === 'eutrofia' ? 'bg-emerald-500' :
+                          state.id === 'sobrepeso' ? 'bg-amber-500' : 'bg-red-500'
+                        }`} />
+                        <span className="flex-1">{state.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Compact Donut chart and details (Alineado a la derecha) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 py-4 bg-white dark:bg-slate-950 border border-slate-200/40 dark:border-zinc-900/30 p-6 rounded-2xl">
+            {/* Enlarged Donut Chart */}
+            <div className="relative w-56 h-56 flex items-center justify-center shrink-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={genderChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={68}
+                    outerRadius={95}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {genderChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip 
+                    content={({ active, payload }: any) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-slate-900 dark:bg-zinc-850 text-white text-[11px] font-bold py-1.5 px-3 rounded-lg shadow-lg z-[1002]">
+                          {data.name}: {data.value}%
+                        </div>
+                      );
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center Label (Enlarged) */}
+              <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="text-[9px] uppercase font-black tracking-widest text-slate-400 dark:text-zinc-550 leading-none">
+                  Proporção
+                </span>
+                <span className="text-xs font-black text-slate-800 dark:text-zinc-200 mt-0.5 leading-none">
+                  Gênero
+                </span>
+              </div>
+            </div>
+
+            {/* Legends & Info (Azul, Vermelho e Prevalência Geral - Ao Lado do Gráfico) */}
+            <div className="flex flex-col gap-3 w-full sm:w-56 shrink-0">
+              {/* Meninos Stat */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-slate-55/50 dark:bg-zinc-900/40 rounded-xl border border-slate-200/40 dark:border-zinc-800/60 w-full">
+                <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-955/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                  <Mars className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-550 dark:text-zinc-400 uppercase tracking-widest leading-none mb-1">Meninos</span>
+                  <span className="text-base font-mono font-black text-blue-600 dark:text-blue-400 leading-none">
+                    {selectedStateData.data.pctMasculino}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Meninas Stat */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-slate-55/50 dark:bg-zinc-900/40 rounded-xl border border-slate-200/40 dark:border-zinc-800/60 w-full">
+                <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-955/20 flex items-center justify-center text-red-600 dark:text-red-500 shrink-0">
+                  <Venus className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-550 dark:text-zinc-400 uppercase tracking-widest leading-none mb-1">Meninas</span>
+                  <span className="text-base font-mono font-black text-red-600 dark:text-red-555 leading-none">
+                    {selectedStateData.data.pctFeminino}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Prevalência Geral Stat */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-slate-55/50 dark:bg-zinc-900/40 rounded-xl border border-slate-200/40 dark:border-zinc-800/60 w-full">
+                <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-955/20 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+                  <span className="text-xs font-black">P</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-550 dark:text-zinc-400 uppercase tracking-widest leading-none mb-1">Prevalência Geral</span>
+                  <span className="text-base font-mono font-black text-teal-600 dark:text-teal-400 leading-none">
+                    {selectedStateData.data.rate.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
+// ── Secondary KPI Card inline helper ───────────────────────────────────────────
+function KpiCard({
+  label, value, accentColor, tooltip
+}: {
+  label: string; value: string | number;
+  accentColor: string; tooltip?: string;
+}) {
+  return (
+    <div className="relative z-10 hover:z-20 rounded-xl p-5 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between h-[105px]">
+      <div className="text-[11px] text-slate-550 dark:text-zinc-400 uppercase tracking-wider font-extrabold flex items-start justify-between gap-1.5 relative z-10 w-full">
+        <span className="leading-tight break-words max-w-[85%]">{label}</span>
+        {tooltip && (
+          <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] shrink-0 mt-0.5">
+            <Info className="w-3.5 h-3.5" />
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
+              {tooltip}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-baseline gap-1 relative z-10 mt-auto">
+        <h3 className={`text-3xl font-black tracking-tight ${accentColor}`}>{value}</h3>
+        <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-550">anos</span>
+      </div>
     </div>
   );
 }

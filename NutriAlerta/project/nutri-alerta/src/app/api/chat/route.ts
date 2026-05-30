@@ -182,7 +182,7 @@ function getSystemInstruction(context: any, contextoRAG: string) {
        - Se for um BAIRRO, mencione a UBS responsável pela cobertura e proponha ações focadas na vizinhança e agentes de saúde locais.
        - Se for uma UBS, ofereça propostas focadas nas equipes de atenção primária.
        - Se for MUNICIPIO (Geral), discuta políticas macro para a cidade de Rio Claro.
-    3. Use linguagem clara, objetiva, estruturada com listas ou tópicos elegantes, mantendo tom sério e profissional de consultoria estratégica.
+    3. Use linguagem clara, direta e objetiva. Responda em prosa corrida, sem listas com marcadores, sem bullet points e sem saudações formais como "Prezado(a) gestor(a)". Seja conciso: máximo 3 parágrafos curtos por resposta, salvo quando o gestor pedir explicitamente um plano de ações detalhado.
     4. Se não houver unidade/bairro/escola selecionada e a pergunta exigir dados locais específicos, lembre amigavelmente o gestor de selecionar uma unidade na lista lateral.
     5. Responda sempre em português brasileiro de forma pragmática e direta.
     `;
@@ -266,9 +266,8 @@ Com base nisso, recomendo direcionar as ações comunitárias e de assistência 
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, message, context } = await req.json();
-    console.log('📥 screenData recebido:', JSON.stringify(context?.screenData, null, 2));
-    console.log('🤖 genAI configurado:', !!genAI);
-
+    
+    
     if (!sessionId || !message || !context) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
     }
@@ -300,17 +299,33 @@ export async function POST(req: NextRequest) {
       const systemInstruction = getSystemInstruction(context, contextoRAG);
       const historyForAPI = [...historyFromDB];
 
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-1.5-flash',
-        systemInstruction: {
-          role: "system",
-          parts: [{ text: systemInstruction }]
-        }
-      });
-      const chat = model.startChat({ history: historyForAPI });
+const model = genAI.getGenerativeModel({ 
+  model: 'gemini-2.5-flash',
+  systemInstruction: {
+    role: "system",
+    parts: [{ text: systemInstruction }]
+  }
+});
 
-      const result = await chat.sendMessage(message);
-      const text = result.response.text();
+const chat = model.startChat({ 
+  history: historyForAPI,
+  generationConfig: {
+    thinkingConfig: { thinkingBudget: 8000 }
+  } as any
+});
+      
+const result = await chat.sendMessage(message);
+
+const parts = result.response.candidates?.[0]?.content?.parts ?? [];
+
+const thinking = parts
+  .filter((p: any) => p.thought === true)
+  .map((p: any) => p.text)
+  .join('');
+const text = parts
+  .filter((p: any) => !p.thought)
+  .map((p: any) => p.text)
+  .join('') || result.response.text();
 
       if (isKvConfigured) {
         try {
@@ -321,7 +336,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      return NextResponse.json({ response: text });
+  return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
       console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
       const fallbackText = getLocalFallbackResponse(message, context.screenData);

@@ -2,31 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminSupabaseClient } from '@/lib/supabaseAdmin';
+import { kv } from '@vercel/kv';
 
-// Isolated thread-safe authenticated admin client to bypass RLS in the cloud database
-async function getAdminSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://peqvaslchaxrewhtxltc.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_knBFAKhSyTfdfRwMYaQGeg_pF5D6w33';
-  
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
-
-  const { data, error } = await client.auth.signInWithPassword({
-    email: 'nutrialerta@gmail.com',
-    password: '#Pangam123@'
-  });
-
-  if (error) {
-    throw new Error(`Auth RLS bypass failed: ${error.message}`);
-  }
-
-  return client;
-}
+const CACHE_KEY = 'nutrialerta_data_cache';
+const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
 
 // UBS CNES mapping from sync_db_data.js
 const UBS_CNES: Record<string, string> = {
@@ -42,7 +22,7 @@ const UBS_CNES: Record<string, string> = {
   "USF Palmeiras I/II “Dr. Gilson Giovanni”": "2033186",
   "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”": "2074214",
   "USF Benjamin de Castro": "7058865",
-  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2055902",
+  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2046903",
   "USF Jardim das Flores “Dr. Moacir Camargo”": "2074419",
   "USF Guanabara “Dr. Celestino Donato”": "2074222",
   "USF Panorama “Dr. Osvaldo Akamine”": "2074346",
@@ -65,16 +45,13 @@ async function fetchAndSyncDbData() {
   const cwd = process.cwd();
   console.log('[Supabase Cloud Sync] Starting dynamic cloud database query...');
   
-  // 1. Authenticate with Supabase to bypass RLS policies
   const adminClient = await getAdminSupabaseClient();
   
-  // 2. Fetch all schools
   const { data: dbSchools, error: schoolsErr } = await adminClient.from('escolas').select('*');
   if (schoolsErr) {
     throw new Error(`Failed to fetch schools from Supabase: ${schoolsErr.message}`);
   }
   
-  // 3. Fetch all health records in sequential chunks
   const pageSize = 1000;
   const allRecords: any[] = [];
   let i = 0;
@@ -102,7 +79,6 @@ async function fetchAndSyncDbData() {
   
   console.log(`[Supabase Cloud Sync] Loaded ${allRecords.length} records from Supabase.`);
 
-  // 4. Load spatial mapping POIs
   const poisPath = path.join(cwd, 'src', 'lib', 'extractedPois.json');
   let extractedPois: any[] = [];
   try {
@@ -112,7 +88,6 @@ async function fetchAndSyncDbData() {
     console.warn('[Supabase Cloud Sync] extractedPois.json not found, using empty array.');
   }
 
-  // Map school DB name to POI metadata
   const schoolMap: Record<string, any> = {};
   dbSchools.forEach((s: any) => {
     const norm = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
@@ -131,7 +106,6 @@ async function fetchAndSyncDbData() {
     };
   });
 
-  // If we have records in the database, rebuild Base_Nutricional_Consolidada_Final.csv
   if (allRecords.length > 0) {
     const ubsYearGroups: Record<string, any> = {};
     
@@ -149,16 +123,9 @@ async function fetchAndSyncDbData() {
 
       if (!ubsYearGroups[key]) {
         ubsYearGroups[key] = {
-          cnes,
-          ubsName,
-          ano: year,
-          Magreza_Acentuada_Qtd: 0,
-          Magreza_Qtd: 0,
-          Eutrofia_Qtd: 0,
-          Sobrepeso_Qtd: 0,
-          Obesidade_Qtd: 0,
-          Obesidade_Grave_Qtd: 0,
-          Total: 0
+          cnes, ubsName, ano: year,
+          Magreza_Acentuada_Qtd: 0, Magreza_Qtd: 0, Eutrofia_Qtd: 0,
+          Sobrepeso_Qtd: 0, Obesidade_Qtd: 0, Obesidade_Grave_Qtd: 0, Total: 0
         };
       }
 
@@ -187,29 +154,20 @@ async function fetchAndSyncDbData() {
       const total = g.Total;
       if (total === 0) return;
 
-      const magAcentPct = ((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(6);
-      const magPct = ((g.Magreza_Qtd / total) * 100).toFixed(6);
-      const eutPct = ((g.Eutrofia_Qtd / total) * 100).toFixed(6);
-      const sobPct = ((g.Sobrepeso_Qtd / total) * 100).toFixed(6);
-      const obsPct = ((g.Obesidade_Qtd / total) * 100).toFixed(6);
-      const obsGravePct = ((g.Obesidade_Grave_Qtd / total) * 100).toFixed(6);
-
       const row = [
         'SP', '354390', 'RIO CLARO', g.cnes, g.ubsName,
         '', '', '', '', '', '', '', '',
         total, 'SP', g.ano, '0 a 18 anos',
-        g.Magreza_Acentuada_Qtd, magAcentPct,
-        g.Magreza_Qtd, magPct,
-        g.Eutrofia_Qtd, eutPct,
-        g.Sobrepeso_Qtd, sobPct,
-        g.Obesidade_Qtd, obsPct,
-        g.Obesidade_Grave_Qtd, obsGravePct
+        g.Magreza_Acentuada_Qtd, ((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(6),
+        g.Magreza_Qtd, ((g.Magreza_Qtd / total) * 100).toFixed(6),
+        g.Eutrofia_Qtd, ((g.Eutrofia_Qtd / total) * 100).toFixed(6),
+        g.Sobrepeso_Qtd, ((g.Sobrepeso_Qtd / total) * 100).toFixed(6),
+        g.Obesidade_Qtd, ((g.Obesidade_Qtd / total) * 100).toFixed(6),
+        g.Obesidade_Grave_Qtd, ((g.Obesidade_Grave_Qtd / total) * 100).toFixed(6)
       ];
-
       csvRows.push(row.join(','));
     });
 
-    // Write consolidated CSV data to both folders to trigger ML check
     const csvFilename = 'Base_Nutricional_Consolidada_Final.csv';
     const pathsToUpdate = [
       path.join(cwd, '..', 'csv', csvFilename),
@@ -220,12 +178,10 @@ async function fetchAndSyncDbData() {
     for (const p of pathsToUpdate) {
       try {
         await fs.writeFile(p, csvRows.join('\n'), 'utf8');
-        console.log(`[Supabase Cloud Sync] Wrote dynamic cloud data to CSV: ${p}`);
       } catch (err) {}
     }
   }
 
-  // 5. Build high-fidelity school, neighborhood, and UBS dynamic metrics
   const schoolYearGroups: Record<string, any> = {};
   allRecords.forEach(r => {
     const date = new Date(r.data_coleta);
@@ -235,15 +191,9 @@ async function fetchAndSyncDbData() {
     const key = `${r.escola_id}-${year}`;
     if (!schoolYearGroups[key]) {
       schoolYearGroups[key] = {
-        escola_id: r.escola_id,
-        ano: year,
-        Magreza_Acentuada_Qtd: 0,
-        Magreza_Qtd: 0,
-        Eutrofia_Qtd: 0,
-        Sobrepeso_Qtd: 0,
-        Obesidade_Qtd: 0,
-        Obesidade_Grave_Qtd: 0,
-        Total: 0
+        escola_id: r.escola_id, ano: year,
+        Magreza_Acentuada_Qtd: 0, Magreza_Qtd: 0, Eutrofia_Qtd: 0,
+        Sobrepeso_Qtd: 0, Obesidade_Qtd: 0, Obesidade_Grave_Qtd: 0, Total: 0
       };
     }
 
@@ -273,7 +223,8 @@ async function fetchAndSyncDbData() {
     }
 
     schoolMetrics[schoolName].anos[g.ano] = {
-      desnutricao: Number((((g.Magreza_Acentuada_Qtd + g.Magreza_Qtd) / total) * 100).toFixed(2)),
+      desnutricao: Number(((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(2)),
+      magreza: Number(((g.Magreza_Qtd / total) * 100).toFixed(2)),
       eutrofia: Number(((g.Eutrofia_Qtd / total) * 100).toFixed(2)),
       sobrepeso: Number(((g.Sobrepeso_Qtd / total) * 100).toFixed(2)),
       obesidade: Number((((g.Obesidade_Qtd + g.Obesidade_Grave_Qtd) / total) * 100).toFixed(2)),
@@ -293,7 +244,6 @@ async function fetchAndSyncDbData() {
     }, {})
   };
 
-  // Write local JSON cache
   try {
     const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
     await fs.writeFile(jsonDestPath, JSON.stringify(dbConsolidatedResult, null, 2), 'utf8');
@@ -302,7 +252,6 @@ async function fetchAndSyncDbData() {
   return schoolMetrics;
 }
 
-// Define the health units to perform geographical proximity mapping
 const UNIDADES_SAUDE = [
   { nome: "UBS Jardim Chervezon “Dr. Nicolino Maziotti”", categoria: "UBS", lat: -22.385236150603358, lon: -47.564888689845596 },
   { nome: "UBS 29 “Oreste Armando Giovani”", categoria: "UBS", lat: -22.42459370350195, lon: -47.56384685307812 },
@@ -325,12 +274,10 @@ const UNIDADES_SAUDE = [
   { nome: "USF Terra Nova", categoria: "UBS", lat: -22.449226627079025, lon: -47.583233814971415 }
 ];
 
-// Helper to calculate geographical proximity
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lon1 - lon2, 2));
 }
 
-// Map coordinates to standard frontend UBS names
 function findNearestUbsName(lat: number, lon: number) {
   let nearest = null;
   let minDistance = Infinity;
@@ -345,7 +292,6 @@ function findNearestUbsName(lat: number, lon: number) {
   return nearest ? nearest.nome : null;
 }
 
-// Fast CSV Parser
 function parseCSV(content: string) {
   const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   if (lines.length === 0) return [];
@@ -384,7 +330,6 @@ function parseCSV(content: string) {
   });
 }
 
-// Robust Math Percentages Normalization to sum exactly to targetSum (default 100.00%)
 function normalizePercentages<T extends Record<string, any>>(
   obj: T,
   keys: Array<keyof T>,
@@ -420,7 +365,6 @@ function normalizePercentages<T extends Record<string, any>>(
   return result;
 }
 
-// Dynamic CSV Finder
 async function findCSVFile(filenames: string[]): Promise<string | null> {
   const cwd = process.cwd();
   const checkPaths = [
@@ -439,527 +383,641 @@ async function findCSVFile(filenames: string[]): Promise<string | null> {
   return null;
 }
 
+type SourceMeta = {
+  source: 'supabase' | 'local-json' | 'local-csv';
+  fallbackReason: string | null;
+  artifacts: string[];
+  lastUpdated: string;
+};
+
+const TEMPORAL_YEAR_MIN = 2010;
+const TEMPORAL_YEAR_MAX = 2027;
+
+function getTemporalYearRange() {
+  return Array.from({ length: TEMPORAL_YEAR_MAX - TEMPORAL_YEAR_MIN + 1 }, (_, index) => TEMPORAL_YEAR_MIN + index);
+}
+
+function formatTemporalYear(year: number) {
+  return year >= 2026 ? `${year} ★` : String(year);
+}
+
+function buildDefaultTemporalEntry(year: number) {
+  return {
+    ano: formatTemporalYear(year),
+    desnutricao: 2.62,
+    magreza: 0,
+    obesidade: 12.93,
+    sobrepeso: 15.2,
+    eutrofia: 61.55,
+    isPrevisao: year >= 2026
+  };
+}
+
+function createDefaultTemporalData() {
+  return getTemporalYearRange().map(buildDefaultTemporalEntry);
+}
+
+function computeTrendForecast(history: Array<{ year: number; value: number }>, targetYear: number) {
+  if (history.length === 0) return 0;
+  if (history.length === 1) return history[0].value;
+
+  const xs = history.map((entry) => entry.year);
+  const ys = history.map((entry) => entry.value);
+  const meanX = xs.reduce((sum, value) => sum + value, 0) / xs.length;
+  const meanY = ys.reduce((sum, value) => sum + value, 0) / ys.length;
+
+  const denominator = xs.reduce((sum, value) => sum + Math.pow(value - meanX, 2), 0);
+  if (denominator === 0) {
+    return ys[ys.length - 1];
+  }
+
+  const slope = xs.reduce((sum, value, index) => sum + (value - meanX) * (ys[index] - meanY), 0) / denominator;
+  const intercept = meanY - slope * meanX;
+
+  return intercept + slope * targetYear;
+}
+
+function averageTemporalMetrics(records: Array<Record<string, any>>) {
+  if (records.length === 0) return null;
+
+  const avg = records.reduce((acc: any, record: any) => {
+    acc.desnutricao += Number(record.desnutricao || 0);
+    acc.magreza += Number(record.magreza || 0);
+    acc.obesidade += Number(record.obesidade || 0);
+    acc.sobrepeso += Number(record.sobrepeso || 0);
+    acc.eutrofia += Number(record.eutrofia || 0);
+    return acc;
+  }, { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 });
+
+  return normalizePercentages(
+    {
+      desnutricao: avg.desnutricao / records.length,
+      magreza: avg.magreza / records.length,
+      obesidade: avg.obesidade / records.length,
+      sobrepeso: avg.sobrepeso / records.length,
+      eutrofia: avg.eutrofia / records.length
+    },
+    ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+  );
+}
+
+function buildTemporalDataFromRegionalData(regionalData: Record<string, Record<string, any>>) {
+  const temporalYearRange = getTemporalYearRange();
+  const seriesByYear: Record<number, { desnutricao: number; magreza: number; obesidade: number; sobrepeso: number; eutrofia: number }> = {};
+
+  temporalYearRange.forEach((year) => {
+    const records = Object.values(regionalData[String(year)] || {});
+    const averaged = averageTemporalMetrics(records);
+
+    if (averaged) {
+      seriesByYear[year] = {
+        desnutricao: Number(averaged.desnutricao.toFixed(2)),
+        magreza: Number(averaged.magreza.toFixed(2)),
+        obesidade: Number(averaged.obesidade.toFixed(2)),
+        sobrepeso: Number(averaged.sobrepeso.toFixed(2)),
+        eutrofia: Number(averaged.eutrofia.toFixed(2))
+      };
+    }
+  });
+
+  const predictedSeries = { ...seriesByYear };
+
+  for (const year of temporalYearRange) {
+    if (predictedSeries[year]) {
+      continue;
+    }
+
+    if (year <= 2025) {
+      predictedSeries[year] = buildDefaultTemporalEntry(year);
+      continue;
+    }
+
+    const metrics = ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+    const filledValues = {} as Record<(typeof metrics)[number], number>;
+
+    metrics.forEach((metric) => {
+      const history = Object.entries(predictedSeries)
+        .map(([entryYear, values]) => ({
+          year: Number(entryYear),
+          value: Number(values[metric])
+        }))
+        .sort((a, b) => a.year - b.year);
+
+      filledValues[metric] = Number(computeTrendForecast(history, year).toFixed(2));
+    });
+
+    predictedSeries[year] = filledValues;
+  }
+
+  return temporalYearRange.map((year) => {
+    const values = predictedSeries[year] || buildDefaultTemporalEntry(year);
+
+    return {
+      ano: formatTemporalYear(year),
+      desnutricao: Number(values.desnutricao.toFixed(2)),
+      magreza: Number(values.magreza.toFixed(2)),
+      obesidade: Number(values.obesidade.toFixed(2)),
+      sobrepeso: Number(values.sobrepeso.toFixed(2)),
+      eutrofia: Number(values.eutrofia.toFixed(2)),
+      isPrevisao: year >= 2026
+    };
+  });
+}
+
+function buildRegionalDataFromSchoolMetrics(schoolMetrics: Record<string, any>) {
+  const regionalData: Record<string, Record<string, any>> = {};
+  const years = new Set<string>();
+
+  Object.values(schoolMetrics).forEach((school: any) => {
+    if (!school?.anos) return;
+    Object.keys(school.anos).forEach((year) => years.add(year));
+  });
+
+  Array.from(years).sort((a, b) => Number(a) - Number(b)).forEach((year) => {
+    const buckets: Record<string, { desnutricao: number; magreza: number; obesidade: number; sobrepeso: number; eutrofia: number; total_avaliados: number }> = {};
+
+    Object.values(schoolMetrics).forEach((school: any) => {
+      const yearData = school?.anos?.[year];
+      if (!yearData) return;
+
+      const ubsName = school.regiao_ubs || findNearestUbsName(Number(school.lat), Number(school.lon)) || UNIDADES_SAUDE[0].nome;
+      const total = Number(yearData.total_avaliados || 0);
+      if (!buckets[ubsName]) {
+        buckets[ubsName] = { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0, total_avaliados: 0 };
+      }
+
+      buckets[ubsName].desnutricao += Number(yearData.desnutricao || 0) * total;
+      buckets[ubsName].magreza += Number(yearData.magreza || 0) * total;
+      buckets[ubsName].obesidade += Number(yearData.obesidade || 0) * total;
+      buckets[ubsName].sobrepeso += Number(yearData.sobrepeso || 0) * total;
+      buckets[ubsName].eutrofia += Number(yearData.eutrofia || 0) * total;
+      buckets[ubsName].total_avaliados += total;
+    });
+
+    Object.entries(buckets).forEach(([ubsName, bucket]) => {
+      const total = bucket.total_avaliados || 1;
+      const normalized = normalizePercentages(
+        {
+          desnutricao: bucket.desnutricao / total,
+          magreza: bucket.magreza / total,
+          obesidade: bucket.obesidade / total,
+          sobrepeso: bucket.sobrepeso / total,
+          eutrofia: bucket.eutrofia / total
+        },
+        ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+      );
+
+      regionalData[year] = regionalData[year] || {};
+      regionalData[year][ubsName] = {
+        nome: ubsName,
+        ...normalized,
+        total_avaliados: total
+      };
+    });
+  });
+
+  return regionalData;
+}
+
+function attachRegionalDeltaMetrics(regionalData: Record<string, Record<string, any>>) {
+  const years = Object.keys(regionalData)
+    .map((year) => Number(year))
+    .filter((year) => Number.isFinite(year))
+    .sort((a, b) => a - b);
+
+  years.forEach((year) => {
+    const currentYearKey = String(year);
+    const previousYearKey = String(year - 1);
+    const currentRecords = regionalData[currentYearKey] || {};
+
+    Object.entries(currentRecords).forEach(([ubsName, record]) => {
+      const previousRecord = regionalData[previousYearKey]?.[ubsName];
+      const getDelta = (metricKey: keyof typeof record) => {
+        const currentValue = Number(record?.[metricKey] ?? 0);
+        const previousValue = Number(previousRecord?.[metricKey] ?? currentValue);
+        return Number((currentValue - previousValue).toFixed(2));
+      };
+
+      record.delta_desnutricao = getDelta('desnutricao');
+      record.delta_magreza = getDelta('magreza');
+      record.delta_obesidade = getDelta('obesidade');
+      record.delta_sobrepeso = getDelta('sobrepeso');
+      record.delta_eutrofia = getDelta('eutrofia');
+    });
+  });
+}
+
+function buildBairroMetricsFromSchoolMetrics(schoolMetrics: Record<string, any>, regionalData: Record<string, Record<string, any>>) {
+  const bairroMetrics: Record<string, any> = {};
+  const schools = Object.values(schoolMetrics) as any[];
+  const bairroNames = Array.from(new Set(schools.map((school) => school?.bairro).filter(Boolean)));
+
+  bairroNames.forEach((bairroName) => {
+    const relatedSchools = schools.filter((school) => school?.bairro === bairroName);
+    const years = new Set<string>();
+    relatedSchools.forEach((school) => Object.keys(school?.anos || {}).forEach((year) => years.add(year)));
+
+    const anos: Record<string, any> = {};
+    Array.from(years).sort((a, b) => Number(a) - Number(b)).forEach((year) => {
+      let total = 0;
+      let weightedDes = 0;
+      let weightedMag = 0;
+      let weightedObs = 0;
+      let weightedSob = 0;
+      let weightedEut = 0;
+
+      relatedSchools.forEach((school) => {
+        const yearData = school?.anos?.[year];
+        if (!yearData) return;
+        const avaliados = Number(yearData.total_avaliados || 0);
+        total += avaliados;
+        weightedDes += Number(yearData.desnutricao || 0) * avaliados;
+        weightedMag += Number(yearData.magreza || 0) * avaliados;
+        weightedObs += Number(yearData.obesidade || 0) * avaliados;
+        weightedSob += Number(yearData.sobrepeso || 0) * avaliados;
+        weightedEut += Number(yearData.eutrofia || 0) * avaliados;
+      });
+
+      if (total > 0) {
+        const normalized = normalizePercentages(
+          {
+            desnutricao: weightedDes / total,
+            magreza: weightedMag / total,
+            obesidade: weightedObs / total,
+            sobrepeso: weightedSob / total,
+            eutrofia: weightedEut / total
+          },
+          ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+        );
+        anos[year] = {
+          ...normalized,
+          total_avaliados: total
+        };
+        return;
+      }
+
+      const parentUbs = relatedSchools[0]?.regiao_ubs || null;
+      const fallback = parentUbs ? regionalData[year]?.[parentUbs] : null;
+      anos[year] = fallback || {
+        desnutricao: 2.62,
+        obesidade: 12.93,
+        sobrepeso: 15.2,
+        eutrofia: 61.55,
+        total_avaliados: 100
+      };
+    });
+
+    bairroMetrics[bairroName] = {
+      nome: bairroName,
+      lat: relatedSchools[0]?.lat || 0,
+      lon: relatedSchools[0]?.lon || 0,
+      regiao_ubs: relatedSchools[0]?.regiao_ubs || UNIDADES_SAUDE[0].nome,
+      anos
+    };
+  });
+
+  return bairroMetrics;
+}
+
+function projectSchoolMetricsForward(schoolMetrics: Record<string, any>, targetYears = [2026, 2027]) {
+  const projectedSchoolMetrics = JSON.parse(JSON.stringify(schoolMetrics || {}));
+  const metricKeys = ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia'] as const;
+
+  Object.values(projectedSchoolMetrics).forEach((school: any) => {
+    if (!school?.anos) return;
+
+    const orderedYears = Object.keys(school.anos)
+      .map((year) => Number(year))
+      .filter((year) => Number.isFinite(year))
+      .sort((a, b) => a - b);
+
+    if (orderedYears.length === 0) return;
+
+    targetYears.forEach((targetYear) => {
+      if (school.anos[String(targetYear)]) return;
+
+      const historyByMetric = metricKeys.reduce((acc, metric) => {
+        acc[metric] = orderedYears.map((year) => ({
+          year,
+          value: Number(school.anos[String(year)]?.[metric] || 0)
+        }));
+        return acc;
+      }, {} as Record<(typeof metricKeys)[number], Array<{ year: number; value: number }>>);
+
+      const predictedMetrics = metricKeys.reduce((acc, metric) => {
+        const forecast = computeTrendForecast(historyByMetric[metric], targetYear);
+        acc[metric] = Number(Math.max(0, Math.min(100, forecast)).toFixed(2));
+        return acc;
+      }, {} as Record<(typeof metricKeys)[number], number>);
+
+      const totalHistory = orderedYears.map((year) => ({
+        year,
+        value: Number(school.anos[String(year)]?.total_avaliados || 0)
+      }));
+      const totalForecast = totalHistory.length > 0
+        ? Math.max(0, Math.round(computeTrendForecast(totalHistory, targetYear)))
+        : 0;
+
+      const normalizedMetrics = normalizePercentages(predictedMetrics, [...metricKeys]);
+      school.anos[String(targetYear)] = {
+        ...normalizedMetrics,
+        total_avaliados: totalForecast
+      };
+    });
+  });
+
+  return projectedSchoolMetrics;
+}
+
+async function loadLocalCsvFallback(cwd: string) {
+  const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
+  const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
+
+  const regionalData: Record<string, Record<string, any>> = {};
+  const temporalData = createDefaultTemporalData();
+
+  if (!obesityPath || !desnutricaoPath) {
+    return { regionalData, temporalData, bairroMetrics: {}, source: 'local-json' as const, artifacts: [] };
+  }
+
+  const obesityRows = parseCSV(await fs.readFile(obesityPath, 'utf-8'));
+  const desnutricaoRows = parseCSV(await fs.readFile(desnutricaoPath, 'utf-8'));
+
+  const getOrInit = (year: string, ubsName: string, row: any) => {
+    regionalData[year] = regionalData[year] || {};
+    regionalData[year][ubsName] = regionalData[year][ubsName] || {
+      nome: ubsName,
+      cnes: row.CNES || row.cnes,
+      lat: Number(row.lat_ubs),
+      lon: Number(row.lon_ubs),
+      ano: Number(year),
+      status: Number(year) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO'
+    };
+    return regionalData[year][ubsName];
+  };
+
+  obesityRows.forEach((row) => {
+    const year = String(row.Ano);
+    const lat = Number(row.lat_ubs);
+    const lon = Number(row.lon_ubs);
+    if (!year || isNaN(lat) || isNaN(lon)) return;
+
+    const ubsName = findNearestUbsName(lat, lon);
+    if (!ubsName) return;
+
+    const rec = getOrInit(year, ubsName, row);
+    rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
+    rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
+    rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
+    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
+    rec.total_avaliados = Number(row.Total || 0);
+  });
+
+  desnutricaoRows.forEach((row) => {
+    const year = String(row.Ano);
+    const lat = Number(row.lat_ubs);
+    const lon = Number(row.lon_ubs);
+    if (!year || isNaN(lat) || isNaN(lon)) return;
+
+    const ubsName = findNearestUbsName(lat, lon);
+    if (!ubsName) return;
+
+    const rec = getOrInit(year, ubsName, row);
+    rec.desnutricao = Number((row.Tendencia_Desnutricao || row.Magreza_Pct || 2.62).toFixed(2));
+    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
+  });
+
+  Object.keys(regionalData).forEach((year) => {
+    Object.keys(regionalData[year]).forEach((ubsName) => {
+      const rec = regionalData[year][ubsName];
+      const normalized = normalizePercentages(
+        {
+          desnutricao: rec.desnutricao ?? 2.62,
+          magreza: rec.magreza ?? 0,
+          obesidade: rec.obesidade ?? 12.93,
+          sobrepeso: rec.sobrepeso ?? 15.2,
+          eutrofia: rec.eutrofia ?? 61.55
+        },
+        ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+      );
+
+      rec.desnutricao = normalized.desnutricao;
+      rec.magreza = normalized.magreza;
+      rec.obesidade = normalized.obesidade;
+      rec.sobrepeso = normalized.sobrepeso;
+      rec.eutrofia = normalized.eutrofia;
+    });
+  });
+
+  attachRegionalDeltaMetrics(regionalData);
+
+  return {
+    regionalData,
+    temporalData: buildTemporalDataFromRegionalData(regionalData),
+    bairroMetrics: {},
+    source: 'local-csv' as const,
+    artifacts: ['NutriAlerta_Projecao_Futura.csv', 'NutriAlerta_Projecao_Desnutricao.csv']
+  };
+}
+
 export async function GET(req: NextRequest) {
+  const isKvConfigured = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+  // ── CACHE READ ──────────────────────────────────────────────────────────────
+  if (isKvConfigured) {
+    try {
+      const cached = await kv.get(CACHE_KEY);
+      if (cached) {
+        console.log('[Cache HIT] Returning cached data');
+        return NextResponse.json(cached);
+      }
+    } catch (e) {
+      console.warn('[Cache] KV read failed, proceeding to full fetch');
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   const cwd = process.cwd();
+  let sourceMeta: SourceMeta = {
+    source: 'supabase',
+    fallbackReason: null,
+    artifacts: ['registros_saude'],
+    lastUpdated: new Date().toISOString()
+  };
+
+  let demographicData: Record<string, any> | null = null;
+  let schoolMetrics: Record<string, any> = {};
+  let regionalData: Record<string, Record<string, any>> = {};
+  let bairroMetrics: Record<string, any> = {};
+  let temporalData = createDefaultTemporalData();
+  let yearsList = temporalData.map((entry) => entry.ano);
+
   try {
     const consolidatedPath = await findCSVFile(['Base_Nutricional_Consolidada_Final.csv']);
     const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
     const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
     const demographicsPath = await findCSVFile(['NutriAlerta_Projecao_Demografica.json']);
 
-    if (!obesityPath || !desnutricaoPath) {
-      console.warn("CSV Files not found!");
-      return NextResponse.json({
-        success: false,
-        error: "CSV files not found. Please upload them to project/csv/"
-      });
-    }
-
-    // Auto-ML Retrain: Verifica se a base de dados consolidada foi editada/atualizada manualmente
     if (consolidatedPath && obesityPath) {
       try {
         const statsConsolidated = await fs.stat(consolidatedPath);
         const statsObesity = await fs.stat(obesityPath);
-        
-        // Se a base de dados consolidada foi modificada depois da última geração de previsões
+
         if (statsConsolidated.mtime > statsObesity.mtime) {
           console.log("[Auto-ML Retrain] Base de dados modificada! Iniciando retreinamento assíncrono do modelo...");
-          const cwd = process.cwd();
           const modelScriptPath = path.join(cwd, '..', '..', 'models', 'unified_ML.py');
-          
-          exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err, stdout, stderr) => {
-            if (err) {
-              console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
-              return;
-            }
-            console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
-          });
+
+          fs.access(modelScriptPath)
+            .then(() => {
+              exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err) => {
+                if (err) {
+                  console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
+                  return;
+                }
+                console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
+              });
+            })
+            .catch(() => {
+              console.warn(`[Auto-ML Retrain WARNING] Script de ML não encontrado em: ${modelScriptPath}. Ignorando retreinamento.`);
+            });
         }
       } catch (statErr) {
         console.error("[Auto-ML Retrain Check ERROR]", statErr);
       }
     }
 
-    let demographicData = null;
     if (demographicsPath) {
       try {
         const demographicContent = await fs.readFile(demographicsPath, 'utf-8');
         demographicData = JSON.parse(demographicContent);
-        if (demographicData) {
-          Object.keys(demographicData).forEach(key => {
-            const entry = demographicData[key];
-            if (entry && Array.isArray(entry.ageGroups)) {
-              entry.ageGroups.forEach((group: any) => {
-                const des = group.desnutricao?.rate || 0;
-                const sob = group.sobrepeso?.rate || 0;
-                const obs = group.obesidade?.rate || 0;
-                const eut = group.eutrofia?.rate || 0;
-                const rawObj = { desnutricao: des, sobrepeso: sob, obesidade: obs, eutrofia: eut };
-                const normalized = normalizePercentages(rawObj, ['desnutricao', 'sobrepeso', 'obesidade', 'eutrofia']);
-                if (group.desnutricao) group.desnutricao.rate = normalized.desnutricao;
-                if (group.sobrepeso) group.sobrepeso.rate = normalized.sobrepeso;
-                if (group.obesidade) group.obesidade.rate = normalized.obesidade;
-                if (group.eutrofia) group.eutrofia.rate = normalized.eutrofia;
-              });
-            }
-          });
-        }
+        Object.keys(demographicData || {}).forEach((key) => {
+          const entry = demographicData?.[key];
+          if (entry && Array.isArray(entry.ageGroups)) {
+            entry.ageGroups.forEach((group: any) => {
+              const rawObj = {
+                desnutricao: group.desnutricao?.rate || 0,
+                sobrepeso: group.sobrepeso?.rate || 0,
+                obesidade: group.obesidade?.rate || 0,
+                eutrofia: group.eutrofia?.rate || 0
+              };
+              const normalized = normalizePercentages(rawObj, ['desnutricao', 'sobrepeso', 'obesidade', 'eutrofia']);
+              if (group.desnutricao) group.desnutricao.rate = normalized.desnutricao;
+              if (group.sobrepeso) group.sobrepeso.rate = normalized.sobrepeso;
+              if (group.obesidade) group.obesidade.rate = normalized.obesidade;
+              if (group.eutrofia) group.eutrofia.rate = normalized.eutrofia;
+            });
+          }
+        });
       } catch (err) {
-        console.error("Error reading demographics JSON:", err);
+        console.error('Error reading demographics JSON:', err);
       }
     }
 
-    const obesityContent = await fs.readFile(obesityPath, 'utf-8');
-    const desnutricaoContent = await fs.readFile(desnutricaoPath, 'utf-8');
-
-    const obesityRows = parseCSV(obesityContent);
-    const desnutricaoRows = parseCSV(desnutricaoContent);
-
-    // Grouping by Year and Geospatially Matched UBS Name
-    const rawDataMap: Record<string, Record<string, {
-      nome: string;
-      cnes: string | number;
-      lat: number;
-      lon: number;
-      ano: number;
-      status: string;
-      obesidade?: number;
-      desnutricao?: number;
-      sobrepeso?: number;
-      eutrofia?: number;
-      obesidade_grave?: number;
-      total_avaliados?: number;
-      delta_obesidade?: number;
-      delta_desnutricao?: number;
-      delta_sobrepeso?: number;
-      delta_eutrofia?: number;
-    }>> = {};
-
-    // Helper to initialize map keys
-    const getOrInitRecord = (yearStr: string, ubsName: string, row: any) => {
-      if (!rawDataMap[yearStr]) rawDataMap[yearStr] = {};
-      if (!rawDataMap[yearStr][ubsName]) {
-        rawDataMap[yearStr][ubsName] = {
-          nome: ubsName,
-          cnes: row.CNES || row.cnes,
-          lat: Number(row.lat_ubs),
-          lon: Number(row.lon_ubs),
-          ano: Number(yearStr),
-          status: row.Status || (Number(yearStr) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO')
-        };
-      }
-      return rawDataMap[yearStr][ubsName];
-    };
-
-    // Parse Obesity rows
-    obesityRows.forEach(row => {
-      const year = String(row.Ano);
-      const lat = Number(row.lat_ubs);
-      const lon = Number(row.lon_ubs);
-      if (!year || isNaN(lat) || isNaN(lon)) return;
-
-      const ubsName = findNearestUbsName(lat, lon);
-      if (!ubsName) return;
-
-      const rec = getOrInitRecord(year, ubsName, row);
-      const severeObs = row.Obesidade_Grave_Pct || 0;
-      const baseObs = typeof row.Tendencia_Obesidade === 'number' ? row.Tendencia_Obesidade : (row.Obesidade_Pct || 0);
-      rec.obesidade = Number((baseObs + severeObs).toFixed(2));
-      rec.sobrepeso = row.Sobrepeso_Pct || 0;
-      rec.eutrofia = row.Eutrofia_Pct || 58;
-      rec.obesidade_grave = 0;
-      rec.total_avaliados = row.Total || 0;
-      rec.delta_obesidade = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Obesidade;
-    });
-
-    // Parse Desnutrição rows
-    desnutricaoRows.forEach(row => {
-      const year = String(row.Ano);
-      const lat = Number(row.lat_ubs);
-      const lon = Number(row.lon_ubs);
-      if (!year || isNaN(lat) || isNaN(lon)) return;
-
-      const ubsName = findNearestUbsName(lat, lon);
-      if (!ubsName) return;
-
-      const rec = getOrInitRecord(year, ubsName, row);
-      rec.desnutricao = typeof row.Tendencia_Desnutricao === 'number' ? row.Tendencia_Desnutricao : row.Magreza_Pct;
-      rec.delta_desnutricao = row.Delta_Predito !== null ? row.Delta_Predito : row.Delta_Desnutricao;
-    });
-
-    // Normalizar Eutrofia, Sobrepeso, Obesidade, Desnutrição nas UBS para somar exatamente 100%
-    Object.keys(rawDataMap).forEach(year => {
-      Object.keys(rawDataMap[year]).forEach(ubsName => {
-        const rec = rawDataMap[year][ubsName] as any;
-        const rawObj = {
-          desnutricao: rec.desnutricao !== undefined ? rec.desnutricao : 2.62,
-          obesidade: rec.obesidade !== undefined ? rec.obesidade : 12.93,
-          sobrepeso: rec.sobrepeso !== undefined ? rec.sobrepeso : 15.2,
-          eutrofia: rec.eutrofia !== undefined ? rec.eutrofia : 61.55
-        };
-        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-        rec.desnutricao = normalized.desnutricao;
-        rec.obesidade = normalized.obesidade;
-        rec.sobrepeso = normalized.sobrepeso;
-        rec.eutrofia = normalized.eutrofia;
-      });
-    });
-
-    // Compute delta_sobrepeso and delta_eutrofia dynamically year-over-year
-    const yearsSortedForDelta = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
-    yearsSortedForDelta.forEach((yr, index) => {
-      const ubsNames = Object.keys(rawDataMap[yr]);
-      ubsNames.forEach(name => {
-        const rec = rawDataMap[yr][name] as any;
-        if (index === 0) {
-          rec.delta_sobrepeso = 0;
-          rec.delta_eutrofia = 0;
-        } else {
-          const prevYear = yearsSortedForDelta[index - 1];
-          const prevRec = rawDataMap[prevYear]?.[name];
-          
-          if (prevRec && prevRec.sobrepeso !== undefined && rec.sobrepeso !== undefined) {
-            rec.delta_sobrepeso = Number((rec.sobrepeso - prevRec.sobrepeso).toFixed(2));
-          } else {
-            rec.delta_sobrepeso = 0;
-          }
-
-          if (prevRec && prevRec.eutrofia !== undefined && rec.eutrofia !== undefined) {
-            rec.delta_eutrofia = Number((rec.eutrofia - prevRec.eutrofia).toFixed(2));
-          } else {
-            rec.delta_eutrofia = 0;
-          }
-        }
-      });
-    });
-
-    // Compute annual averages (temporalData) dynamically
-    const years = Object.keys(rawDataMap).sort((a, b) => Number(a) - Number(b));
-    const temporalData = years.map(yr => {
-      const ubsRecords = Object.values(rawDataMap[yr]);
-      let totalObs = 0;
-      let countObs = 0;
-      let totalDes = 0;
-      let countDes = 0;
-      let totalSob = 0;
-      let countSob = 0;
-      let totalEut = 0;
-      let countEut = 0;
-
-      ubsRecords.forEach(rec => {
-        if (rec.obesidade !== undefined && rec.obesidade !== null) {
-          totalObs += rec.obesidade;
-          countObs++;
-        }
-        if (rec.desnutricao !== undefined && rec.desnutricao !== null) {
-          totalDes += rec.desnutricao;
-          countDes++;
-        }
-        if (rec.sobrepeso !== undefined && rec.sobrepeso !== null) {
-          totalSob += rec.sobrepeso;
-          countSob++;
-        }
-        if (rec.eutrofia !== undefined && rec.eutrofia !== null) {
-          totalEut += rec.eutrofia;
-          countEut++;
-        }
-      });
-
-      const rawObj = {
-        desnutricao: countDes > 0 ? totalDes / countDes : 2.62,
-        obesidade: countObs > 0 ? totalObs / countObs : 12.93,
-        sobrepeso: countSob > 0 ? totalSob / countSob : 15.2,
-        eutrofia: countEut > 0 ? totalEut / countEut : 61.5
-      };
-      const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-      const des = normalized.desnutricao;
-      const obs = normalized.obesidade;
-      const sob = normalized.sobrepeso;
-      const eut = normalized.eutrofia;
-
-      const isPrevisao = Number(yr) >= 2026;
-      return {
-        ano: yr + (isPrevisao ? ' ★' : ''),
-        desnutricao: des,
-        obesidade: obs,
-        sobrepeso: sob,
-        eutrofia: eut,
-        isPrevisao
-      };
-    });
-
-    // LOAD SUPABASE DYNAMIC SCHOOL DATA DIRECTLY FROM CLOUD DATABASE (resolves request #1)
-    let schoolMetrics: any = null;
     try {
-      schoolMetrics = await fetchAndSyncDbData();
-      console.log("[Supabase Cloud Sync SUCCESS] Successfully fetched fresh dynamic metrics from cloud database!");
-    } catch (dbErr) {
-      console.warn("[Supabase Cloud Sync Fallback] Failed to fetch live data from Supabase. Falling back to local JSON cache...", dbErr);
+      const liveSchoolMetrics = await fetchAndSyncDbData();
+      if (liveSchoolMetrics && Object.keys(liveSchoolMetrics).length > 0) {
+        schoolMetrics = JSON.parse(JSON.stringify(liveSchoolMetrics));
+        Object.values(schoolMetrics).forEach((school: any) => {
+          if (!school?.anos) return;
+          Object.keys(school.anos).forEach((year) => {
+            const data = school.anos[year];
+            const normalized = normalizePercentages(
+              {
+                desnutricao: data.desnutricao || 0,
+                magreza: data.magreza || 0,
+                obesidade: data.obesidade || 0,
+                sobrepeso: data.sobrepeso || 0,
+                eutrofia: data.eutrofia || 0
+              },
+              ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+            );
+            data.desnutricao = normalized.desnutricao;
+            data.magreza = normalized.magreza;
+            data.obesidade = normalized.obesidade;
+            data.sobrepeso = normalized.sobrepeso;
+            data.eutrofia = normalized.eutrofia;
+          });
+        });
+
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+
+        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        attachRegionalDeltaMetrics(regionalData);
+        bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
+        yearsList = temporalData.map((entry) => entry.ano);
+      } else {
+        throw new Error('Supabase returned empty school metrics');
+      }
+    } catch (dbErr: any) {
+      sourceMeta = {
+        source: 'local-json',
+        fallbackReason: dbErr?.message || 'Supabase unavailable',
+        artifacts: ['dbConsolidatedData.json'],
+        lastUpdated: new Date().toISOString()
+      };
+
+      try {
+        const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
+        const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
+        const dbConsolidated = JSON.parse(dbConsolidatedContent);
+        schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics || {}));
+      } catch (cacheErr) {
+        schoolMetrics = {};
+      }
+
+      if (Object.keys(schoolMetrics).length > 0) {
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        attachRegionalDeltaMetrics(regionalData);
+        bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
+        yearsList = temporalData.map((entry) => entry.ano);
+      } else if (obesityPath && desnutricaoPath) {
+        const localFallback = await loadLocalCsvFallback(cwd);
+        sourceMeta = {
+          source: localFallback.source,
+          fallbackReason: sourceMeta.fallbackReason,
+          artifacts: localFallback.artifacts,
+          lastUpdated: new Date().toISOString()
+        };
+        regionalData = localFallback.regionalData;
+        temporalData = localFallback.temporalData;
+        bairroMetrics = localFallback.bairroMetrics;
+        yearsList = temporalData.map((entry) => entry.ano);
+      }
     }
 
-    if (!schoolMetrics || Object.keys(schoolMetrics).length === 0) {
-      const cwd = process.cwd();
-      const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
-      const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
-      const dbConsolidated = JSON.parse(dbConsolidatedContent);
-      schoolMetrics = dbConsolidated.schoolMetrics;
+    if (Object.keys(temporalData).length === 0) {
+      temporalData = createDefaultTemporalData();
+      yearsList = temporalData.map((entry) => entry.ano);
     }
 
-    // Deep clone schoolMetrics to avoid mutating cache
-    schoolMetrics = JSON.parse(JSON.stringify(schoolMetrics));
-    const schoolList = Object.values(schoolMetrics) as any[];
-
-    // Normalize school baselines to sum to exactly 100%
-    schoolList.forEach(school => {
-      Object.keys(school.anos).forEach(yr => {
-        const data = school.anos[yr];
-        const rawObj = {
-          desnutricao: data.desnutricao || 0,
-          obesidade: data.obesidade || 0,
-          sobrepeso: data.sobrepeso || 0,
-          eutrofia: data.eutrofia || 0
-        };
-        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-        data.desnutricao = normalized.desnutricao;
-        data.obesidade = normalized.obesidade;
-        data.sobrepeso = normalized.sobrepeso;
-        data.eutrofia = normalized.eutrofia;
-      });
-    });
-
-    // PROJECT SCHOOL METRICS FOR 2026 and 2027 BY APPLYING PARENT UBS MODEL TREND DELTAS
-    schoolList.forEach(school => {
-      const ubsName = school.regiao_ubs || findNearestUbsName(school.lat, school.lon) || UNIDADES_SAUDE[0].nome;
-      
-      // We will project 2026 and 2027
-      const targetYears = ['2026', '2027'];
-      targetYears.forEach(targetYr => {
-        // Find parent UBS records for 2025 and the target year
-        const ubs2025 = rawDataMap['2025']?.[ubsName] || { desnutricao: 2.62, obesidade: 12.93, sobrepeso: 21.0, eutrofia: 61.55 };
-        const ubsTarget = rawDataMap[targetYr]?.[ubsName];
-
-        if (!ubsTarget) return;
-
-        // Compute deltas from parent UBS
-        const deltaDes = (ubsTarget.desnutricao || 0) - (ubs2025.desnutricao || 0);
-        const deltaObs = (ubsTarget.obesidade || 0) - (ubs2025.obesidade || 0);
-        const deltaSob = (ubsTarget.sobrepeso || 0) - (ubs2025.sobrepeso || 0);
-        const deltaEut = (ubsTarget.eutrofia || 0) - (ubs2025.eutrofia || 0);
-
-        // Find school baseline year (latest available year <= 2025)
-        const schoolYears = Object.keys(school.anos).map(Number).filter(y => y <= 2025).sort((a, b) => b - a);
-        const baselineYear = schoolYears[0] ? String(schoolYears[0]) : null;
-        const baseline = baselineYear ? school.anos[baselineYear] : { desnutricao: 3.0, obesidade: 10.0, sobrepeso: 15.0, eutrofia: 72.0, total_avaliados: 100 };
-
-        // Apply deltas to baseline school rates
-        const rawObj = {
-          desnutricao: Math.max(0, Math.min(100, (baseline.desnutricao || 0) + deltaDes)),
-          obesidade: Math.max(0, Math.min(100, (baseline.obesidade || 0) + deltaObs)),
-          sobrepeso: Math.max(0, Math.min(100, (baseline.sobrepeso || 0) + deltaSob)),
-          eutrofia: Math.max(0, Math.min(100, (baseline.eutrofia || 0) + deltaEut))
-        };
-        const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-        const des = normalized.desnutricao;
-        const obs = normalized.obesidade;
-        const sob = normalized.sobrepeso;
-        const eut = normalized.eutrofia;
-
-        school.anos[targetYr] = {
-          desnutricao: des,
-          obesidade: obs,
-          sobrepeso: sob,
-          eutrofia: eut,
-          total_avaliados: baseline.total_avaliados || 100
-        };
-      });
-    });
-
-    // LOAD RIO CLARO BAIRROS FOR CENTROID CALCULATION
-    const bairrosPath = path.join(cwd, 'src', 'lib', 'rio_claro_bairros.json');
-    const bairrosContent = await fs.readFile(bairrosPath, 'utf-8');
-    const bairrosGeoJSON = JSON.parse(bairrosContent);
-
-    // Calculate neighborhood centroids and group features
-    const bairroCentroids: Record<string, { sumLon: number; sumLat: number; count: number; parentUbs: string }> = {};
-
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const props = feat.properties || {};
-      const name = props.nome_real_bairro;
-      if (!name) return;
-
-      const geom = feat.geometry;
-      if (!geom) return;
-
-      let coords: number[][] = [];
-      if (geom.type === 'Polygon') {
-        coords = geom.coordinates[0];
-      } else if (geom.type === 'MultiPolygon') {
-        geom.coordinates.forEach((poly: any) => {
-          coords = coords.concat(poly[0]);
-        });
-      }
-
-      let sumLon = 0, sumLat = 0, count = 0;
-      coords.forEach(pt => {
-        if (Array.isArray(pt) && pt.length >= 2) {
-          sumLon += pt[0];
-          sumLat += pt[1];
-          count++;
-        }
-      });
-
-      if (count > 0) {
-        if (!bairroCentroids[name]) {
-          bairroCentroids[name] = { sumLon: 0, sumLat: 0, count: 0, parentUbs: props.nome_bairro };
-        }
-        bairroCentroids[name].sumLon += sumLon;
-        bairroCentroids[name].sumLat += sumLat;
-        bairroCentroids[name].count += count;
-      }
-    });
-
-    const uniqueBairros: Record<string, { nome: string; lat: number; lon: number; parentUbs: string }> = {};
-    Object.keys(bairroCentroids).forEach(name => {
-      const data = bairroCentroids[name];
-      uniqueBairros[name] = {
-        nome: name,
-        lat: data.sumLat / data.count,
-        lon: data.sumLon / data.count,
-        parentUbs: data.parentUbs
-      };
-    });
-
-    // Map each neighborhood to school(s) (with closest school fallback)
-    const bairroMetrics: Record<string, {
-      nome: string;
-      lat: number;
-      lon: number;
-      regiao_ubs: string;
-      anos: Record<string, {
-        desnutricao: number;
-        obesidade: number;
-        sobrepeso: number;
-        eutrofia: number;
-        total_avaliados: number;
-      }>;
-    }> = {};
-
-    const yearsListCombined = [...years, '2026', '2027'];
-
-    Object.keys(uniqueBairros).forEach(bName => {
-      const bInfo = uniqueBairros[bName];
-      
-      // Filter schools directly inside this neighborhood
-      let associatedSchools = schoolList.filter(s => s.bairro && s.bairro.trim().toLowerCase() === bName.trim().toLowerCase());
-
-      // Geographical nearest-neighbor fallback if no schools are directly inside
-      if (associatedSchools.length === 0) {
-        let closestSchool = null;
-        let minDistance = Infinity;
-
-        schoolList.forEach(school => {
-          if (typeof school.lat !== 'number' || typeof school.lon !== 'number') return;
-          const dist = getDistance(bInfo.lat, bInfo.lon, school.lat, school.lon);
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestSchool = school;
-          }
-        });
-
-        if (closestSchool) {
-          associatedSchools = [closestSchool];
-        }
-      }
-
-      // Aggregate metrics across associated schools for all years
-      const anos: Record<string, any> = {};
-
-      yearsListCombined.forEach(yr => {
-        let sumAvaliados = 0;
-        let weightedDes = 0;
-        let weightedObs = 0;
-        let weightedSob = 0;
-        let weightedEut = 0;
-
-        associatedSchools.forEach(sch => {
-          const yrData = sch.anos[yr];
-          if (!yrData) return;
-
-          const aval = yrData.total_avaliados || 0;
-          sumAvaliados += aval;
-          weightedDes += (yrData.desnutricao || 0) * aval;
-          weightedObs += (yrData.obesidade || 0) * aval;
-          weightedSob += (yrData.sobrepeso || 0) * aval;
-          weightedEut += (yrData.eutrofia || 0) * aval;
-        });
-
-        if (sumAvaliados > 0) {
-          const rawObj = {
-            desnutricao: weightedDes / sumAvaliados,
-            obesidade: weightedObs / sumAvaliados,
-            sobrepeso: weightedSob / sumAvaliados,
-            eutrofia: weightedEut / sumAvaliados
-          };
-          const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-          anos[yr] = {
-            desnutricao: normalized.desnutricao,
-            obesidade: normalized.obesidade,
-            sobrepeso: normalized.sobrepeso,
-            eutrofia: normalized.eutrofia,
-            total_avaliados: sumAvaliados
-          };
-        } else {
-          // If no school has data for this year, fallback to parent UBS metrics for that year
-          const parentUbs = bInfo.parentUbs;
-          const ubsData = rawDataMap[yr]?.[parentUbs] || rawDataMap[yr]?.[Object.keys(rawDataMap[yr])[0]];
-          
-          if (ubsData) {
-            const rawObj = {
-              desnutricao: ubsData.desnutricao || 0,
-              obesidade: ubsData.obesidade || 0,
-              sobrepeso: ubsData.sobrepeso || 0,
-              eutrofia: ubsData.eutrofia || 100
-            };
-            const normalized = normalizePercentages(rawObj, ['desnutricao', 'obesidade', 'sobrepeso', 'eutrofia']);
-            anos[yr] = {
-              desnutricao: normalized.desnutricao,
-              obesidade: normalized.obesidade,
-              sobrepeso: normalized.sobrepeso,
-              eutrofia: normalized.eutrofia,
-              total_avaliados: 100
-            };
-          } else {
-            anos[yr] = {
-              desnutricao: 3.0,
-              obesidade: 12.0,
-              sobrepeso: 15.0,
-              eutrofia: 70.0,
-              total_avaliados: 100
-            };
-          }
-        }
-      });
-
-      bairroMetrics[bName] = {
-        nome: bName,
-        lat: bInfo.lat,
-        lon: bInfo.lon,
-        regiao_ubs: bInfo.parentUbs,
-        anos
-      };
-    });
-
-    return NextResponse.json({
+    const responseData = {
       success: true,
       temporalData,
-      regionalData: rawDataMap,
+      regionalData,
       schoolMetrics,
       bairroMetrics,
       demographicData,
-      yearsList: years
-    });
+      yearsList,
+      sourceMeta
+    };
+
+    // ── CACHE WRITE ─────────────────────────────────────────────────────────────
+    if (isKvConfigured) {
+      try {
+        await kv.set(CACHE_KEY, responseData, { ex: CACHE_TTL });
+        console.log('[Cache] Data cached for 6 hours');
+      } catch (e) {
+        console.warn('[Cache] KV write failed');
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────────
+
+    return NextResponse.json(responseData);
   } catch (error: any) {
-    console.error("API Dynamic Data Error:", error);
+    console.error('API Dynamic Data Error:', error);
     return NextResponse.json({
       success: false,
       error: error.message

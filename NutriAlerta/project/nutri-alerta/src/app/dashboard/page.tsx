@@ -3,31 +3,42 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
-import Sidebar from '@/components/Sidebar';
 import ExpertView from '@/components/ExpertView';
 import ConsultantView from '@/components/ConsultantView';
 import DemographicsSection from '@/components/DemographicsSection';
 import UbsComparisonSection from '@/components/UbsComparisonSection';
-import DataEntrySection from '@/components/DataEntrySection';
 import ChatbotWidget from '@/components/ChatbotWidget';
 import { useAppStore } from '@/store/useAppStore';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function Dashboard() {
-  const { viewMode, initializeData, darkMode } = useAppStore();
+  const { viewMode, initializeData, darkMode, setViewMode } = useAppStore();
   const [authorized, setAuthorized] = useState(false);
+  const [hasTimeout, setHasTimeout] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasTimeout(true);
+    }, 5000);
+
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-      } else {
-        setAuthorized(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        clearTimeout(timer);
+        if (!session) {
+          router.push('/login');
+        } else {
+          setAuthorized(true);
+        }
+      } catch (err) {
+        clearTimeout(timer);
+        setHasTimeout(true);
       }
     };
     checkAuth();
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   useEffect(() => {
@@ -35,6 +46,12 @@ export default function Dashboard() {
       initializeData();
     }
   }, [initializeData, authorized]);
+
+  useEffect(() => {
+    if (viewMode === 'data-entry') {
+      setViewMode('map');
+    }
+  }, [viewMode, setViewMode]);
 
   // Sync dark class on HTML element
   useEffect(() => {
@@ -46,6 +63,23 @@ export default function Dashboard() {
   }, [darkMode]);
 
   if (!authorized) {
+    if (hasTimeout) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
+            <p className="text-sm font-bold text-rose-400">A conexão está demorando mais do que o esperado.</p>
+            <p className="text-xs text-zinc-400">Não conseguimos validar suas credenciais de acesso. Verifique sua conexão ou vá para o login.</p>
+            <button 
+              onClick={() => router.push('/login')}
+              className="mt-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-teal-500/10 cursor-pointer"
+            >
+              Acessar Login
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
         <div className="flex flex-col items-center gap-3">
@@ -61,22 +95,33 @@ export default function Dashboard() {
       <Header />
       
       <div className="flex flex-1 overflow-hidden relative">
-        <Sidebar />
-        
         <main className="flex-1 relative overflow-y-auto bg-background transition-colors duration-300">
           <AnimatePresence mode="wait">
             {viewMode === 'map' && <ExpertView key="map" />}
             {viewMode === 'schools' && (
-              <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+              <motion.div
+                key="schools"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="p-6 space-y-6 max-w-7xl mx-auto w-full"
+              >
                 <DemographicsSection />
-              </div>
+              </motion.div>
             )}
             {viewMode === 'comparison' && (
-              <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+              <motion.div
+                key="comparison"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="p-6 space-y-6 max-w-7xl mx-auto w-full"
+              >
                 <UbsComparisonSection />
-              </div>
+              </motion.div>
             )}
-            {viewMode === 'data-entry' && <DataEntrySection key="data-entry" />}
             {viewMode === 'consultant' && <ConsultantView key="consultant" />}
           </AnimatePresence>
         </main>

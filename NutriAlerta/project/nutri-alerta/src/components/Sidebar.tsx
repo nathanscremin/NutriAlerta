@@ -1,15 +1,17 @@
 "use client";
 import React from 'react';
-import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Bot, Hospital, Home, School, Search, X } from 'lucide-react';
+import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Hospital, Home, School, Search, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
+import { UBS_LIST as ubsList, SCHOOLS_LIST as schoolsList, UNIQUE_BAIRROS_LIST as uniqueBairrosList } from '@/lib/staticLists';
+import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
+import { useHudMetrics } from '@/hooks/useHudMetrics';
 
 export default function Sidebar() {
   const { 
     viewMode, setViewMode,
     anoSelecionado, setAnoSelecionado, 
     indicador, setIndicador, 
-    selectedBairro, setSelectedBairro, 
     analysisLevel, setAnalysisLevel,
     selectedUbs, setSelectedUbs,
     selectedBairroName, setSelectedBairroName,
@@ -20,6 +22,7 @@ export default function Sidebar() {
     regionalData,
     schoolMetrics,
     bairroMetrics,
+    sourceMeta,
     darkMode, setDarkMode,
     sidebarCollapsed, setSidebarCollapsed
   } = useAppStore();
@@ -52,36 +55,6 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Lista de UBSs
-  const ubsList = React.useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-      return nameA.localeCompare(nameB);
-    });
-  }, []);
-
-  // Lista de Bairros Únicos extraídos do GeoJSON
-  const uniqueBairrosList = React.useMemo(() => {
-    const bairrosGeoJSON = getVoronoiGeoJSON();
-    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
-    const setNames = new Set<string>();
-    const list: Array<{ nome: string; parentUbs: string }> = [];
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const name = feat.properties?.nome_real_bairro;
-      const ubs = feat.properties?.nome_bairro;
-      if (name && !setNames.has(name)) {
-        setNames.add(name);
-        list.push({ nome: name, parentUbs: ubs || '' });
-      }
-    });
-    return list.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
-
-  // Lista de 88 Escolas Analisadas
-  const schoolsList = React.useMemo(() => {
-    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
 
   // Filtros aplicados baseados no searchQuery ativo e na hierarquia de foco
   const filteredUbs = React.useMemo(() => {
@@ -114,7 +87,7 @@ export default function Sidebar() {
     );
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const cleanYear = anoSelecionado.replace(' ★', '').trim();
+  const cleanYear = anoSelecionado.replace('★', '').trim();
   const isPrevisao = anoSelecionado.includes('★');
 
   const activeLabel = React.useMemo(() => {
@@ -130,101 +103,35 @@ export default function Sidebar() {
     return 'Rio Claro';
   }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs]);
 
-  const hudMetrics = React.useMemo(() => {
-    let obs = 0;
-    let des = 0;
-    let sob = 0;
-    let eut = 0;
-    let avaliados = 0;
-    let subUnitLabel = "UBS monitoradas";
-    let subUnitValue = String(ubsList.length);
+  const scopeMetrics = React.useMemo(() => {
+    return getScopedNutritionMetrics({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      year: cleanYear,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics,
+    });
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-    if (analysisLevel === 'escola' && selectedSchoolName) {
-      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
-      if (data) {
-        obs = data.obesidade;
-        des = data.desnutricao;
-        sob = data.sobrepeso;
-        eut = data.eutrofia;
-        avaliados = data.total_avaliados;
-      }
-      subUnitLabel = "Tipo de Escola";
-      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
-      subUnitValue = schoolInfo?.categoria || "Educação";
-    } else if (analysisLevel === 'bairro' && selectedBairroName) {
-      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
-      if (data) {
-        obs = data.obesidade;
-        des = data.desnutricao;
-        sob = data.sobrepeso;
-        eut = data.eutrofia;
-        avaliados = data.total_avaliados;
-      }
-      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
-      subUnitLabel = "Escolas no bairro";
-      subUnitValue = String(schoolCount);
-    } else if (analysisLevel === 'ubs' && selectedUbs) {
-      const data = regionalData[cleanYear]?.[selectedUbs];
-      if (data) {
-        obs = data.obesidade || 0;
-        des = data.desnutricao || 0;
-        sob = data.sobrepeso || 0;
-        eut = data.eutrofia || 0;
-      }
-      let ubsTotal = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
-          ubsTotal += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = ubsTotal || (data?.total_avaliados || 0);
-      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
-      subUnitLabel = "Escolas na região";
-      subUnitValue = String(schoolCount);
-    } else {
-      // municipio
-      const data = temporalData.find(d => d.ano === anoSelecionado);
-      if (data) {
-        obs = data.obesidade;
-        des = data.desnutricao;
-        sob = data.sobrepeso;
-        eut = data.eutrofia;
-      }
-      let totalSchoolAvaliados = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.anos?.[cleanYear]?.total_avaliados) {
-          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = totalSchoolAvaliados;
-      if (avaliados === 0) {
-        avaliados = anoSelecionado.includes('2025') ? 45200 : anoSelecionado.includes('2024') ? 41100 : 38500;
-      }
-      subUnitLabel = "UBS monitoradas";
-      subUnitValue = String(ubsList.length);
-    }
-
-    const formatPct = (val: number) => {
-      if (val === undefined || val === null || isNaN(val)) return 'N/D';
-      return `${val.toFixed(2)}%`;
-    };
-
-    const formatAval = (val: number) => {
-      if (isPrevisao) return 'Projetado';
-      if (!val) return 'N/D';
-      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
-    };
-
-    return {
-      avgObs: formatPct(obs),
-      avgDes: formatPct(des),
-      avgSob: formatPct(sob),
-      avgEut: formatPct(eut),
-      evaluatedStr: formatAval(avaliados),
-      subUnitLabel,
-      subUnitValue
-    };
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics, ubsList, schoolsList]);
+  const hudMetrics = useHudMetrics({
+    analysisLevel,
+    selectedSchoolName,
+    selectedBairroName,
+    selectedUbs,
+    anoSelecionado,
+    cleanYear,
+    scopeMetrics,
+    regionalData,
+    schoolMetrics,
+    bairroMetrics,
+    ubsList,
+    schoolsList,
+    isPrevisao
+  });
 
   // Ocultar completamente o menu lateral caso esteja recolhido
   if (sidebarCollapsed) return null;
@@ -243,8 +150,26 @@ export default function Sidebar() {
       </div>
 
       <div className="flex-1 p-4 space-y-6 overflow-y-auto scrollbar-thin">
-        {/* Filtros Globais — Visíveis em todas as telas, exceto no Consultor */}
-        {viewMode !== 'consultant' && (
+        <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-900/80 bg-slate-50/80 dark:bg-zinc-900/40 px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-500">Fonte de dados</p>
+              <p className="text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] mt-1">
+                {sourceMeta.source === 'supabase' ? 'Supabase' : sourceMeta.source === 'local-csv' ? 'Fallback CSV local' : 'Fallback local'}
+              </p>
+            </div>
+            <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black ${sourceMeta.source === 'supabase' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'}`}>
+              {sourceMeta.source === 'supabase' ? 'Ativo' : 'Observação'}
+            </span>
+          </div>
+          {sourceMeta.fallbackReason && (
+            <p className="mt-2 text-[10px] text-slate-600 dark:text-zinc-400 leading-relaxed">
+              {sourceMeta.fallbackReason}
+            </p>
+          )}
+        </div>
+
+        {/* Filtros Globais — Visíveis em todas as telas */}
           <div className="space-y-6">
             {/* Ano de Referência */}
             <div>
@@ -320,7 +245,8 @@ export default function Sidebar() {
                   }}
                   onFocus={() => setIsDropdownOpen(true)}
                   placeholder="Pesquisar..."
-                  className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100/60 dark:hover:bg-zinc-900"
+                  style={{ paddingRight: '44px' }}
+                  className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 rounded-xl pl-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100/60 dark:hover:bg-zinc-900"
                 />
 
                 {searchQuery ? (
@@ -330,7 +256,7 @@ export default function Sidebar() {
                       setIsDropdownOpen(false);
                       setSelection('municipio', null, null, null);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center z-10"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -526,6 +452,7 @@ export default function Sidebar() {
               <div className="space-y-1.5">
                 {[
                   { id: 'desnutricao', label: 'Desnutrição', color: 'text-blue-500',  dot: 'bg-blue-500/80 dark:bg-blue-400/90' },
+                  { id: 'magreza',     label: 'Magreza',     color: 'text-sky-500',  dot: 'bg-sky-500/80 dark:bg-sky-400/90' },
                   { id: 'eutrofia',   label: 'Peso Adequado', color: 'text-emerald-500', dot: 'bg-emerald-500/80 dark:bg-emerald-400/90' },
                   { id: 'sobrepeso',  label: 'Sobrepeso',  color: 'text-amber-500', dot: 'bg-amber-500/80 dark:bg-amber-400/90' },
                   { id: 'obesidade', label: 'Obesidade', color: 'text-red-500', dot: 'bg-red-500/80 dark:bg-red-400/90' },
@@ -561,16 +488,17 @@ export default function Sidebar() {
                 Resumo · {activeLabel} {anoSelecionado}
               </label>
               <div className="space-y-2">
-                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
                 <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição" value={hudMetrics.avgDes}  color="text-blue-600 dark:text-blue-400" />
+                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-sky-500" />}    label="Magreza" value={hudMetrics.avgMag} color="text-sky-600 dark:text-sky-400" />
+                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
                 <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />}    label="Avaliados" value={hudMetrics.evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
-                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-600" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-600 dark:text-teal-400" />
+                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-650" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-700 dark:text-teal-400" />
               </div>
             </div>
           </div>
-        )}
+
 
         {/* Separador Fixo */}
         <div className="border-t border-slate-100 dark:border-zinc-900/40" />

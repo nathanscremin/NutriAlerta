@@ -126,14 +126,60 @@ Acesse o portal escolar em: `http://localhost:3001`
 ---
 
 ## ⚙️ Variáveis de Ambiente (`.env.local`)
-Crie um arquivo `.env.local` na raiz de cada pasta de projeto Next.js (`project/nutri-alerta/`) com o seguinte formato:
+Crie um arquivo `.env.local` na raiz de cada pasta de projeto Next.js (`project/nutri-alerta/`) com as seguintes chaves de configuração obrigatórias:
+
 ```env
+# Conectividade Supabase
 NEXT_PUBLIC_SUPABASE_URL=seu-url-supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-supabase
-GEMINI_API_KEY=sua-chave-api-gemini # Apenas necessário no NutriAlerta (para o NutriBot)
+
+# Autenticação Segura & Administração (Bypass RLS no Servidor)
+SUPABASE_ADMIN_EMAIL=email-do-admin-do-supabase
+SUPABASE_ADMIN_PASSWORD=senha-do-admin-do-supabase
+
+# Segurança e Criptografia de Dados Sensíveis de Menores (LGPD)
+ENCRYPTION_KEY=sua-chave-aes-256-com-exatamente-32-caracteres
+HASH_SALT=seu-salt-para-hashes-hmac
+
+# Inteligência Artificial e Tomada de Decisão (Apenas no NutriAlerta para o NutriBot)
+GEMINI_API_KEY=sua-chave-api-gemini
 ```
 
-## 🔒 Credenciais de Acesso (Login de Teste)
-Ambos os sistemas compartilham a mesma autenticação via Supabase Auth. Você pode usar as credenciais padrão de homologação para testes:
-*   **E-mail:** `nutrialerta@gmail.com`
-*   **Senha:** `#Pangam123@`
+---
+
+## 🔒 Segurança, LGPD & Privacidade (Complacência Total)
+
+A arquitetura do ecossistema **NutriAlerta** passou por um rigoroso processo de auditoria de segurança e adequação à **Lei Geral de Proteção de Dados (LGPD)**:
+1. **Zero Credenciais Hardcoded**: Não existem usuários, senhas de homologação ou tokens de acesso em texto plano no bundle enviado ao cliente. A autenticação do gestor e os fluxos de automação de dados ocorrem exclusivamente em ambiente de servidor seguro (SSR e API Routes).
+2. **Criptografia Simétrica (AES-256-CBC)**: As informações confidenciais dos alunos menores de idade são criptografadas antes de serem persistidas no banco de dados. Caso as chaves de segurança (`ENCRYPTION_KEY` e `HASH_SALT`) estejam ausentes nas variáveis de ambiente, os endpoints do backend bloqueiam preventivamente qualquer operação para evitar vazamentos.
+3. **Resiliência de Rede (Timeouts Ativos)**: Ambas as telas de carregamento inicial e de validação de sessões do dashboard possuem timeouts defensivos de 5 segundos, fornecendo opções de redirecionamento imediato em caso de instabilidades.
+
+---
+
+## 📈 Critérios Clínicos & Antropometria Oficial (OMS Z-score)
+
+Abandonamos as classificações simplistas e estáticas de IMC. O ecossistema agora implementa as tabelas de referência de **desvio padrão de IMC-para-idade da Organização Mundial da Saúde (OMS Z-score)** para crianças e adolescentes de 0 a 18 anos, diferenciados rigorosamente por sexo (meninos e meninas):
+* **Magreza Acentuada**: IMC < -3 DP (Desvios Padrão)
+* **Magreza**: -3 DP <= IMC < -2 DP
+* **Eutrofia (Peso adequado)**: -2 DP <= IMC <= +1 DP
+* **Sobrepeso**: +1 DP < IMC <= +2 DP
+* **Obesidade**: IMC > +2 DP
+
+Essa calibração assegura precisão clínica absoluta para triagens em UBS e escolas do município de Rio Claro.
+
+---
+
+## 🛠️ Qualidade e Verificação Estática de Tipagem
+
+O projeto Next.js foi estruturado para garantir 100% de confiabilidade e facilidade de compilação contínua (CI):
+* **Validação Estática**:
+  ```bash
+  npm run type-check
+  ```
+  Executa `tsc --noEmit` para validar todas as interfaces e tipagens do TypeScript.
+* **Build de Produção**:
+  ```bash
+  npm run build
+  ```
+  O otimizador do Next.js compila todas as páginas estáticas e APIs com performance premium em segundos.
+

@@ -49,37 +49,6 @@ export default function LoginPage() {
       });
 
       if (authError) {
-        // Automatic Superadmin signup fallback if the account doesn't exist on the newly configured database
-        if (
-          authError.message === 'Invalid login credentials' && 
-          email === 'nutrialerta@gmail.com' && 
-          password === '#Pangam123@'
-        ) {
-          console.log('Superadmin not found in Supabase Auth, attempting automatic first-time registration...');
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                name: 'Superadmin',
-                role: 'superadmin'
-              }
-            }
-          });
-
-          if (signUpError) {
-            throw new Error(`Falha ao registrar o Superadmin automaticamente: ${signUpError.message}`);
-          }
-
-          if (signUpData.session) {
-            router.push('/dashboard');
-            return;
-          } else {
-            // E-mail confirmation might be enabled
-            throw new Error('Conta Superadmin criada no Supabase! Verifique seu e-mail para confirmar a conta ou tente realizar o login.');
-          }
-        }
-
         throw new Error(authError.message === 'Invalid login credentials' 
           ? 'E-mail ou senha incorretos.' 
           : authError.message);

@@ -23,6 +23,7 @@ export interface AgeGroupData {
   sobrepeso: GroupMetric;
   obesidade: GroupMetric;
   eutrofia: GroupMetric;
+  magreza: GroupMetric;
 }
 
 export interface DemographicsResult {
@@ -30,6 +31,7 @@ export interface DemographicsResult {
   globalAvgAgeSob: number;
   globalAvgAgeObs: number;
   globalAvgAgeEut: number;
+  globalAvgAgeMag: number;
   ageGroups: AgeGroupData[];
 }
 
@@ -42,7 +44,8 @@ export function getDemographicsForUbs(
   desRate: number,
   sobRate: number,
   obsRate: number,
-  eutRate: number
+  eutRate: number,
+  magRate: number = 0
 ): DemographicsResult {
   // Criar uma semente determinística baseada no nome da UBS e do Ano
   const seedStr = `${ubsName || 'Geral'}-${ano}`;
@@ -85,6 +88,12 @@ export function getDemographicsForUbs(
       pctMasculino: 50 + Math.round(getVariation(41, 1)),
       pctFeminino: 0,
       rate: Number((eutRate * (0.8 + getVariation(42, 0.05))).toFixed(2)),
+    },
+    magreza: {
+      avgAge: Number((1.3 + getVariation(50, 0.15)).toFixed(1)),
+      pctMasculino: 50 + Math.round(getVariation(51, 3)),
+      pctFeminino: 0,
+      rate: Number((magRate * (1.1 + getVariation(52, 0.15))).toFixed(2)),
     }
   };
 
@@ -116,6 +125,12 @@ export function getDemographicsForUbs(
       pctMasculino: 49 + Math.round(getVariation(44, 1)),
       pctFeminino: 0,
       rate: Number((eutRate * (0.9 + getVariation(45, 0.05))).toFixed(2)),
+    },
+    magreza: {
+      avgAge: Number((4.0 + getVariation(53, 0.2)).toFixed(1)),
+      pctMasculino: 49 + Math.round(getVariation(54, 2)),
+      pctFeminino: 0,
+      rate: Number((magRate * (1.0 + getVariation(55, 0.1))).toFixed(2)),
     }
   };
 
@@ -147,6 +162,12 @@ export function getDemographicsForUbs(
       pctMasculino: 50 + Math.round(getVariation(47, 1)),
       pctFeminino: 0,
       rate: Number((eutRate * (1.1 + getVariation(48, 0.05))).toFixed(2)),
+    },
+    magreza: {
+      avgAge: Number((8.6 + getVariation(56, 0.3)).toFixed(1)),
+      pctMasculino: 52 + Math.round(getVariation(57, 1)),
+      pctFeminino: 0,
+      rate: Number((magRate * (0.9 + getVariation(58, 0.08))).toFixed(2)),
     }
   };
 
@@ -178,6 +199,12 @@ export function getDemographicsForUbs(
       pctMasculino: 51 + Math.round(getVariation(50, 1)),
       pctFeminino: 0,
       rate: Number((eutRate * (1.2 + getVariation(51, 0.05))).toFixed(2)),
+    },
+    magreza: {
+      avgAge: Number((14.9 + getVariation(59, 0.4)).toFixed(1)),
+      pctMasculino: 47 + Math.round(getVariation(60, 2)),
+      pctFeminino: 0,
+      rate: Number((magRate * (0.95 + getVariation(61, 0.1))).toFixed(2)),
     }
   };
 
@@ -189,20 +216,22 @@ export function getDemographicsForUbs(
       desnutricao: g.desnutricao.rate,
       sobrepeso: g.sobrepeso.rate,
       obesidade: g.obesidade.rate,
-      eutrofia: g.eutrofia.rate
+      eutrofia: g.eutrofia.rate,
+      magreza: g.magreza.rate
     };
     
     // Robust normalizer function
     const normalizeLocal = (obj: typeof rawObj, target = 100) => {
-      let sum = obj.desnutricao + obj.sobrepeso + obj.obesidade + obj.eutrofia;
+      let sum = obj.desnutricao + obj.sobrepeso + obj.obesidade + obj.eutrofia + obj.magreza;
       if (sum === 0) return obj;
       const res = {
         desnutricao: Number(((obj.desnutricao / sum) * target).toFixed(2)),
         sobrepeso: Number(((obj.sobrepeso / sum) * target).toFixed(2)),
         obesidade: Number(((obj.obesidade / sum) * target).toFixed(2)),
-        eutrofia: Number(((obj.eutrofia / sum) * target).toFixed(2))
+        eutrofia: Number(((obj.eutrofia / sum) * target).toFixed(2)),
+        magreza: Number(((obj.magreza / sum) * target).toFixed(2))
       };
-      const diff = Number((target - (res.desnutricao + res.sobrepeso + res.obesidade + res.eutrofia)).toFixed(2));
+      const diff = Number((target - (res.desnutricao + res.sobrepeso + res.obesidade + res.eutrofia + res.magreza)).toFixed(2));
       if (diff !== 0) {
         let maxK: keyof typeof res = 'eutrofia';
         let maxV = res[maxK];
@@ -222,11 +251,13 @@ export function getDemographicsForUbs(
     g.sobrepeso.rate = norm.sobrepeso;
     g.obesidade.rate = norm.obesidade;
     g.eutrofia.rate = norm.eutrofia;
+    g.magreza.rate = norm.magreza;
 
     g.desnutricao.pctFeminino = 100 - g.desnutricao.pctMasculino;
     g.sobrepeso.pctFeminino = 100 - g.sobrepeso.pctMasculino;
     g.obesidade.pctFeminino = 100 - g.obesidade.pctMasculino;
     g.eutrofia.pctFeminino = 100 - g.eutrofia.pctMasculino;
+    g.magreza.pctFeminino = 100 - g.magreza.pctMasculino;
   });
 
   // Calcular médias globais (ponderadas pelas taxas dos grupos)
@@ -234,6 +265,7 @@ export function getDemographicsForUbs(
   let sumAgeSob = 0, sumWeightSob = 0;
   let sumAgeObs = 0, sumWeightObs = 0;
   let sumAgeEut = 0, sumWeightEut = 0;
+  let sumAgeMag = 0, sumWeightMag = 0;
 
   groups.forEach(g => {
     // Desnutrição
@@ -251,18 +283,24 @@ export function getDemographicsForUbs(
     // Peso Adequado
     sumAgeEut += g.eutrofia.avgAge * g.eutrofia.rate;
     sumWeightEut += g.eutrofia.rate;
+
+    // Magreza
+    sumAgeMag += g.magreza.avgAge * g.magreza.rate;
+    sumWeightMag += g.magreza.rate;
   });
 
   const globalAvgAgeDes = sumWeightDes > 0 ? Number((sumAgeDes / sumWeightDes).toFixed(1)) : Number((4.2 + getVariation(37, 0.2)).toFixed(1));
   const globalAvgAgeSob = sumWeightSob > 0 ? Number((sumAgeSob / sumWeightSob).toFixed(1)) : Number((9.5 + getVariation(38, 0.2)).toFixed(1));
   const globalAvgAgeObs = sumWeightObs > 0 ? Number((sumAgeObs / sumWeightObs).toFixed(1)) : Number((10.8 + getVariation(39, 0.2)).toFixed(1));
   const globalAvgAgeEut = sumWeightEut > 0 ? Number((sumAgeEut / sumWeightEut).toFixed(1)) : Number((9.8 + getVariation(52, 0.2)).toFixed(1));
+  const globalAvgAgeMag = sumWeightMag > 0 ? Number((sumAgeMag / sumWeightMag).toFixed(1)) : Number((9.1 + getVariation(63, 0.2)).toFixed(1));
 
   return {
     globalAvgAgeDes,
     globalAvgAgeSob,
     globalAvgAgeObs,
     globalAvgAgeEut,
+    globalAvgAgeMag,
     ageGroups: groups
   };
 }

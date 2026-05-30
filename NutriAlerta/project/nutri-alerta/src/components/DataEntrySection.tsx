@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import { UNIDADES_SAUDE } from '@/lib/mockData';
+import { classifyNutritionWHO } from '@/lib/nutritionUtils';
 import { ShieldCheck, Heart, AlertTriangle, CloudOff, RefreshCw, CheckCircle, Database, HelpCircle, FileText } from 'lucide-react';
 
 export default function DataEntrySection() {
@@ -49,51 +50,19 @@ export default function DataEntrySection() {
   let colorBadge = 'bg-slate-100 text-slate-650 dark:bg-zinc-800 dark:text-zinc-400';
 
   if (imc > 0) {
-    if (idadeNum <= 5) {
-      if (imc < 13.5) {
-        classificacao = 'Desnutrição Infantil';
-        alertaRisco = 'alto';
-        condutaClinica = 'Aconselhamento urgente de aleitamento materno e encaminhamento imediato à pediatria.';
-        colorBadge = 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-450 border border-blue-200/50';
-      } else if (imc > 18.5) {
-        classificacao = 'Obesidade Infantil';
-        alertaRisco = 'alto';
-        condutaClinica = 'Redução imediata de ultraprocessados, promoção de refeições naturais e inserção na agenda nutricional.';
-        colorBadge = 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-450 border border-red-200/50';
-      } else if (imc > 17.0) {
-        classificacao = 'Sobrepeso Infantil';
-        alertaRisco = 'medio';
-        condutaClinica = 'Monitoramento do ganho de peso ponderal mensal pelas ACS e orientação dietética familiar de apoio.';
-        colorBadge = 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-450 border border-amber-200/50';
-      } else {
-        classificacao = 'Eutrofia (Peso Adequado)';
-        alertaRisco = 'baixo';
-        condutaClinica = 'Apoiar o aleitamento continuado, alimentação saudável ativa e agendar pesagem de rotina semestral.';
-        colorBadge = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 border border-emerald-200/50';
-      }
+    const resWHO = classifyNutritionWHO(idadeNum, genero, imc);
+    classificacao = resWHO.classificacao;
+    alertaRisco = resWHO.alertaRisco.toLowerCase();
+    condutaClinica = resWHO.condutaClinica;
+
+    if (classificacao === 'Desnutrição') {
+      colorBadge = 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-450 border border-blue-200/50';
+    } else if (classificacao === 'Obesidade') {
+      colorBadge = 'bg-rose-50 dark:bg-rose-955/20 text-rose-700 dark:text-rose-455 border border-rose-200/50';
+    } else if (classificacao === 'Sobrepeso') {
+      colorBadge = 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-450 border border-amber-200/50';
     } else {
-      // 6 a 18 anos
-      if (imc < 14.0) {
-        classificacao = 'Desnutrição';
-        alertaRisco = 'alto';
-        condutaClinica = 'Planejar visita domiciliar imediata da equipe multiprofissional da UBS e suplementação nutricional supervisionada.';
-        colorBadge = 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-450 border border-blue-200/50';
-      } else if (imc > 24.0) {
-        classificacao = 'Obesidade';
-        alertaRisco = 'alto';
-        condutaClinica = 'Consulta médica com endocrinologista e agendamento da família em grupos de atividade física preventiva da UBS.';
-        colorBadge = 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-450 border border-red-200/50';
-      } else if (imc > 21.0) {
-        classificacao = 'Sobrepeso';
-        alertaRisco = 'medio';
-        condutaClinica = 'Orientar a redução de frituras/açúcares e reinserir no grupo de aconselhamento alimentar prático.';
-        colorBadge = 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-450 border border-amber-200/50';
-      } else {
-        classificacao = 'Eutrofia (Peso Adequado)';
-        alertaRisco = 'baixo';
-        condutaClinica = 'Parabenizar a família, incentivar o consumo de frutas/verduras na rotina e manter o acompanhamento anual.';
-        colorBadge = 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 border border-emerald-200/50';
-      }
+      colorBadge = 'bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-450 border border-teal-200/50';
     }
   }
 
@@ -205,6 +174,13 @@ export default function DataEntrySection() {
     setNomeResponsavel('');
     setPeso('');
     setAltura('');
+    setIdade('5');
+    setGenero('Masculino');
+    setUbsOrigem(selectedUbs || UNIDADES_SAUDE[0].nome);
+    setConsentCheck(false);
+    setClinicaCheck(false);
+    setSigiloCheck(false);
+    setNoloopCheck(false);
   };
 
   // Sincronizar Fila Offline com a API (Simulador de Restabelecimento de Internet)
@@ -216,6 +192,7 @@ export default function DataEntrySection() {
 
     let syncCount = 0;
     const pending = [...offlineQueue];
+    const failedItems: typeof pending = [];
 
     for (const item of pending) {
       try {
@@ -236,24 +213,29 @@ export default function DataEntrySection() {
         const data = await res.json();
         if (data.success) {
           syncCount++;
+        } else {
+          failedItems.push(item);
         }
       } catch (err) {
         console.error("Falha ao sincronizar item offline:", err);
+        failedItems.push(item);
       }
     }
 
-    if (syncCount === pending.length) {
+    if (failedItems.length === 0) {
       clearOfflineQueue();
-      setSuccessMessage(`Sincronização Concluída! Todos os ${syncCount} registros salvos localmente foram transmitidos com segurança e pseudonimizados no servidor central.`);
-    } else if (syncCount > 0) {
-      // Esvazia os sincronizados
-      clearOfflineQueue();
-      // Recarrega os falhos se houver
-      const remaining = pending.slice(syncCount);
-      remaining.forEach(item => addToOfflineQueue(item));
-      setErrorMessage(`Sincronização Parcial: Apenas ${syncCount} de ${pending.length} registros foram sincronizados devido à instabilidade na rede da UBS.`);
+      setSuccessMessage(`Sincronização Concluída! Todos os ${pending.length} registros salvos localmente foram transmitidos com segurança e pseudonimizados no servidor central.`);
     } else {
-      setErrorMessage('Erro de Rede: Não foi possível restabelecer conexão com o servidor central. Tente novamente mais tarde.');
+      // Esvazia a fila completamente
+      clearOfflineQueue();
+      // Recarrega somente os que falharam individualmente
+      failedItems.forEach(item => addToOfflineQueue(item));
+      
+      if (syncCount > 0) {
+        setErrorMessage(`Sincronização Parcial: Apenas ${syncCount} de ${pending.length} registros foram sincronizados devido à instabilidade na rede da UBS. Os ${failedItems.length} registros restantes foram mantidos localmente.`);
+      } else {
+        setErrorMessage('Erro de Rede: Não foi possível restabelecer conexão com o servidor central. Todos os registros locais foram mantidos com segurança.');
+      }
     }
     setIsSyncing(false);
   };
@@ -309,10 +291,10 @@ export default function DataEntrySection() {
             className={`p-4 rounded-xl border text-xs font-semibold leading-relaxed flex items-start gap-3 shadow-md transition-all duration-300 ${
               successMessage.includes('Offline') 
                 ? 'bg-amber-50/80 border-amber-200/60 text-amber-800 dark:bg-amber-955/20 dark:border-amber-900/30 dark:text-amber-400' 
-                : 'bg-emerald-50/80 border-emerald-200/60 text-emerald-800 dark:bg-emerald-955/20 dark:border-emerald-900/30 dark:text-emerald-400'
+                : 'bg-teal-50/80 border-teal-200/60 text-teal-800 dark:bg-teal-950/20 dark:border-emerald-900/30 dark:text-teal-400'
             }`}
           >
-            {successMessage.includes('Offline') ? <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" /> : <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
+            {successMessage.includes('Offline') ? <CloudOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" /> : <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />}
             <span>{successMessage}</span>
           </motion.div>
         )}
@@ -346,7 +328,7 @@ export default function DataEntrySection() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Nome completo */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Nome do Paciente (Menor)</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Nome do Paciente (Menor)</label>
                 <input
                   type="text"
                   required
@@ -359,14 +341,14 @@ export default function DataEntrySection() {
 
               {/* CPF do Paciente */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">CPF do Avaliado (ou Responsável)</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">CPF do Avaliado (ou Responsável)</label>
                 <input
                   type="text"
                   required
                   value={cpf}
                   onChange={handleCpfChange}
                   placeholder="000.000.000-00"
-                  className="w-full bg-slate-55/50 dark:bg-zinc-900/30 border border-slate-200/80 dark:border-zinc-800/85 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-zinc-655 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
+                  className="w-full bg-slate-55/50 dark:bg-zinc-900/30 border border-slate-200/80 dark:border-zinc-800/85 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-zinc-600 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                 />
               </div>
             </div>
@@ -374,7 +356,7 @@ export default function DataEntrySection() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Nome do Responsável */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Nome Completo do Responsável</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Nome Completo do Responsável</label>
                 <input
                   type="text"
                   required
@@ -387,7 +369,7 @@ export default function DataEntrySection() {
 
               {/* UBS de Atendimento */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">UBS de Origem</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">UBS de Origem</label>
                 <div className="relative">
                   <select
                     value={ubsOrigem}
@@ -408,14 +390,14 @@ export default function DataEntrySection() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
               {/* Idade */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Idade</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Idade</label>
                 <div className="relative">
                   <select
                     value={idade}
                     onChange={e => setIdade(e.target.value)}
                     className="w-full bg-slate-55/50 dark:bg-zinc-900/30 border border-slate-200/80 dark:border-zinc-800/85 rounded-xl px-4 py-2.5 pr-10 text-xs font-semibold text-slate-705 dark:text-[#f5f5f7] focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 focus:bg-white dark:focus:bg-zinc-900 transition-all duration-200 cursor-pointer appearance-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]"
                   >
-                    {Array.from({ length: 19 }, (_, i) => String(i)).map(val => (
+                    {Array.from({ length: 18 }, (_, i) => String(i + 1)).map(val => (
                       <option key={val} value={val} className="bg-white dark:bg-[#1c1c1e] text-slate-700 dark:text-[#f5f5f7]">{val} anos</option>
                     ))}
                   </select>
@@ -427,7 +409,7 @@ export default function DataEntrySection() {
 
               {/* Genero */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Gênero</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Gênero</label>
                 <div className="flex gap-1 bg-slate-55/50 dark:bg-zinc-900/30 border border-slate-200/80 dark:border-zinc-800/85 rounded-xl p-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
                   {(['Masculino', 'Feminino'] as const).map(g => (
                     <button
@@ -448,7 +430,7 @@ export default function DataEntrySection() {
 
               {/* Peso (kg) */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Peso (kg)</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Peso (kg)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -462,7 +444,7 @@ export default function DataEntrySection() {
 
               {/* Altura (m) */}
               <div>
-                <label className="text-[10px] font-black text-slate-455 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Altura (m)</label>
+                <label className="text-[10px] font-black text-slate-450 dark:text-zinc-500 uppercase mb-1.5 block tracking-wider">Altura (m)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -546,16 +528,16 @@ export default function DataEntrySection() {
                   <div className="h-2.5 w-full bg-slate-100 dark:bg-zinc-800 rounded-full relative overflow-hidden p-[1px] border border-slate-200/30 dark:border-zinc-700/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] flex">
                     {/* Faixas coloridas de fundo */}
                     <div className={`h-full transition-all duration-500 rounded-l-full ${classificacao.includes('Desnutrição') ? 'bg-blue-500' : 'bg-blue-400/25 dark:bg-blue-500/10'}`} style={{ width: '22%' }} />
-                    <div className={`h-full transition-all duration-500 ${classificacao.includes('Eutrofia') ? 'bg-emerald-500' : 'bg-emerald-400/25 dark:bg-emerald-500/10'}`} style={{ width: '22.5%' }} />
+                    <div className={`h-full transition-all duration-500 ${classificacao.includes('Eutrofia') ? 'bg-teal-500' : 'bg-emerald-400/25 dark:bg-teal-500/10'}`} style={{ width: '22.5%' }} />
                     <div className={`h-full transition-all duration-500 ${classificacao.includes('Sobrepeso') ? 'bg-amber-500' : 'bg-amber-400/25 dark:bg-amber-500/10'}`} style={{ width: '17.5%' }} />
-                    <div className={`h-full transition-all duration-500 rounded-r-full ${classificacao.includes('Obesidade') ? 'bg-red-500' : 'bg-red-400/25 dark:bg-red-500/10'}`} style={{ width: '38%' }} />
+                    <div className={`h-full transition-all duration-500 rounded-r-full ${classificacao.includes('Obesidade') ? 'bg-rose-500' : 'bg-rose-400/25 dark:bg-rose-500/10'}`} style={{ width: '38%' }} />
                   </div>
 
                   <div className="flex justify-between text-[8px] text-slate-450 dark:text-zinc-500 font-black uppercase tracking-wider mt-3 px-0.5">
                     <span className={classificacao.includes('Desnutrição') ? "text-blue-600 dark:text-blue-400" : ""}>Magreza</span>
-                    <span className={classificacao.includes('Eutrofia') ? "text-emerald-600 dark:text-emerald-400" : ""}>Eutrofia</span>
+                    <span className={classificacao.includes('Eutrofia') ? "text-teal-600 dark:text-teal-400" : ""}>Eutrofia</span>
                     <span className={classificacao.includes('Sobrepeso') ? "text-amber-600 dark:text-amber-400" : ""}>Sobrepeso</span>
-                    <span className={classificacao.includes('Obesidade') ? "text-red-600 dark:text-red-400" : ""}>Obesidade</span>
+                    <span className={classificacao.includes('Obesidade') ? "text-rose-600 dark:text-rose-450" : ""}>Obesidade</span>
                   </div>
                 </div>
 
@@ -582,9 +564,9 @@ export default function DataEntrySection() {
           <div className="bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl p-6 shadow-sm space-y-4">
             <div>
               <h3 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Diretrizes Éticas e Não-Estigmatização (LGPD)
+                <ShieldCheck className="w-4 h-4 text-teal-500" /> Diretrizes Éticas e Não-Estigmatização (LGPD)
               </h3>
-              <p className="text-[10px] text-slate-550 dark:text-zinc-455 mt-1 font-semibold leading-normal">
+              <p className="text-[10px] text-slate-550 dark:text-zinc-450 mt-1 font-semibold leading-normal">
                 Para conformidade legal (Art. 14 da LGPD) e ética em IA na saúde pública, marque os termos obrigatórios abaixo antes de efetivar o registro.
               </p>
             </div>
@@ -682,13 +664,13 @@ function EthicCheckbox({ checked, onChange, title, desc }: { checked: boolean; o
       onClick={() => onChange(!checked)}
       className={`p-3.5 rounded-xl border transition-all duration-300 cursor-pointer flex items-start gap-3.5 select-none ${
         checked 
-          ? 'bg-emerald-50/20 border-emerald-350/50 text-slate-800 dark:bg-emerald-950/15 dark:border-emerald-800/50 dark:text-[#f5f5f7] shadow-[0_2px_10px_rgba(16,185,129,0.05)]' 
+          ? 'bg-teal-50/20 border-emerald-350/50 text-slate-800 dark:bg-teal-950/15 dark:border-teal-800/50 dark:text-[#f5f5f7] shadow-[0_2px_10px_rgba(16,185,129,0.05)]' 
           : 'bg-slate-50/30 dark:bg-zinc-900/10 border-slate-200/60 dark:border-zinc-800/80 text-slate-655 hover:bg-slate-50/80 hover:border-slate-350 dark:hover:bg-zinc-850/20 hover:text-slate-850 dark:text-zinc-400'
       }`}
     >
       <div className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border mt-0.5 transition-all duration-205 ${
         checked 
-          ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm' 
+          ? 'bg-teal-500 border-emerald-500 text-white shadow-sm' 
           : 'bg-slate-150 dark:bg-zinc-850 border-slate-350 dark:border-zinc-700 text-transparent'
       }`}>
         <svg className="w-2.5 h-2.5 stroke-current stroke-[3.5]" fill="none" viewBox="0 0 24 24">
