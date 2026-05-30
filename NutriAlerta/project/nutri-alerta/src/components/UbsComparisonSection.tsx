@@ -486,21 +486,21 @@ export default function UbsComparisonSection() {
               <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
               </span>
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-1 min-w-[200px]">
-                <div className="text-right">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-1.5 min-w-[200px]">
+                <div className="flex items-center justify-end">
                   {aLeads ? (
-                    <span className="text-[10px] font-black text-teal-600 dark:text-teal-400 bg-teal-55/20 px-2 py-0.5 rounded shrink-0">
-                      ★ Melhor
+                    <span className="text-[9.5px] font-black text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md leading-none flex items-center gap-0.5 shadow-sm">
+                      ★ <span className="translate-y-[0.5px]">Melhor</span>
                     </span>
                   ) : <span />}
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center px-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center px-2 leading-none">
                   Indicador
                 </span>
-                <div className="text-left">
+                <div className="flex items-center justify-start">
                   {!aLeads ? (
-                    <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-55/20 px-2 py-0.5 rounded shrink-0">
-                      Melhor ★
+                    <span className="text-[9.5px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md leading-none flex items-center gap-0.5 shadow-sm">
+                      <span className="translate-y-[0.5px]">Melhor</span> ★
                     </span>
                   ) : <span />}
                 </div>

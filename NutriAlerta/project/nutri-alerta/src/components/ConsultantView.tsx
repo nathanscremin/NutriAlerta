@@ -612,12 +612,13 @@ export default function ConsultantView() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Pesquisar UBS, Bairro ou Escola..."
-              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 pr-9 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] cursor-text"
+              style={{ paddingRight: '44px' }}
+              className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-655 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/10 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)] cursor-text"
             />
             {searchQuery ? (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-zinc-300 cursor-pointer p-0.5"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-zinc-300 cursor-pointer p-0.5 z-10"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

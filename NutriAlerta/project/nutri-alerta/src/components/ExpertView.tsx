@@ -56,13 +56,13 @@ function KpiCard({
       : 'text-slate-600 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-800/50';
 
   return (
-    <div className="relative rounded-xl p-6 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+    <div className="relative z-10 hover:z-20 rounded-xl p-6 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
       <div className="text-xs text-slate-600 dark:text-zinc-400 uppercase tracking-wide mb-3 font-semibold flex items-center justify-between relative z-10">
         <span>{label}</span>
         {tooltip && (
           <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-600 dark:text-zinc-300">
             <Info className="w-4 h-4" />
-            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-white text-xs p-3 rounded-lg shadow-md opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed">
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-white text-xs p-3 rounded-lg shadow-md opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed">
               {tooltip}
             </div>
           </div>
@@ -754,7 +754,8 @@ export default function ExpertView() {
                   }}
                   onFocus={() => setIsSearchOpen(true)}
                   placeholder="Pesquisar região, UBS ou escola..."
-                  className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 pr-12 py-2.5 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-lg backdrop-blur-sm cursor-text"
+                  style={{ paddingRight: '52px' }}
+                  className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-lg backdrop-blur-sm cursor-text"
                 />
 
                 {searchQuery ? (
@@ -764,7 +765,7 @@ export default function ExpertView() {
                       setIsSearchOpen(false);
                       setSelection('municipio', null, null, null);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200 z-10"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -1030,7 +1031,7 @@ export default function ExpertView() {
                 </h3>
                 <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-600 dark:hover:text-[#f5f5f7] shrink-0">
                   <Info className="w-3.5 h-3.5" />
-                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
                     Proporção percentual ponderada do estado nutricional dos indivíduos monitorados nesta localidade.
                   </div>
                 </div>
@@ -1101,7 +1102,7 @@ export default function ExpertView() {
                     </h3>
                     <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-600 dark:hover:text-[#f5f5f7] shrink-0">
                       <Info className="w-3.5 h-3.5" />
-                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-56 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
+                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-56 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
                         {isEut 
                           ? 'Ranking das UBSs/Regiões ordenadas pelo maior aumento no percentual de peso adequado no período.'
                           : 'Ranking das UBSs/Regiões ordenadas pelo maior avanço ou aumento na taxa de prevalência de risco nutricional.'}

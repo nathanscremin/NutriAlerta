@@ -241,7 +241,8 @@ export default function DemographicsSection() {
                 }}
                 onFocus={() => setIsSearchOpen(true)}
                 placeholder="Pesquisar região, UBS ou escola..."
-                className="w-full bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-805 rounded-xl pl-3.5 pr-8 py-2 text-xs font-semibold text-slate-805 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-0 focus:border-teal-500 transition-all shadow-sm cursor-text"
+                style={{ paddingRight: '44px' }}
+                className="w-full bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-805 rounded-xl pl-3.5 py-2 text-xs font-semibold text-slate-805 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-0 focus:border-teal-500 transition-all shadow-sm cursor-text"
               />
 
               {searchQuery ? (
@@ -251,7 +252,7 @@ export default function DemographicsSection() {
                     setIsSearchOpen(false);
                     setSelection('municipio', null, null, null);
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200 z-10"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -488,7 +489,7 @@ export default function DemographicsSection() {
               <span>Distribuição e Prevalência Geral</span>
               <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] normal-case tracking-normal">
                 <Info className="w-3.5 h-3.5" />
-                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1002] font-semibold leading-relaxed text-center border dark:border-zinc-700">
+                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold leading-relaxed text-center border dark:border-zinc-700">
                   Prevalência registrada de cada indicador nutricional no ano selecionado.
                 </div>
               </div>
@@ -523,7 +524,7 @@ export default function DemographicsSection() {
               <span>Análise por Gênero</span>
               <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] normal-case tracking-normal">
                 <Info className="w-3.5 h-3.5" />
-                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1002] font-semibold leading-relaxed text-center border dark:border-zinc-700">
+                <div className="pointer-events-none absolute bottom-full left-0 sm:left-auto sm:right-0 mb-2 w-52 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold leading-relaxed text-center border dark:border-zinc-700">
                   Proporção de distribuição entre meninos (masculino) e meninas (feminino) para o indicador selecionado.
                 </div>
               </div>
@@ -682,7 +683,7 @@ function KpiCard({
         {tooltip && (
           <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] shrink-0 mt-0.5">
             <Info className="w-3.5 h-3.5" />
-            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1002] font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
               {tooltip}
             </div>
           </div>

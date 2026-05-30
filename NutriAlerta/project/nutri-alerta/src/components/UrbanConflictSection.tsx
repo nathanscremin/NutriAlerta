@@ -89,7 +89,7 @@ export default function UrbanConflictSection() {
           colorClass="bg-amber-50/50 dark:bg-amber-955/20 border-amber-100/40 dark:border-amber-900/35"
           textColor="text-amber-700 dark:text-amber-400"
           subtitle="do total mapeado na região"
-          tooltip="Percentual de estabelecimentos de alimentação rápida em relação à infraestrutura alimentar total."
+          tooltip="Métrica que expressa o grau de concentração de estabelecimentos de risco em relação aos saudáveis no município."
         />
       </div>
 
@@ -184,23 +184,23 @@ function KpiCard({
   tooltip?: string;
 }) {
   return (
-    <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4.5 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.01)] relative group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-      <div>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <p className="text-[10px] text-slate-500 dark:text-zinc-450 uppercase tracking-wider font-extrabold">{label}</p>
+    <div className="bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.01)] relative z-10 hover:z-20 group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 min-h-[98px] h-full w-full">
+      <div className="flex-1 min-w-0 pr-2">
+        <div className="flex items-start justify-between gap-1.5 min-h-[28px] mb-1">
+          <p className="text-[10px] text-slate-500 dark:text-zinc-450 uppercase tracking-wider font-extrabold leading-tight break-words max-w-[85%]">{label}</p>
           {tooltip && (
-            <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-650 dark:hover:text-[#f5f5f7]">
+            <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-655 dark:hover:text-[#f5f5f7] shrink-0 mt-0.5">
               <Info className="w-3.5 h-3.5" />
-              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
+              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed text-center border dark:border-zinc-700">
                 {tooltip}
               </div>
             </div>
           )}
         </div>
-        <h3 className={`text-2xl font-black tracking-tight ${textColor}`}>{value}</h3>
-        {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-500 mt-1 font-semibold leading-none">{subtitle}</p>}
+        <h3 className={`text-xl sm:text-2xl font-black tracking-tight leading-none ${textColor}`}>{value}</h3>
+        {subtitle && <p className="text-[8px] text-slate-400 dark:text-zinc-500 mt-1 font-semibold leading-tight">{subtitle}</p>}
       </div>
-      <div className={`p-2.5 rounded-xl border ${colorClass} flex items-center justify-center shadow-sm`}>{icon}</div>
+      <div className={`p-2 rounded-xl border ${colorClass} flex items-center justify-center shadow-sm shrink-0`}>{icon}</div>
     </div>
   );
 }
