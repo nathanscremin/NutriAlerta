@@ -1,10 +1,12 @@
 import argparse
 import time
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
 
 from supabase_data import build_master_dataset
 
@@ -48,7 +50,7 @@ def criar_tendencias(df_master):
     return df
 
 
-def treinar_modelo_indicador(df_modelo, coluna_anterior, coluna_delta):
+def treinar_modelo_indicador(df_modelo, coluna_anterior, coluna_delta, nome_indicador):
     df_temp = df_modelo.dropna(subset=[coluna_anterior, coluna_delta]).copy()
 
     features = [
@@ -67,14 +69,47 @@ def treinar_modelo_indicador(df_modelo, coluna_anterior, coluna_delta):
         'acesso_transporte',
     ]
 
-    max_ano = int(df_temp['Ano'].max())
-    train_mask = df_temp['Ano'] < (max_ano - 1)
-    X_train = df_temp.loc[train_mask, features]
-    y_train = df_temp.loc[train_mask, coluna_delta]
+    anos_disponiveis = sorted(df_temp['Ano'].unique())
+    maes = []
+    r2s = []
+    
+    # Se houver pelo menos 3 anos, realizamos a validação cruzada temporal walk-forward
+    if len(anos_disponiveis) >= 3:
+        for ano_teste in anos_disponiveis[2:]:
+            train_mask = df_temp['Ano'] < ano_teste
+            test_mask = df_temp['Ano'] == ano_teste
+            
+            X_tr, y_tr = df_temp.loc[train_mask, features], df_temp.loc[train_mask, coluna_delta]
+            X_te, y_te = df_temp.loc[test_mask, features], df_temp.loc[test_mask, coluna_delta]
+            
+            if len(X_tr) > 0 and len(X_te) > 0:
+                fold_model = RandomForestRegressor(n_estimators=300, random_state=42, max_depth=8)
+                fold_model.fit(X_tr, y_tr)
+                preds = fold_model.predict(X_te)
+                
+                maes.append(float(mean_absolute_error(y_te, preds)))
+                try:
+                    r2s.append(float(r2_score(y_te, preds)))
+                except:
+                    r2s.append(0.0)
+                    
+    mae_medio = float(np.mean(maes)) if maes else 0.0
+    r2_medio = float(np.mean(r2s)) if r2s else 0.0
+    
+    print(f"\n[ML - {nome_indicador.upper()}] Validação Cruzada Temporal Walk-Forward:")
+    print(f"  -> MAE Médio (Variação do Indicador): {mae_medio:.4f}%")
+    print(f"  -> R² Médio: {r2_medio:.4f}")
+    if maes:
+        print(f"  -> MAE por Fold (Anos {anos_disponiveis[2:]}): {[round(m, 4) for m in maes]}")
+    print("-" * 50)
+
+    # Treina o modelo final com 100% dos dados para máxima acurácia preditiva dos anos futuros
+    X_train = df_temp[features]
+    y_train = df_temp[coluna_delta]
 
     modelo = RandomForestRegressor(n_estimators=300, random_state=42, max_depth=8)
     modelo.fit(X_train, y_train)
-    return modelo, features
+    return modelo, features, {"mae_medio": mae_medio, "r2_medio": r2_medio}
 
 
 def normalizar_percentuais(df):
@@ -198,6 +233,7 @@ def run_pipeline(df_master=None):
     df_master = criar_tendencias(df_master)
 
     modelos = {}
+    metricas_consolidadas = {}
     for nome, anterior, delta in [
         ('desnutricao', 'Desnutricao_Ano_Anterior', 'Delta_Desnutricao'),
         ('magreza', 'Magreza_Ano_Anterior', 'Delta_Magreza'),
@@ -205,8 +241,18 @@ def run_pipeline(df_master=None):
         ('eutrofia', 'Eutrofia_Ano_Anterior', 'Delta_Eutrofia'),
         ('obesidade', 'Obesidade_Ano_Anterior', 'Delta_Obesidade'),
     ]:
-        modelo, features = treinar_modelo_indicador(df_master, anterior, delta)
+        modelo, features, metrics = treinar_modelo_indicador(df_master, anterior, delta, nome)
         modelos[nome] = {'modelo': modelo, 'features': features}
+        metricas_consolidadas[nome] = metrics
+
+    # Salva as métricas de validação cruzada do modelo em um arquivo JSON
+    caminho_metricas = obter_caminho_salvamento('NutriAlerta_ML_Metricas.json')
+    try:
+        with open(caminho_metricas, 'w', encoding='utf-8') as f:
+            json.dump(metricas_consolidadas, f, indent=2, ensure_ascii=False)
+        print(f"[OK] Métricas de validação salvas em {caminho_metricas}")
+    except Exception as e:
+        print(f"[ERRO] Falha ao salvar arquivo de métricas: {e}")
 
     df_consolidado = gerar_projecoes(df_master, modelos)
 

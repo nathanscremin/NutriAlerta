@@ -2,35 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminSupabaseClient } from '@/lib/supabaseAdmin';
 import { kv } from '@vercel/kv';
 
 const CACHE_KEY = 'nutrialerta_data_cache';
 const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
-
-// Isolated thread-safe authenticated admin client to bypass RLS in the cloud database
-async function getAdminSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://peqvaslchaxrewhtxltc.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_knBFAKhSyTfdfRwMYaQGeg_pF5D6w33';
-  
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
-
-  const { data, error } = await client.auth.signInWithPassword({
-    email: 'nutrialerta@gmail.com',
-    password: '#Pangam123@'
-  });
-
-  if (error) {
-    throw new Error(`Auth RLS bypass failed: ${error.message}`);
-  }
-
-  return client;
-}
 
 // UBS CNES mapping from sync_db_data.js
 const UBS_CNES: Record<string, string> = {
@@ -46,7 +22,7 @@ const UBS_CNES: Record<string, string> = {
   "USF Palmeiras I/II “Dr. Gilson Giovanni”": "2033186",
   "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”": "2074214",
   "USF Benjamin de Castro": "7058865",
-  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2055902",
+  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2046903",
   "USF Jardim das Flores “Dr. Moacir Camargo”": "2074419",
   "USF Guanabara “Dr. Celestino Donato”": "2074222",
   "USF Panorama “Dr. Osvaldo Akamine”": "2074346",
@@ -891,13 +867,19 @@ export async function GET(req: NextRequest) {
           console.log("[Auto-ML Retrain] Base de dados modificada! Iniciando retreinamento assíncrono do modelo...");
           const modelScriptPath = path.join(cwd, '..', '..', 'models', 'unified_ML.py');
 
-          exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err) => {
-            if (err) {
-              console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
-              return;
-            }
-            console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
-          });
+          fs.access(modelScriptPath)
+            .then(() => {
+              exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err) => {
+                if (err) {
+                  console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
+                  return;
+                }
+                console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
+              });
+            })
+            .catch(() => {
+              console.warn(`[Auto-ML Retrain WARNING] Script de ML não encontrado em: ${modelScriptPath}. Ignorando retreinamento.`);
+            });
         }
       } catch (statErr) {
         console.error("[Auto-ML Retrain Check ERROR]", statErr);

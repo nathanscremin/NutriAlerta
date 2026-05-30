@@ -3,9 +3,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, BrainCircuit, Sparkles, MapPin, Search, Globe, Trash2, Hospital, Home, School, ChevronDown, MoreVertical, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
+import { UBS_LIST as ubsList, SCHOOLS_LIST as schoolsList, UNIQUE_BAIRROS_LIST as uniqueBairrosList } from '@/lib/staticLists';
+import { buildScopedTemporalSeries } from '@/lib/metricSelectors';
 import { useAppStore } from '@/store/useAppStore';
 import ReactMarkdown from 'react-markdown';
-// commit no vercel
 interface Message {
   role: 'user' | 'bot';
   text: string;
@@ -72,7 +73,6 @@ function getRiskBadge(value: number, indicator: string) {
   }
 }
 
-const normalizeQuotes = (s: string) => s.replace(/[\u201c\u201d\u2018\u2019]/g, '"');
 
 function ThinkingBubble({ thinking }: { thinking: string }) {
   const [open, setOpen] = useState(false);
@@ -112,7 +112,7 @@ const normalizeUbsKey = (name: string, data: Record<string, any>): any => {
 export default function ConsultantView() {
   const { 
     anoSelecionado, setAnoSelecionado, indicador, setIndicador, selectedBairro, setSelectedBairro, 
-    temporalData, regionalData, yearsList, activePoiTypes,
+    temporalData, regionalData, yearsList,
     analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName,
     setAnalysisLevel, setSelectedUbs, setSelectedBairroName, setSelectedSchoolName, setSelection,
     schoolMetrics, bairroMetrics
@@ -130,32 +130,12 @@ export default function ConsultantView() {
   const prevContextRef = useRef<string>('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const uniqueBairrosList = React.useMemo(() => {
-    const bairrosGeoJSON = getVoronoiGeoJSON();
-    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
-    const setNames = new Set<string>();
-    const list: Array<{ nome: string; parentUbs: string }> = [];
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const p = feat.properties;
-      if (p && p.nome_real_bairro && !setNames.has(p.nome_real_bairro)) {
-        setNames.add(p.nome_real_bairro);
-        list.push({ nome: p.nome_real_bairro, parentUbs: p.nome_bairro || '' });
-      }
-    });
-    return list.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
+  // Auto-scroll do chat para a última mensagem enviada/recebida
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const schoolsList = React.useMemo(() => {
-    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
 
-  const ubsList = React.useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-      return nameA.localeCompare(nameB);
-    });
-  }, []);
 
   const filteredUbs = React.useMemo(() => {
     return ubsList.filter(u => u.nome.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -179,92 +159,19 @@ export default function ConsultantView() {
     return list.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const filteredSearchSuggestions = React.useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    let list = schoolsList.filter(s => s.nome.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (selectedBairroName) {
-      list = list.filter(s => s.bairro === selectedBairroName);
-    }
-    return list.slice(0, 5);
-  }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
-
   const activeTemporalData = React.useMemo(() => {
-    let baseSource: Array<{
-      ano: string;
-      desnutricao: number;
-      magreza: number;
-      obesidade: number;
-      sobrepeso: number;
-      eutrofia: number;
-      isPrevisao: boolean;
-    }> = [];
-
-    if (analysisLevel === 'municipio') {
-      baseSource = temporalData.map(d => ({
-        ano: d.ano,
-        desnutricao: d.desnutricao,
-        magreza: d.magreza || 0,
-        obesidade: d.obesidade,
-        sobrepeso: (d as any).sobrepeso || 15.2,
-        eutrofia: d.eutrofia || 58,
-        isPrevisao: d.isPrevisao
-      }));
-    } else if (analysisLevel === 'ubs') {
-      const ubsName = selectedUbs;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const yrRecord = ubsName ? normalizeUbsKey(ubsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-        return {
-          ano: yr,
-          desnutricao: yrRecord && typeof yrRecord.desnutricao === 'number' ? yrRecord.desnutricao : globalRec.desnutricao,
-          magreza: yrRecord && typeof yrRecord.magreza === 'number' ? yrRecord.magreza : (globalRec as any).magreza || 0,
-          obesidade: yrRecord && typeof yrRecord.obesidade === 'number' ? yrRecord.obesidade : globalRec.obesidade,
-          sobrepeso: yrRecord && typeof yrRecord.sobrepeso === 'number' ? yrRecord.sobrepeso : (globalRec as any).sobrepeso || 16.3,
-          eutrofia: yrRecord && typeof yrRecord.eutrofia === 'number' ? yrRecord.eutrofia : (globalRec as any).eutrofia || 61.2,
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    } else if (analysisLevel === 'bairro') {
-      const bName = selectedBairroName;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const bairroRecord = bName ? (bairroMetrics as any)[bName]?.anos[cleanYr] : null;
-        const parentUbsName = (bName && bairroMetrics[bName]?.regiao_ubs) || selectedUbs;
-        const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-        return {
-          ano: yr,
-          desnutricao: bairroRecord && typeof bairroRecord.desnutricao === 'number' ? bairroRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
-          magreza: bairroRecord && typeof bairroRecord.magreza === 'number' ? bairroRecord.magreza : (ubsRecord?.magreza ?? (globalRec as any).magreza ?? 0),
-          obesidade: bairroRecord && typeof bairroRecord.obesidade === 'number' ? bairroRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
-          sobrepeso: bairroRecord && typeof bairroRecord.sobrepeso === 'number' ? bairroRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 16.3),
-          eutrofia: bairroRecord && typeof bairroRecord.eutrofia === 'number' ? bairroRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 61.2),
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    } else if (analysisLevel === 'escola') {
-      const schoolName = selectedSchoolName;
-      baseSource = yearsList.map(yr => {
-        const cleanYr = yr.replace('★', '').trim();
-        const schoolRecord = schoolName ? (schoolMetrics as any)[schoolName]?.anos[cleanYr] : null;
-        const parentUbsName = (schoolName && schoolMetrics[schoolName]?.regiao_ubs) || selectedUbs;
-        const ubsRecord = parentUbsName ? normalizeUbsKey(parentUbsName, regionalData[cleanYr] || {}) : null;
-        const globalRec = temporalData.find(t => t.ano.replace('★', '').trim() === cleanYr) || { desnutricao: 2.62, magreza: 0, obesidade: 12.93, sobrepeso: 16.3, eutrofia: 61.2 };
-        return {
-          ano: yr,
-          desnutricao: schoolRecord && typeof schoolRecord.desnutricao === 'number' ? schoolRecord.desnutricao : (ubsRecord?.desnutricao ?? globalRec.desnutricao),
-          magreza: schoolRecord && typeof schoolRecord.magreza === 'number' ? schoolRecord.magreza : (ubsRecord?.magreza ?? (globalRec as any).magreza ?? 0),
-          obesidade: schoolRecord && typeof schoolRecord.obesidade === 'number' ? schoolRecord.obesidade : (ubsRecord?.obesidade ?? globalRec.obesidade),
-          sobrepeso: schoolRecord && typeof schoolRecord.sobrepeso === 'number' ? schoolRecord.sobrepeso : ((ubsRecord?.sobrepeso ?? (globalRec as any).sobrepeso) || 16.3),
-          eutrofia: schoolRecord && typeof schoolRecord.eutrofia === 'number' ? schoolRecord.eutrofia : ((ubsRecord?.eutrofia ?? (globalRec as any).eutrofia) || 61.2),
-          isPrevisao: Number(cleanYr) >= 2026
-        };
-      });
-    }
-
-    return baseSource;
-  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, yearsList, regionalData, schoolMetrics, bairroMetrics]);
+    return buildScopedTemporalSeries({
+      analysisLevel,
+      selectedUbs,
+      selectedBairroName,
+      selectedSchoolName,
+      temporalData,
+      regionalData,
+      schoolMetrics,
+      bairroMetrics,
+      yearsList
+    });
+  }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, temporalData, regionalData, schoolMetrics, bairroMetrics, yearsList]);
 
   const dadosAno = activeTemporalData.find(d => d.ano === anoSelecionado) || activeTemporalData[0] || { desnutricao: 0, magreza: 0, obesidade: 0, sobrepeso: 0, eutrofia: 0 };
   const cleanYear = anoSelecionado.replace('★', '').trim();

@@ -61,8 +61,17 @@ Para evitar colisões com o painel municipal do NutriAlerta, este portal foi con
     ```
 3.  **Configure o arquivo `.env.local` na pasta do app:**
     ```env
+    # Conectividade Supabase
     NEXT_PUBLIC_SUPABASE_URL=seu-url-supabase
     NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-supabase
+
+    # Administração & Bypass RLS (Segurança de Ingestão)
+    SUPABASE_ADMIN_EMAIL=email-do-admin-do-supabase
+    SUPABASE_ADMIN_PASSWORD=senha-do-admin-do-supabase
+
+    # Proteção de Identidade e Criptografia (LGPD)
+    ENCRYPTION_KEY=sua-chave-aes-256-com-exatamente-32-caracteres
+    HASH_SALT=seu-salt-para-hashes-hmac
     ```
 4.  **Execute o servidor de desenvolvimento:**
     ```bash
@@ -72,8 +81,26 @@ Para evitar colisões com o painel municipal do NutriAlerta, este portal foi con
 
 ---
 
+## 🔒 Segurança, LGPD & Conexão Resiliente
+*   **Criptografia na Origem (LGPD)**: Os registros médicos e de identificação de alunos são protegidos utilizando criptografia simétrica de nível militar (AES-256-CBC) e hashes salgados (HMAC-SHA256) antes da gravação no Supabase, garantindo conformidade irrestrita à LGPD.
+*   **Bypass de Timeout**: A tela de loading inicial e o carregamento das sessões contam com limites de conexão de 5 segundos, evitando telas em branco ou travamentos em conexões escolares instáveis.
+
+---
+
+## 📈 Critério Antropométrico Clínico (OMS Z-Score)
+A classificação nutricional adota o **Z-score oficial da Organização Mundial da Saúde (OMS)**. A partir da idade (anos completos) e sexo (gênero de nascença), a classificação calcula a adequação exata do IMC:
+* **Magreza Acentuada**: IMC < -3 DP (Desvios Padrão)
+* **Magreza**: -3 DP <= IMC < -2 DP
+* **Eutrofia**: -2 DP <= IMC <= +1 DP
+* **Sobrepeso**: +1 DP < IMC <= +2 DP
+* **Obesidade**: IMC > +2 DP
+
+Isso isola totalmente as escolas de tabelas genéricas, fornecendo laudos clínicos autênticos e fidedignos para os pais e para a merenda escolar.
+
+---
+
 ## 📋 Critérios de Qualidade (Definition of Done)
 Qualquer novo incremento, ajuste de IMC ou cadastro no portal escolar segue estritamente a política de qualidade do time:
-1.  Código versionado com commits descritivos.
-2.  Cálculos de IMC testados com amostras reais de estudantes.
-3.  Estilos adaptados e testados para modo claro e escuro.
+1.  Código versionado e tipagem estática validada com `npm run type-check`.
+2.  Cálculos de IMC testados sob as referências clínicas exatas da OMS.
+3.  Design com suporte completo para visualização clara em Modo Claro e Modo Escuro.

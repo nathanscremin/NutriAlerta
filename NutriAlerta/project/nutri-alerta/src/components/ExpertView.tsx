@@ -3,14 +3,17 @@ import React from 'react';
 import RiskMap from '@/components/RiskMap';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
-  LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine, BarChart, Bar
+  LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine
 } from 'recharts';
-import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, Sparkles, CheckCircle2, Search, ChevronDown, Calendar, Hospital, Home, School, Globe, ShieldCheck, Stethoscope } from 'lucide-react';
+import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, CheckCircle2, Search, ChevronDown, Hospital, Home, School, Globe, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
 import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
 import { buildScopedTemporalSeries, getScopedNutritionMetrics } from '@/lib/metricSelectors';
+import { getSeverityLevel } from '@/lib/nutritionUtils';
+import { useHudMetrics } from '@/hooks/useHudMetrics';
+import { UBS_LIST as ubsList, SCHOOLS_LIST as schoolsList, UNIQUE_BAIRROS_LIST as uniqueBairrosList } from '@/lib/staticLists';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -143,34 +146,7 @@ export default function ExpertView() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Processamento de listas para busca
-  const ubsList = React.useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-      return nameA.localeCompare(nameB);
-    });
-  }, []);
 
-  const uniqueBairrosList = React.useMemo(() => {
-    const bairrosGeoJSON = getVoronoiGeoJSON();
-    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
-    const setNames = new Set<string>();
-    const list: Array<{ nome: string; parentUbs: string }> = [];
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const name = feat.properties?.nome_real_bairro;
-      const ubs = feat.properties?.nome_bairro;
-      if (name && !setNames.has(name)) {
-        setNames.add(name);
-        list.push({ nome: name, parentUbs: ubs || '' });
-      }
-    });
-    return list.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
-
-  const schoolsList = React.useMemo(() => {
-    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
 
   const filteredUbs = React.useMemo(() => {
     return ubsList.filter(u =>
@@ -230,68 +206,21 @@ export default function ExpertView() {
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-  const hudMetrics = React.useMemo(() => {
-    let avaliados = 0;
-    let subUnitLabel = "UBS monitoradas";
-    let subUnitValue = String(ubsList.length);
-
-    if (analysisLevel === 'escola' && selectedSchoolName) {
-      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      subUnitLabel = "Tipo de Escola";
-      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
-      subUnitValue = schoolInfo?.categoria || "Educação";
-    } else if (analysisLevel === 'bairro' && selectedBairroName) {
-      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
-      subUnitLabel = "Escolas no bairro";
-      subUnitValue = String(schoolCount);
-    } else if (analysisLevel === 'ubs' && selectedUbs) {
-      let ubsTotal = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
-          ubsTotal += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = ubsTotal || regionalData[cleanYear]?.[selectedUbs]?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
-      subUnitLabel = "Escolas na região";
-      subUnitValue = String(schoolCount);
-    } else {
-      let totalSchoolAvaliados = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.anos?.[cleanYear]?.total_avaliados) {
-          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = totalSchoolAvaliados || 0;
-      subUnitLabel = "UBS monitoradas";
-      subUnitValue = String(ubsList.length);
-    }
-
-    const formatPct = (val: number) => {
-      if (val === undefined || val === null || isNaN(val)) return 'N/D';
-      return `${val.toFixed(2)}%`;
-    };
-
-    const formatAval = (val: number) => {
-      if (isPrevisao) return 'Projetado';
-      if (!val) return 'N/D';
-      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
-    };
-
-    return {
-      avgObs: formatPct(scopeMetrics.obesidade),
-      avgMag: formatPct(scopeMetrics.magreza),
-      avgDes: formatPct(scopeMetrics.desnutricao),
-      avgSob: formatPct(scopeMetrics.sobrepeso),
-      avgEut: formatPct(scopeMetrics.eutrofia),
-      evaluatedStr: formatAval(avaliados),
-      subUnitLabel,
-      subUnitValue
-    };
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, scopeMetrics, regionalData, schoolMetrics, ubsList, schoolsList, bairroMetrics, isPrevisao]);
+  const hudMetrics = useHudMetrics({
+    analysisLevel,
+    selectedSchoolName,
+    selectedBairroName,
+    selectedUbs,
+    anoSelecionado,
+    cleanYear,
+    scopeMetrics,
+    regionalData,
+    schoolMetrics,
+    bairroMetrics,
+    ubsList,
+    schoolsList,
+    isPrevisao
+  });
 
   // Helper to get parent UBS for a neighborhood
   const getParentUbsForBairroName = React.useCallback((bName: string | null): string | null => {
@@ -406,92 +335,67 @@ export default function ExpertView() {
   const baseRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === baseYear) || dadosAno;
   const targetRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === targetYear) || dadosProj;
 
-  // Mapeamento de candidatos para busca de extremos no modo Global
-  const candidateIndicators = [
-    {
-      id: 'desnutricao',
-      label: 'Desnutrição',
-      value: Number(dadosAno.desnutricao.toFixed(2)),
-      proj: Number(dadosProj.desnutricao.toFixed(2)),
-      base: Number(baseRecord.desnutricao.toFixed(2)),
-      target: Number(targetRecord.desnutricao.toFixed(2)),
-      color: 'text-blue-600 dark:text-blue-400',
-      bg: 'bg-blue-50/50 dark:bg-blue-955/20',
-      border: 'border-blue-100 dark:border-blue-900/40',
-      bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
-    },
-    {
-      id: 'magreza',
-      label: 'Magreza',
-      value: Number(dadosAno.magreza.toFixed(2)),
-      proj: Number(dadosProj.magreza.toFixed(2)),
-      base: Number((baseRecord.magreza || 0).toFixed(2)),
-      target: Number((targetRecord.magreza || 0).toFixed(2)),
-      color: 'text-sky-600 dark:text-sky-400',
-      bg: 'bg-sky-50/50 dark:bg-sky-955/20',
-      border: 'border-sky-100 dark:border-sky-900/40',
-      bullet: 'bg-sky-550 shadow-[0_0_8px_rgba(56,189,248,0.5)]'
-    },
-    {
-      id: 'sobrepeso',
-      label: 'Sobrepeso',
-      value: Number(dadosAno.sobrepeso.toFixed(2)),
-      proj: Number(dadosProj.sobrepeso.toFixed(2)),
-      base: Number((baseRecord.sobrepeso || 0).toFixed(2)),
-      target: Number((targetRecord.sobrepeso || 0).toFixed(2)),
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-50/50 dark:bg-amber-955/20',
-      border: 'border-amber-100 dark:border-amber-900/40',
-      bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
-    },
-    {
-      id: 'obesidade',
-      label: 'Obesidade',
-      value: Number(dadosAno.obesidade.toFixed(2)),
-      proj: Number(dadosProj.obesidade.toFixed(2)),
-      base: Number(baseRecord.obesidade.toFixed(2)),
-      target: Number(targetRecord.obesidade.toFixed(2)),
-      color: 'text-rose-600 dark:text-rose-455',
-      bg: 'bg-rose-50/50 dark:bg-rose-955/20',
-      border: 'border-rose-100 dark:border-rose-900/40',
-      bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-    }
-  ];
+  // Mapeamento de candidatos para busca de extremos no modo Global (Otimizado com useMemo)
+  const { candidateIndicators, sortedCandidates } = React.useMemo(() => {
+    const indicators = [
+      {
+        id: 'desnutricao',
+        label: 'Desnutrição',
+        value: Number(dadosAno.desnutricao.toFixed(2)),
+        proj: Number(dadosProj.desnutricao.toFixed(2)),
+        base: Number(baseRecord.desnutricao.toFixed(2)),
+        target: Number(targetRecord.desnutricao.toFixed(2)),
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50/50 dark:bg-blue-955/20',
+        border: 'border-blue-100 dark:border-blue-900/40',
+        bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+      },
+      {
+        id: 'magreza',
+        label: 'Magreza',
+        value: Number(dadosAno.magreza.toFixed(2)),
+        proj: Number(dadosProj.magreza.toFixed(2)),
+        base: Number((baseRecord.magreza || 0).toFixed(2)),
+        target: Number((targetRecord.magreza || 0).toFixed(2)),
+        color: 'text-sky-600 dark:text-sky-400',
+        bg: 'bg-sky-50/50 dark:bg-sky-955/20',
+        border: 'border-sky-100 dark:border-sky-900/40',
+        bullet: 'bg-sky-550 shadow-[0_0_8px_rgba(56,189,248,0.5)]'
+      },
+      {
+        id: 'sobrepeso',
+        label: 'Sobrepeso',
+        value: Number(dadosAno.sobrepeso.toFixed(2)),
+        proj: Number(dadosProj.sobrepeso.toFixed(2)),
+        base: Number((baseRecord.sobrepeso || 0).toFixed(2)),
+        target: Number((targetRecord.sobrepeso || 0).toFixed(2)),
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50/50 dark:bg-amber-955/20',
+        border: 'border-amber-100 dark:border-amber-900/40',
+        bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+      },
+      {
+        id: 'obesidade',
+        label: 'Obesidade',
+        value: Number(dadosAno.obesidade.toFixed(2)),
+        proj: Number(dadosProj.obesidade.toFixed(2)),
+        base: Number(baseRecord.obesidade.toFixed(2)),
+        target: Number(targetRecord.obesidade.toFixed(2)),
+        color: 'text-rose-600 dark:text-rose-455',
+        bg: 'bg-rose-50/50 dark:bg-rose-955/20',
+        border: 'border-rose-100 dark:border-rose-900/40',
+        bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+      }
+    ];
 
-  const getSeverityLevel = (value: number, indicator: string) => {
-    if (indicator === 'desnutricao') {
-      if (value < 1.5) return 0;
-      if (value < 2.5) return 1;
-      if (value < 3.5) return 2;
-      if (value < 4.5) return 3;
-      return 4;
-    } else if (indicator === 'magreza') {
-      if (value < 12) return 0;
-      if (value < 15) return 1;
-      if (value < 18) return 2;
-      if (value < 21) return 3;
-      return 4;
-    } else if (indicator === 'sobrepeso') {
-      if (value < 12) return 0;
-      if (value < 15) return 1;
-      if (value < 18) return 2;
-      if (value < 21) return 3;
-      return 4;
-    } else {
-      // Obesidade
-      if (value < 7) return 0;
-      if (value < 10) return 1;
-      if (value < 13) return 2;
-      if (value < 16) return 3;
-      return 4;
-    }
-  };
+    const sorted = [...indicators].sort((a, b) => {
+      const lvlA = getSeverityLevel(a.value, a.id);
+      const lvlB = getSeverityLevel(b.value, b.id);
+      return lvlB - lvlA || b.value - a.value;
+    });
 
-  const sortedCandidates = [...candidateIndicators].sort((a, b) => {
-    const lvlA = getSeverityLevel(a.value, a.id);
-    const lvlB = getSeverityLevel(b.value, b.id);
-    return lvlB - lvlA || b.value - a.value;
-  });
+    return { candidateIndicators: indicators, sortedCandidates: sorted };
+  }, [dadosAno, dadosProj, baseRecord, targetRecord]);
 
   const isGlobal = indicador === 'global';
 
@@ -589,31 +493,33 @@ export default function ExpertView() {
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
 
-  // Compute dynamic ranking from loaded regional data
-  const currentYearRegions = regionalData && regionalData[cleanYear] 
-    ? Object.values(regionalData[cleanYear]) 
-    : [];
+  // Compute dynamic ranking from loaded regional data (Otimizado com useMemo)
+  const dynamicRanking = React.useMemo(() => {
+    const currentYearRegions = regionalData && regionalData[cleanYear] 
+      ? Object.values(regionalData[cleanYear]) 
+      : [];
 
-  const dynamicRanking = currentYearRegions.length > 0
-    ? currentYearRegions
-        .map((reg: any) => {
-          const deltaVal = isObs 
-            ? reg.delta_obesidade 
-            : isDes
-              ? reg.delta_desnutricao
-              : isMag
-                ? reg.delta_magreza || 0
-                : isSob
-                  ? reg.delta_sobrepeso || 0
-                  : reg.delta_eutrofia || 0;
-          return {
-            name: reg.nome.replace('UBS ', '').replace('USF ', ''),
-            delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
-          };
-        })
-        .sort((a, b) => b.delta - a.delta)
-        .slice(0, 5)
-    : [];
+    return currentYearRegions.length > 0
+      ? currentYearRegions
+          .map((reg: any) => {
+            const deltaVal = isObs 
+              ? reg.delta_obesidade 
+              : isDes
+                ? reg.delta_desnutricao
+                : isMag
+                  ? reg.delta_magreza || 0
+                  : isSob
+                    ? reg.delta_sobrepeso || 0
+                    : reg.delta_eutrofia || 0;
+            return {
+              name: reg.nome.replace('UBS ', '').replace('USF ', ''),
+              delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
+            };
+          })
+          .sort((a, b) => b.delta - a.delta)
+          .slice(0, 5)
+      : [];
+  }, [regionalData, cleanYear, isObs, isDes, isMag, isSob]);
 
   const sumAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;

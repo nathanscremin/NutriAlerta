@@ -31,9 +31,9 @@ export interface ScopedNutritionParams {
 
 const DEFAULT_METRICS = {
   desnutricao: 2.62,
-  magreza: 0,
+  magreza: 2.5,
   obesidade: 12.93,
-  sobrepeso: 15.2,
+  sobrepeso: 21.0,
   eutrofia: 61.55
 };
 

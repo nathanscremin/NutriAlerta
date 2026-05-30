@@ -43,7 +43,6 @@ export default function DemographicsSection() {
     regionalData, 
     schoolMetrics,
     bairroMetrics,
-    demographicData,
     darkMode 
   } = useAppStore();
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(2); // Padrão: Escolares (6 a 11 anos)

@@ -1,7 +1,7 @@
 export const MOCK_ESCOLAS = [
   { id: 1, nome: 'EMEF Marcelo Rubens', bairro: 'Centro', risco: 85, delta: '+12%', avaliados: 450, lat: -22.41, lng: -47.55 },
   { id: 2, nome: 'EMEI Criança Feliz', bairro: 'Centro', risco: 45, delta: '+2%', avaliados: 320, lat: -22.405, lng: -47.555 },
-  { id: 3, node: 'Escola Estadual Norte', bairro: 'Bairro Norte', risco: 92, delta: '+18%', avaliados: 600, lat: -22.39, lng: -47.56 },
+  { id: 3, nome: 'Escola Estadual Norte', bairro: 'Bairro Norte', risco: 92, delta: '+18%', avaliados: 600, lat: -22.39, lng: -47.56 },
   { id: 4, nome: 'Creche Jardim', bairro: 'Bairro Norte', risco: 68, delta: '+5%', avaliados: 200, lat: -22.395, lng: -47.55 },
   { id: 5, nome: 'EE Professor Silva', bairro: 'Bairro Norte', risco: 74, delta: '+8%', avaliados: 500, lat: -22.398, lng: -47.555 },
   { id: 6, nome: 'EMEF Sul', bairro: 'Bairro Sul', risco: 25, delta: '-4%', avaliados: 800, lat: -22.415, lng: -47.56 },
@@ -53,18 +53,6 @@ export const DADOS_TEMPORAIS: PontoTemporal[] = [
   { ano: '2027 ★', desnutricao: 3.39, obesidade: 13.57, sobrepeso: 22.1, eutrofia: 58.84, isPrevisao: true },
 ];
 
-/** @deprecated Use DADOS_TEMPORAIS — mantido para compatibilidade com gráficos antigos */
-export const MOCK_TEMPORAL = DADOS_TEMPORAIS
-  .filter(d => !d.isPrevisao && parseInt(d.ano) >= 2020)
-  .map(d => ({ ano: d.ano, riscoMedio: d.desnutricao, altoRisco: d.obesidade / 4 }));
-
-// Distribuição nutricional média de 2025 (Fonte: dados reais Nutri for Schools)
-export const MOCK_DISTRIBUICAO = [
-  { name: 'Magreza / Desnutrição',   value:  4, fill: '#3b82f6' },
-  { name: 'Peso Adequado (Eutrofia)', value: 58, fill: '#10b981' },
-  { name: 'Sobrepeso',               value: 21, fill: '#f59e0b' },
-  { name: 'Obesidade (Geral)',        value: 17, fill: '#ef4444' },
-];
 
 export const RANKING_ACELERACAO = [...MOCK_ESCOLAS]
   .sort((a, b) => parseFloat(b.delta) - parseFloat(a.delta))
@@ -130,7 +118,7 @@ export function classifyFoodCategory(nome: string): 'Alimentação - Restaurante
     'subway', 'mc', 'burger', 'burguer', 'habib', 'king', 'lanches', 
     'lanchonete', 'lanchinete', 'hamburgueria', 'sorveteria', 'doces', 
     'ice', 'mania', 'entreposto', 'fast', 'fast-food', 'fastfood', 
-    'conveniência', 'bar', 'lanchonete'
+    'conveniência', 'bar'
   ];
   const isFast = fastFoodKeywords.some(keyword => nameLower.includes(keyword));
   return isFast ? 'Alimentação - Fast-food' : 'Alimentação - Restaurante';
@@ -202,17 +190,6 @@ export const AMBIENTE_OBESOGENICO: InfraPoint[] = ALL_POIS
     grupo: 'risco' as const
   }));
 
-export const PROPORCAO_INFRAESTRUTURA = [
-  { name: 'Mercados', value: MERCADOS_GERAIS.length, fill: '#10b981' },
-  { name: 'Restaurantes', value: RESTAURANTES_GERAIS.length, fill: '#0d9488' },
-  { name: 'Parques & Esportes', value: ESPORTE_LAZER.length, fill: '#38bdf8' },
-  { name: 'Fast Food & Risco', value: AMBIENTE_OBESOGENICO.length, fill: '#f43f5e' },
-];
-
-// Mapeamento de âncoras virtuais - Removido por obsolescência (usando limites reais de bairros)
-export function getVirtualAnchor(nome: string, realLat: number, realLon: number) {
-  return { lat: realLat, lon: realLon };
-}
 
 // Retorna os bairros oficiais de Rio Claro baseados no Censo 2022 vinculados à sua respectiva UBS
 export const getVoronoiGeoJSON = () => {

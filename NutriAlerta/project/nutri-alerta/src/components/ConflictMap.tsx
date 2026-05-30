@@ -4,29 +4,15 @@ import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MERCADOS_GERAIS, RESTAURANTES_GERAIS, ESPORTE_LAZER, AMBIENTE_OBESOGENICO } from '@/lib/mockData';
 import { useAppStore } from '@/store/useAppStore';
+import { TILE_URL_DARK, TILE_URL_LIGHT, RIO_CLARO_CENTER } from '@/lib/mapConfig';
 
 export default function ConflictMap() {
   const { darkMode } = useAppStore();
   const mapBackground = darkMode ? '#1c1c1e' : '#f8fafc';
 
   return (
-    <>
-      <style>{`
-        .custom-glass-tooltip {
-          background: ${darkMode ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)'} !important;
-          backdrop-filter: blur(8px) !important;
-          border: 1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'} !important;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-          color: ${darkMode ? '#f5f5f7' : '#0f172a'} !important;
-          border-radius: 8px !important;
-          padding: 5px 10px !important;
-          white-space: normal !important;
-        }
-        .custom-glass-tooltip::before { display: none !important; }
-        .leaflet-container { background: ${mapBackground} !important; }
-      `}</style>
-      <MapContainer
-        center={[-22.405, -47.565]}
+    <MapContainer
+        center={RIO_CLARO_CENTER}
         zoom={13}
         minZoom={10}
         maxZoom={18}
@@ -36,10 +22,7 @@ export default function ConflictMap() {
       >
         <TileLayer
           key={darkMode ? 'dark-tiles' : 'light-tiles'}
-          url={darkMode 
-            ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-            : "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-          }
+          url={darkMode ? TILE_URL_DARK : TILE_URL_LIGHT}
           attribution=""
         />
 
@@ -111,6 +94,5 @@ export default function ConflictMap() {
           </CircleMarker>
         ))}
       </MapContainer>
-    </>
   );
 }

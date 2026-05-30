@@ -61,8 +61,19 @@ O **NutriAlerta** é um portal estratégico de tomada de decisões para **Gestor
     ```
 3.  **Configure o arquivo `.env.local` na pasta do app:**
     ```env
+    # Conectividade Supabase
     NEXT_PUBLIC_SUPABASE_URL=seu-url-supabase
     NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon-supabase
+
+    # Administração & Autenticação
+    SUPABASE_ADMIN_EMAIL=email-do-admin-do-supabase
+    SUPABASE_ADMIN_PASSWORD=senha-do-admin-do-supabase
+
+    # Criptografia de Dados Confidenciais (LGPD)
+    ENCRYPTION_KEY=sua-chave-aes-256-com-exatamente-32-caracteres
+    HASH_SALT=seu-salt-para-hashes-hmac
+
+    # IA Generativa (NutriBot)
     GEMINI_API_KEY=sua-chave-api-gemini
     ```
 4.  **Execute o servidor de desenvolvimento:**
@@ -70,6 +81,32 @@ O **NutriAlerta** é um portal estratégico de tomada de decisões para **Gestor
     npm run dev
     ```
     *O aplicativo rodará na porta padrão `3000` (http://localhost:3000).*
+
+---
+
+## 🔒 Governança de Dados, LGPD & Resiliência
+*   **Zero Credenciais no Cliente**: Remoção de chaves administrativas e blocos de signup inseguros do frontend. A integridade das sessões é controlada de forma estrita no servidor.
+*   **Criptografia Simétrica (AES-256-CBC)**: Criptografia robusta na ingestão de dados de menores no banco, garantindo conformidade legal à LGPD.
+*   **Conexão Defensiva**: Timeouts programados de 5 segundos no portal e no dashboard garantem uma interface fluida com alternativas rápidas de recarga caso o servidor demore a responder.
+*   **Conectividade do Chat**: O widget de chat analisa erros HTTP ativamente para manter a indicação do sinal "Online" ou "Offline" sempre fidedigna.
+
+---
+
+## 📈 Precisão Clínica (WHO Z-Score)
+Abandonamos limites de IMC estáticos obsoletos. O sistema adota a classificação baseada na **Curva de Crescimento e Desvio Padrão (DP) IMC-para-idade da OMS (Z-score)** de 0 a 18 anos por sexo, garantindo triagens clínicas sem margem de erro.
+
+---
+
+## 🛠️ Validação e Build de Produção
+*   **Type-check estático**:
+    ```bash
+    npm run type-check
+    ```
+*   **Next.js Production Build**:
+    ```bash
+    npm run build
+    ```
+    *Concluídos com absoluto sucesso e zero erros.*
 
 ---
 

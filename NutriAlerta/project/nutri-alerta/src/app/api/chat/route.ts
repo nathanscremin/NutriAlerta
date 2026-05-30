@@ -266,8 +266,7 @@ Com base nisso, recomendo direcionar as ações comunitárias e de assistência 
 export async function POST(req: NextRequest) {
   try {
     const { sessionId, message, context } = await req.json();
-    console.log('📥 screenData recebido:', JSON.stringify(context?.screenData, null, 2));
-    console.log('🤖 genAI configurado:', !!genAI);
+    
     
     if (!sessionId || !message || !context) {
       return NextResponse.json({ error: 'Dados incompletos.' }, { status: 400 });
@@ -318,8 +317,7 @@ const chat = model.startChat({
 const result = await chat.sendMessage(message);
 
 const parts = result.response.candidates?.[0]?.content?.parts ?? [];
-// Adicionando console.log
-console.log('🧠 parts:', JSON.stringify(parts.map((p: any) => ({ thought: p.thought, len: p.text?.length }))));
+
 const thinking = parts
   .filter((p: any) => p.thought === true)
   .map((p: any) => p.text)

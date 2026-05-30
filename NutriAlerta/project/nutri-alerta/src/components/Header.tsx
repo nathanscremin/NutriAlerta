@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserCircle, Menu, Map, School, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
+import { UserCircle, Map, School, Stethoscope, Bot, LogOut, Sun, Moon } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -71,6 +71,7 @@ export default function Header() {
         <motion.div 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => setViewMode('map')}
           className="w-10 h-10 bg-gradient-to-tr from-teal-600 to-teal-500 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 shadow-md"
         >
           <NutriAlertaLogo className="w-5 h-5 text-white" />
