@@ -3,14 +3,17 @@ import React from 'react';
 import RiskMap from '@/components/RiskMap';
 import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend,
-  LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine, BarChart, Bar
+  LineChart, Line, CartesianGrid, XAxis, YAxis, ReferenceLine
 } from 'recharts';
-import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, Sparkles, CheckCircle2, Search, ChevronDown, Calendar, Hospital, Home, School, Globe, ShieldCheck, Stethoscope } from 'lucide-react';
+import { TrendingUp, Users, Activity, ArrowUpRight, ArrowDownRight, Minus, Info, Layers, X, MapPin, AlertTriangle, CheckCircle2, Search, ChevronDown, Hospital, Home, School, Globe, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/store/useAppStore';
 import UrbanConflictSection from '@/components/UrbanConflictSection';
 import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
 import { buildScopedTemporalSeries, getScopedNutritionMetrics } from '@/lib/metricSelectors';
+import { getSeverityLevel } from '@/lib/nutritionUtils';
+import { useHudMetrics } from '@/hooks/useHudMetrics';
+import { UBS_LIST as ubsList, SCHOOLS_LIST as schoolsList, UNIQUE_BAIRROS_LIST as uniqueBairrosList } from '@/lib/staticLists';
 
 // ── Tooltip customizado com dados reais e suporte a tema escuro ──────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -53,13 +56,13 @@ function KpiCard({
       : 'text-slate-600 bg-slate-100 dark:text-zinc-400 dark:bg-zinc-800/50 border-slate-200 dark:border-zinc-800/50';
 
   return (
-    <div className="relative rounded-xl p-6 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+    <div className="relative z-10 hover:z-20 rounded-xl p-6 border border-slate-200/50 dark:border-zinc-800/50 bg-white dark:bg-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
       <div className="text-xs text-slate-600 dark:text-zinc-400 uppercase tracking-wide mb-3 font-semibold flex items-center justify-between relative z-10">
         <span>{label}</span>
         {tooltip && (
           <div className="relative group/tooltip inline-block cursor-help ml-1 text-slate-600 dark:text-zinc-300">
             <Info className="w-4 h-4" />
-            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-white text-xs p-3 rounded-lg shadow-md opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed">
+            <div className="pointer-events-none absolute bottom-full right-0 mb-2 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-white text-xs p-3 rounded-lg shadow-md opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed">
               {tooltip}
             </div>
           </div>
@@ -83,7 +86,8 @@ const POI_CATEGORIES = [
   { id: 'UBS' as const, label: 'Saúde (UBS/UPA)', color: 'bg-red-500' },
   { id: 'Educação' as const, label: 'Educação', color: 'bg-blue-500' },
   { id: 'Esporte e Lazer' as const, label: 'Esporte & Lazer', color: 'bg-green-500' },
-  { id: 'Alimentação - Restaurante/Fast-food' as const, label: 'Restaurantes/Fast-Food', color: 'bg-orange-500' },
+  { id: 'Alimentação - Restaurante' as const, label: 'Restaurantes (Saudável)', color: 'bg-emerald-500' },
+  { id: 'Alimentação - Fast-food' as const, label: 'Fast-Foods (Risco)', color: 'bg-orange-500' },
   { id: 'Alimentação - Mercado' as const, label: 'Mercados', color: 'bg-purple-500' },
 ];
 
@@ -142,34 +146,7 @@ export default function ExpertView() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Processamento de listas para busca
-  const ubsList = React.useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-      return nameA.localeCompare(nameB);
-    });
-  }, []);
 
-  const uniqueBairrosList = React.useMemo(() => {
-    const bairrosGeoJSON = getVoronoiGeoJSON();
-    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
-    const setNames = new Set<string>();
-    const list: Array<{ nome: string; parentUbs: string }> = [];
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const name = feat.properties?.nome_real_bairro;
-      const ubs = feat.properties?.nome_bairro;
-      if (name && !setNames.has(name)) {
-        setNames.add(name);
-        list.push({ nome: name, parentUbs: ubs || '' });
-      }
-    });
-    return list.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
-
-  const schoolsList = React.useMemo(() => {
-    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
 
   const filteredUbs = React.useMemo(() => {
     return ubsList.filter(u =>
@@ -229,68 +206,21 @@ export default function ExpertView() {
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-  const hudMetrics = React.useMemo(() => {
-    let avaliados = 0;
-    let subUnitLabel = "UBS monitoradas";
-    let subUnitValue = String(ubsList.length);
-
-    if (analysisLevel === 'escola' && selectedSchoolName) {
-      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      subUnitLabel = "Tipo de Escola";
-      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
-      subUnitValue = schoolInfo?.categoria || "Educação";
-    } else if (analysisLevel === 'bairro' && selectedBairroName) {
-      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
-      subUnitLabel = "Escolas no bairro";
-      subUnitValue = String(schoolCount);
-    } else if (analysisLevel === 'ubs' && selectedUbs) {
-      let ubsTotal = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
-          ubsTotal += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = ubsTotal || regionalData[cleanYear]?.[selectedUbs]?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
-      subUnitLabel = "Escolas na região";
-      subUnitValue = String(schoolCount);
-    } else {
-      let totalSchoolAvaliados = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.anos?.[cleanYear]?.total_avaliados) {
-          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = totalSchoolAvaliados || 0;
-      subUnitLabel = "UBS monitoradas";
-      subUnitValue = String(ubsList.length);
-    }
-
-    const formatPct = (val: number) => {
-      if (val === undefined || val === null || isNaN(val)) return 'N/D';
-      return `${val.toFixed(2)}%`;
-    };
-
-    const formatAval = (val: number) => {
-      if (isPrevisao) return 'Projetado';
-      if (!val) return 'N/D';
-      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
-    };
-
-    return {
-      avgObs: formatPct(scopeMetrics.obesidade),
-      avgMag: formatPct(scopeMetrics.magreza),
-      avgDes: formatPct(scopeMetrics.desnutricao),
-      avgSob: formatPct(scopeMetrics.sobrepeso),
-      avgEut: formatPct(scopeMetrics.eutrofia),
-      evaluatedStr: formatAval(avaliados),
-      subUnitLabel,
-      subUnitValue
-    };
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, scopeMetrics, regionalData, schoolMetrics, ubsList, schoolsList, bairroMetrics, isPrevisao]);
+  const hudMetrics = useHudMetrics({
+    analysisLevel,
+    selectedSchoolName,
+    selectedBairroName,
+    selectedUbs,
+    anoSelecionado,
+    cleanYear,
+    scopeMetrics,
+    regionalData,
+    schoolMetrics,
+    bairroMetrics,
+    ubsList,
+    schoolsList,
+    isPrevisao
+  });
 
   // Helper to get parent UBS for a neighborhood
   const getParentUbsForBairroName = React.useCallback((bName: string | null): string | null => {
@@ -340,7 +270,7 @@ export default function ExpertView() {
   // Dynamic header title based on current selection level
   const displayTitle = React.useMemo(() => {
     if (analysisLevel === 'municipio') {
-      return 'Mapa de Risco';
+      return 'MAPA DE RISCO';
     }
     if (analysisLevel === 'ubs' && selectedUbs) {
       return `${selectedUbs}`;
@@ -351,7 +281,7 @@ export default function ExpertView() {
     if (analysisLevel === 'escola' && selectedSchoolName) {
       return `${selectedSchoolName}`;
     }
-    return 'Mapa de Risco';
+    return 'MAPA DE RISCO';
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName]);
 
   // Configuração baseada no indicador selecionado
@@ -405,92 +335,67 @@ export default function ExpertView() {
   const baseRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === baseYear) || dadosAno;
   const targetRecord = activeTemporalData.find(d => d.ano.replace('★', '').trim() === targetYear) || dadosProj;
 
-  // Mapeamento de candidatos para busca de extremos no modo Global
-  const candidateIndicators = [
-    {
-      id: 'desnutricao',
-      label: 'Desnutrição',
-      value: Number(dadosAno.desnutricao.toFixed(2)),
-      proj: Number(dadosProj.desnutricao.toFixed(2)),
-      base: Number(baseRecord.desnutricao.toFixed(2)),
-      target: Number(targetRecord.desnutricao.toFixed(2)),
-      color: 'text-blue-600 dark:text-blue-400',
-      bg: 'bg-blue-50/50 dark:bg-blue-955/20',
-      border: 'border-blue-100 dark:border-blue-900/40',
-      bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
-    },
-    {
-      id: 'magreza',
-      label: 'Magreza',
-      value: Number(dadosAno.magreza.toFixed(2)),
-      proj: Number(dadosProj.magreza.toFixed(2)),
-      base: Number((baseRecord.magreza || 0).toFixed(2)),
-      target: Number((targetRecord.magreza || 0).toFixed(2)),
-      color: 'text-sky-600 dark:text-sky-400',
-      bg: 'bg-sky-50/50 dark:bg-sky-955/20',
-      border: 'border-sky-100 dark:border-sky-900/40',
-      bullet: 'bg-sky-550 shadow-[0_0_8px_rgba(56,189,248,0.5)]'
-    },
-    {
-      id: 'sobrepeso',
-      label: 'Sobrepeso',
-      value: Number(dadosAno.sobrepeso.toFixed(2)),
-      proj: Number(dadosProj.sobrepeso.toFixed(2)),
-      base: Number((baseRecord.sobrepeso || 0).toFixed(2)),
-      target: Number((targetRecord.sobrepeso || 0).toFixed(2)),
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-50/50 dark:bg-amber-955/20',
-      border: 'border-amber-100 dark:border-amber-900/40',
-      bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
-    },
-    {
-      id: 'obesidade',
-      label: 'Obesidade',
-      value: Number(dadosAno.obesidade.toFixed(2)),
-      proj: Number(dadosProj.obesidade.toFixed(2)),
-      base: Number(baseRecord.obesidade.toFixed(2)),
-      target: Number(targetRecord.obesidade.toFixed(2)),
-      color: 'text-rose-600 dark:text-rose-455',
-      bg: 'bg-rose-50/50 dark:bg-rose-955/20',
-      border: 'border-rose-100 dark:border-rose-900/40',
-      bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
-    }
-  ];
+  // Mapeamento de candidatos para busca de extremos no modo Global (Otimizado com useMemo)
+  const { candidateIndicators, sortedCandidates } = React.useMemo(() => {
+    const indicators = [
+      {
+        id: 'desnutricao',
+        label: 'Desnutrição',
+        value: Number(dadosAno.desnutricao.toFixed(2)),
+        proj: Number(dadosProj.desnutricao.toFixed(2)),
+        base: Number(baseRecord.desnutricao.toFixed(2)),
+        target: Number(targetRecord.desnutricao.toFixed(2)),
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50/50 dark:bg-blue-955/20',
+        border: 'border-blue-100 dark:border-blue-900/40',
+        bullet: 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+      },
+      {
+        id: 'magreza',
+        label: 'Magreza',
+        value: Number(dadosAno.magreza.toFixed(2)),
+        proj: Number(dadosProj.magreza.toFixed(2)),
+        base: Number((baseRecord.magreza || 0).toFixed(2)),
+        target: Number((targetRecord.magreza || 0).toFixed(2)),
+        color: 'text-sky-600 dark:text-sky-400',
+        bg: 'bg-sky-50/50 dark:bg-sky-955/20',
+        border: 'border-sky-100 dark:border-sky-900/40',
+        bullet: 'bg-sky-550 shadow-[0_0_8px_rgba(56,189,248,0.5)]'
+      },
+      {
+        id: 'sobrepeso',
+        label: 'Sobrepeso',
+        value: Number(dadosAno.sobrepeso.toFixed(2)),
+        proj: Number(dadosProj.sobrepeso.toFixed(2)),
+        base: Number((baseRecord.sobrepeso || 0).toFixed(2)),
+        target: Number((targetRecord.sobrepeso || 0).toFixed(2)),
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50/50 dark:bg-amber-955/20',
+        border: 'border-amber-100 dark:border-amber-900/40',
+        bullet: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+      },
+      {
+        id: 'obesidade',
+        label: 'Obesidade',
+        value: Number(dadosAno.obesidade.toFixed(2)),
+        proj: Number(dadosProj.obesidade.toFixed(2)),
+        base: Number(baseRecord.obesidade.toFixed(2)),
+        target: Number(targetRecord.obesidade.toFixed(2)),
+        color: 'text-rose-600 dark:text-rose-455',
+        bg: 'bg-rose-50/50 dark:bg-rose-955/20',
+        border: 'border-rose-100 dark:border-rose-900/40',
+        bullet: 'bg-rose-550 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+      }
+    ];
 
-  const getSeverityLevel = (value: number, indicator: string) => {
-    if (indicator === 'desnutricao') {
-      if (value < 1.5) return 0;
-      if (value < 2.5) return 1;
-      if (value < 3.5) return 2;
-      if (value < 4.5) return 3;
-      return 4;
-    } else if (indicator === 'magreza') {
-      if (value < 12) return 0;
-      if (value < 15) return 1;
-      if (value < 18) return 2;
-      if (value < 21) return 3;
-      return 4;
-    } else if (indicator === 'sobrepeso') {
-      if (value < 12) return 0;
-      if (value < 15) return 1;
-      if (value < 18) return 2;
-      if (value < 21) return 3;
-      return 4;
-    } else {
-      // Obesidade
-      if (value < 7) return 0;
-      if (value < 10) return 1;
-      if (value < 13) return 2;
-      if (value < 16) return 3;
-      return 4;
-    }
-  };
+    const sorted = [...indicators].sort((a, b) => {
+      const lvlA = getSeverityLevel(a.value, a.id);
+      const lvlB = getSeverityLevel(b.value, b.id);
+      return lvlB - lvlA || b.value - a.value;
+    });
 
-  const sortedCandidates = [...candidateIndicators].sort((a, b) => {
-    const lvlA = getSeverityLevel(a.value, a.id);
-    const lvlB = getSeverityLevel(b.value, b.id);
-    return lvlB - lvlA || b.value - a.value;
-  });
+    return { candidateIndicators: indicators, sortedCandidates: sorted };
+  }, [dadosAno, dadosProj, baseRecord, targetRecord]);
 
   const isGlobal = indicador === 'global';
 
@@ -588,31 +493,33 @@ export default function ExpertView() {
   const delta = (mainProj - mainValue).toFixed(2);
   const isAlta = Number(delta) > 0;
 
-  // Compute dynamic ranking from loaded regional data
-  const currentYearRegions = regionalData && regionalData[cleanYear] 
-    ? Object.values(regionalData[cleanYear]) 
-    : [];
+  // Compute dynamic ranking from loaded regional data (Otimizado com useMemo)
+  const dynamicRanking = React.useMemo(() => {
+    const currentYearRegions = regionalData && regionalData[cleanYear] 
+      ? Object.values(regionalData[cleanYear]) 
+      : [];
 
-  const dynamicRanking = currentYearRegions.length > 0
-    ? currentYearRegions
-        .map((reg: any) => {
-          const deltaVal = isObs 
-            ? reg.delta_obesidade 
-            : isDes
-              ? reg.delta_desnutricao
-              : isMag
-                ? reg.delta_magreza || 0
-                : isSob
-                  ? reg.delta_sobrepeso || 0
-                  : reg.delta_eutrofia || 0;
-          return {
-            name: reg.nome.replace('UBS ', '').replace('USF ', ''),
-            delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
-          };
-        })
-        .sort((a, b) => b.delta - a.delta)
-        .slice(0, 5)
-    : [];
+    return currentYearRegions.length > 0
+      ? currentYearRegions
+          .map((reg: any) => {
+            const deltaVal = isObs 
+              ? reg.delta_obesidade 
+              : isDes
+                ? reg.delta_desnutricao
+                : isMag
+                  ? reg.delta_magreza || 0
+                  : isSob
+                    ? reg.delta_sobrepeso || 0
+                    : reg.delta_eutrofia || 0;
+            return {
+              name: reg.nome.replace('UBS ', '').replace('USF ', ''),
+              delta: typeof deltaVal === 'number' ? Number((deltaVal).toFixed(2)) : 0
+            };
+          })
+          .sort((a, b) => b.delta - a.delta)
+          .slice(0, 5)
+      : [];
+  }, [regionalData, cleanYear, isObs, isDes, isMag, isSob]);
 
   const sumAvaliados = React.useMemo(() => {
     let totalSchoolAvaliados = 0;
@@ -678,7 +585,10 @@ export default function ExpertView() {
         <div className="flex items-center gap-4">
           {displayTitle && (
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight">{displayTitle}</h2>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-[#f5f5f7] tracking-tight flex items-center gap-2">
+                <Activity className="w-4 h-4 text-teal-500 shrink-0" />
+                <span>{displayTitle}</span>
+              </h2>
               <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-bold mt-1">
                 Visualização espacial e preditiva da prevalência de indicadores nutricionais por sub-região · Nutri for Schools {anoSelecionado}
               </p>
@@ -844,7 +754,8 @@ export default function ExpertView() {
                   }}
                   onFocus={() => setIsSearchOpen(true)}
                   placeholder="Pesquisar região, UBS ou escola..."
-                  className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 pr-12 py-2.5 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-lg backdrop-blur-sm cursor-text"
+                  style={{ paddingRight: '52px' }}
+                  className="w-full bg-white/95 dark:bg-[#1c1c1e]/95 border border-slate-200 dark:border-[#2c2c2e] rounded-xl pl-3.5 py-2.5 text-xs font-semibold text-slate-800 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-650 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-lg backdrop-blur-sm cursor-text"
                 />
 
                 {searchQuery ? (
@@ -854,7 +765,7 @@ export default function ExpertView() {
                       setIsSearchOpen(false);
                       setSelection('municipio', null, null, null);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center animate-in fade-in duration-200 z-10"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -992,7 +903,7 @@ export default function ExpertView() {
             className={`absolute top-4 right-4 z-[1000] p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-center shadow-lg ${
               isLayersOpen
                 ? 'bg-teal-600 border-teal-500 text-white shadow-teal-500/10'
-                : 'bg-white/95 dark:bg-[#1c1c1e]/95 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/80'
+                : 'bg-white/95 dark:bg-[#1c1c1e]/95 border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-[#f5f5f7] hover:bg-slate-55 dark:hover:bg-zinc-800/80'
             }`}
             title="Ver Camadas e Detalhes"
           >
@@ -1007,7 +918,7 @@ export default function ExpertView() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className="absolute top-4 right-4 bottom-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-4 space-y-4 overflow-y-auto shrink-0 scrollbar-thin"
+                className="absolute top-16 right-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-3.5 space-y-3 max-h-[calc(100%-80px)] overflow-y-auto shrink-0 scrollbar-thin"
               >
                 {/* Header do Painel */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-900/60 pb-2">
@@ -1033,7 +944,7 @@ export default function ExpertView() {
                         key={id}
                         disabled={isUbs}
                         onClick={() => !isUbs && togglePoi(id)}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[10px] font-semibold transition-all border border-solid ${
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all border border-solid ${
                           isActive
                             ? 'bg-white dark:bg-zinc-800/60 border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-[#f5f5f7] shadow-sm font-extrabold'
                             : 'bg-transparent border-transparent text-slate-500 dark:text-zinc-450 hover:bg-slate-50 dark:hover:bg-zinc-900/30 hover:text-slate-700 dark:hover:text-zinc-300'
@@ -1059,7 +970,7 @@ export default function ExpertView() {
                 {/* Detalhes do Ponto Selecionado */}
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-555 uppercase tracking-widest leading-none mb-3 block">Detalhes do Ponto</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-555 uppercase tracking-widest leading-none mb-2.5 block">Detalhes do Ponto</span>
                     
                     {selectedPoi ? (
                       <div className="bg-white dark:bg-zinc-900/35 border border-slate-200/60 dark:border-zinc-800/55 rounded-xl p-3 space-y-2.5 text-slate-800 dark:text-zinc-200 animate-in fade-in duration-200">
@@ -1070,7 +981,7 @@ export default function ExpertView() {
                             </h4>
                             <button
                               onClick={() => setSelectedPoi(null)}
-                              className="text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+                              className="text-slate-400 dark:text-zinc-550 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -1081,23 +992,23 @@ export default function ExpertView() {
                             <span className="text-[9px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-wider">{selectedPoi.categoria}</span>
                           </div>
 
-                          <p className="text-[10px] text-slate-400 dark:text-zinc-450 leading-normal">
+                          <p className="text-[10px] text-slate-400 dark:text-zinc-455 leading-normal">
                             Ponto de interesse integrado via geoprocessamento. Pronto para análise pelo modelo preditivo de IA e intervenção no território.
                           </p>
                         </div>
 
-                        <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
-                          <button className="flex-1 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[9px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer">
-                            Mais Info
-                          </button>
-                          <button className="flex-1 hover:bg-teal-700 text-[9px] text-white font-bold py-1.5 rounded-md transition-colors bg-teal-600 cursor-pointer">
-                            Simular
+                        <div className="pt-2.5 border-t border-slate-100 dark:border-zinc-900/60 mt-1">
+                          <button
+                            onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(`${selectedPoi.nome} Rio Claro`)}`, '_blank')}
+                            className="w-full bg-slate-55 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-[10px] text-slate-700 dark:text-zinc-200 font-bold py-1.5 rounded-md border border-slate-200/80 dark:border-zinc-700 transition-colors cursor-pointer text-center"
+                          >
+                            Mais Informações
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-4 flex flex-col items-center justify-center text-center text-[10px] text-slate-400 dark:text-zinc-500 transition-all duration-300 min-h-[140px]">
-                        <div className="mb-2 text-slate-400 dark:text-zinc-500 flex justify-center"><MapPin className="w-5 h-5" /></div>
+                      <div className="border border-dashed border-slate-200 dark:border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center text-[9.5px] text-slate-400 dark:text-zinc-555 transition-all duration-300 min-h-[95px]">
+                        <div className="mb-1 text-slate-400 dark:text-zinc-555 flex justify-center"><MapPin className="w-4.5 h-4.5" /></div>
                         <p className="leading-normal">Selecione um ponto ou UBS no mapa para carregar detalhes...</p>
                       </div>
                     )}
@@ -1120,7 +1031,7 @@ export default function ExpertView() {
                 </h3>
                 <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-600 dark:hover:text-[#f5f5f7] shrink-0">
                   <Info className="w-3.5 h-3.5" />
-                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-48 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
                     Proporção percentual ponderada do estado nutricional dos indivíduos monitorados nesta localidade.
                   </div>
                 </div>
@@ -1135,11 +1046,11 @@ export default function ExpertView() {
                   <PieChart>
                     <Pie
                       data={[
+                        { name: 'Desnutrição', value: desnutricaoAvg, fill: '#3b82f6' },
+                        { name: 'Magreza', value: magrezaAvg, fill: '#38bdf8' },
                         { name: 'Peso Adequado', value: eutrofiaAvg, fill: '#10b981' },
                         { name: 'Sobrepeso', value: sobrepesoAvg, fill: '#f59e0b' },
-                        { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' },
-                        { name: 'Magreza', value: magrezaAvg, fill: '#38bdf8' },
-                        { name: 'Desnutrição', value: desnutricaoAvg, fill: '#3b82f6' }
+                        { name: 'Obesidade', value: obesidadeAvg, fill: '#ef4444' }
                       ]}
                       innerRadius="58%"
                       outerRadius="80%"
@@ -1147,7 +1058,17 @@ export default function ExpertView() {
                       dataKey="value"
                       stroke="none"
                       cornerRadius={4}
-                    />
+                    >
+                      {[
+                        { name: 'Desnutrição', fill: '#3b82f6' },
+                        { name: 'Magreza', fill: '#38bdf8' },
+                        { name: 'Peso Adequado', fill: '#10b981' },
+                        { name: 'Sobrepeso', fill: '#f59e0b' },
+                        { name: 'Obesidade', fill: '#ef4444' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
                     <RechartsTooltip
                       contentStyle={{ backgroundColor: darkMode ? '#1c1c1e' : '#ffffff', borderColor: darkMode ? '#2c2c2e' : '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', color: darkMode ? '#f5f5f7' : '#0f172a' }}
                       itemStyle={{ fontWeight: 'bold' }}
@@ -1157,6 +1078,10 @@ export default function ExpertView() {
                       iconType="circle"
                       iconSize={8}
                       wrapperStyle={{ fontSize: '11px', color: darkMode ? '#a1a1aa' : '#475569', paddingTop: '10px', fontWeight: 'bold' }}
+                      itemSorter={(item: any) => {
+                        const order = ['Desnutrição', 'Magreza', 'Peso Adequado', 'Sobrepeso', 'Obesidade'];
+                        return order.indexOf(item.value);
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1177,7 +1102,7 @@ export default function ExpertView() {
                     </h3>
                     <div className="relative group/tooltip inline-block cursor-help text-slate-400 dark:text-zinc-550 hover:text-slate-600 dark:hover:text-[#f5f5f7] shrink-0">
                       <Info className="w-3.5 h-3.5" />
-                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-56 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-50 font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
+                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-56 bg-slate-900 dark:bg-zinc-800 text-white dark:text-[#f5f5f7] text-[10px] p-2.5 rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity z-[1050] font-semibold normal-case tracking-normal leading-relaxed border dark:border-zinc-700 text-center">
                         {isEut 
                           ? 'Ranking das UBSs/Regiões ordenadas pelo maior aumento no percentual de peso adequado no período.'
                           : 'Ranking das UBSs/Regiões ordenadas pelo maior avanço ou aumento na taxa de prevalência de risco nutricional.'}

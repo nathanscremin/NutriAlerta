@@ -54,6 +54,7 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'online' | 'offline'>('online');
   const { selectedBairro, anoSelecionado, indicador } = useAppStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -92,8 +93,14 @@ export default function ChatbotWidget() {
       });
 
       const data = await res.json();
+      if (res.ok && !data.error) {
+        setApiStatus('online');
+      } else {
+        setApiStatus('offline');
+      }
       setMessages(prev => [...prev, { role: 'bot', text: data.response || data.error || 'Sem resposta.' }]);
     } catch {
+      setApiStatus('offline');
       setMessages(prev => [...prev, { role: 'bot', text: 'Erro de conexão com a API.' }]);
     }
 
@@ -142,7 +149,11 @@ export default function ChatbotWidget() {
               </div>
               <div>
                 <h3 className="font-bold text-slate-800 dark:text-[#f5f5f7] text-sm">NutriBot Guia</h3>
-                <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
+                {apiStatus === 'online' ? (
+                  <p className="text-[10px] text-teal-600 dark:text-teal-500 font-bold">Online</p>
+                ) : (
+                  <p className="text-[10px] text-rose-500 dark:text-rose-450 font-bold">Conexão Instável</p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-1">

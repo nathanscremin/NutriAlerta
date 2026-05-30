@@ -28,11 +28,11 @@ interface CompareTooltipProps {
 // ─── Configuração dos indicadores ────────────────────────────────────────────
 
 const INDICATORS = [
-  { id: 'eutrofia',    label: 'Peso Adequado', short: 'Eut.',   key: 'eut', color: '#0d9488', tailwind: 'teal' },
-  { id: 'magreza',     label: 'Magreza',       short: 'Mag.',   key: 'mag', color: '#38bdf8', tailwind: 'sky' },
-  { id: 'obesidade',   label: 'Obesidade',      short: 'Obes.',  key: 'obs', color: '#f43f5e', tailwind: 'rose' },
-  { id: 'sobrepeso',   label: 'Sobrepeso',       short: 'Sob.',   key: 'sob', color: '#f59e0b', tailwind: 'amber' },
   { id: 'desnutricao', label: 'Desnutrição',     short: 'Desn.',  key: 'des', color: '#3b82f6', tailwind: 'blue' },
+  { id: 'magreza',     label: 'Magreza',       short: 'Mag.',   key: 'mag', color: '#38bdf8', tailwind: 'sky' },
+  { id: 'eutrofia',    label: 'Peso Adequado', short: 'Eut.',   key: 'eut', color: '#0d9488', tailwind: 'teal' },
+  { id: 'sobrepeso',   label: 'Sobrepeso',       short: 'Sob.',   key: 'sob', color: '#f59e0b', tailwind: 'amber' },
+  { id: 'obesidade',   label: 'Obesidade',      short: 'Obes.',  key: 'obs', color: '#f43f5e', tailwind: 'rose' },
 ] as const;
 
 const INDICATOR_STYLES: Record<string, { bar: string; text: string; bg: string; border: string; glow: string }> = {
@@ -137,17 +137,16 @@ function AnimatedBar({ value, maxValue, colorClass }: { value: number; maxValue:
   );
 }
 
-function DeltaBadge({ delta, lowerIsBetter = false }: { delta: number; lowerIsBetter?: boolean }) {
-  const isGood = lowerIsBetter ? delta < 0 : delta > 0;
+function DeltaBadge({ delta, isRuim = false }: { delta: number; isRuim?: boolean }) {
+  const isAscending = delta > 0;
   const abs = Math.abs(delta);
-  if (abs < 0.05) return (
-    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-slate-400 dark:text-zinc-500">
-      <Minus className="w-2.5 h-2.5" /> {abs.toFixed(1)}pp
-    </span>
-  );
+  const colorClass = isRuim
+    ? (isAscending ? 'text-rose-500 dark:text-rose-400' : 'text-teal-600 dark:text-teal-400')
+    : (isAscending ? 'text-teal-600 dark:text-teal-400' : 'text-rose-500 dark:text-rose-400');
+
   return (
-    <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold ${isGood ? 'text-teal-600 dark:text-teal-400' : 'text-rose-500 dark:text-rose-400'}`}>
-      {isGood ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+    <span className={`inline-flex items-center gap-0.5 text-[11px] font-extrabold ${colorClass}`}>
+      {isAscending ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
       {abs.toFixed(1)}pp
     </span>
   );
@@ -187,9 +186,9 @@ function MetricRow({
       </div>
 
       {/* Label Central */}
-      <div className="text-center min-w-[72px]">
-        <p className="text-[9px] font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 leading-tight">{label}</p>
-        <DeltaBadge delta={delta} lowerIsBetter={lowerIsBetter} />
+      <div className="text-center min-w-[200px] flex flex-col items-center justify-center gap-0.5">
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-505 dark:text-zinc-400 leading-tight">{label}</p>
+        <DeltaBadge delta={delta} isRuim={lowerIsBetter} />
       </div>
 
       {/* Side B */}
@@ -265,10 +264,16 @@ export default function UbsComparisonSection() {
     }
   }, [selectedBairro, ubsList]);
 
-  const activeIndicator = useMemo(() => {
-    if (['desnutricao', 'magreza', 'eutrofia', 'sobrepeso', 'obesidade'].includes(indicador)) return indicador as 'desnutricao' | 'magreza' | 'eutrofia' | 'sobrepeso' | 'obesidade';
-    return 'obesidade';
+  const [localIndicator, setLocalIndicator] = useState<'desnutricao' | 'magreza' | 'eutrofia' | 'sobrepeso' | 'obesidade'>('obesidade');
+  const [isIndSelectorOpen, setIsIndSelectorOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (['desnutricao', 'magreza', 'eutrofia', 'sobrepeso', 'obesidade'].includes(indicador)) {
+      setLocalIndicator(indicador as 'desnutricao' | 'magreza' | 'eutrofia' | 'sobrepeso' | 'obesidade');
+    }
   }, [indicador]);
+
+  const activeIndicator = localIndicator;
 
   const activeIndConfig = useMemo(() => INDICATORS.find(i => i.id === activeIndicator) ?? INDICATORS[1], [activeIndicator]);
 
@@ -324,12 +329,7 @@ export default function UbsComparisonSection() {
 
   const hasSelection = ubsA !== null && ubsB !== null;
 
-  // Valor principal do indicador ativo para o placar central
-  const activeKeyMap = { obesidade: 'obs', magreza: 'mag', desnutricao: 'des', sobrepeso: 'sob', eutrofia: 'eut' } as const;
-  const activeKey = activeKeyMap[activeIndicator];
-  const valA = statsA ? statsA[activeKey] : 0;
-  const valB = statsB ? statsB[activeKey] : 0;
-  const diff = Math.abs(valA - valB);
+
 
   // A comparação global do estado nutricional da UBS é baseada em quem tem a maior taxa de Peso Adequado (eutrofia)
   const eutA = statsA ? statsA.eut : 0;
@@ -351,8 +351,46 @@ export default function UbsComparisonSection() {
           </p>
         </div>
 
-        {/* Seletor de Ano Customizado */}
+        {/* Seletores de Ano e Indicador Customizados */}
         <div className="flex items-center gap-3">
+          {/* Seletor do Indicador Ativo */}
+          <div className="relative">
+            <button
+              onClick={() => setIsIndSelectorOpen(!isIndSelectorOpen)}
+              className="flex items-center gap-2 bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 focus:outline-none focus:ring-0 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-[#f5f5f7] hover:bg-slate-50 dark:hover:bg-zinc-800/60 shadow-sm cursor-pointer"
+            >
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: activeIndConfig.color }} />
+              <span>{activeIndConfig.label}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            </button>
+
+            {isIndSelectorOpen && (
+              <>
+                <div className="fixed inset-0 z-[1000]" onClick={() => setIsIndSelectorOpen(false)} />
+                <div className="absolute right-0 mt-1.5 w-44 max-h-52 overflow-y-auto bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-zinc-800 rounded-xl shadow-xl z-[1001] scrollbar-thin divide-y divide-slate-100 dark:divide-zinc-900/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {INDICATORS.map((ind) => (
+                    <button
+                      key={ind.id}
+                      onClick={() => {
+                        setLocalIndicator(ind.id);
+                        setIsIndSelectorOpen(false);
+                      }}
+                      className={`w-full px-3.5 py-2.5 text-xs font-bold text-left transition-colors border-none bg-transparent cursor-pointer flex items-center gap-2 ${
+                        localIndicator === ind.id
+                          ? 'bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400 font-extrabold'
+                          : 'text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-900/40'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ind.color }} />
+                      <span>{ind.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Seletor de Ano Customizado */}
           <div className="relative">
             <button
               onClick={() => setIsYearOpen(!isYearOpen)}
@@ -427,7 +465,6 @@ export default function UbsComparisonSection() {
         />
       </div>
 
-      {/* ── Placar central e gráficos condicionados à seleção ── */}
       {!hasSelection ? (
         <div className="rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800/80 bg-white/40 dark:bg-zinc-955/5 p-12 text-center flex flex-col items-center justify-center gap-4 transition-all duration-300">
           <div className="w-14 h-14 rounded-full bg-slate-50 dark:bg-zinc-900/60 flex items-center justify-center text-slate-400 dark:text-zinc-550 shadow-inner">
@@ -442,61 +479,6 @@ export default function UbsComparisonSection() {
         </div>
       ) : (
         <>
-          {/* ── Placar central do indicador ativo ── */}
-          <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 overflow-hidden bg-white dark:bg-[#111116] animate-in fade-in duration-300">
-            {/* Barra de cor do indicador */}
-            <div className="h-1 w-full" style={{ background: activeIndConfig.color }} />
-
-            <div className="grid grid-cols-[1fr_auto_1fr]">
-              {/* Painel A */}
-              <div className={`p-5 flex flex-col items-center gap-2 border-r border-slate-100 dark:border-zinc-800/50 ${aLeads ? 'bg-teal-50/40 dark:bg-teal-950/10' : ''}`}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
-                </span>
-                <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
-                  {valA.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-550">%</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {statsA?.total || 0} alunos
-                </span>
-                {aLeads && (
-                  <span className="text-[9px] font-black text-teal-600 dark:text-teal-400 bg-teal-55/35 border border-teal-200/50 dark:border-teal-800/40 px-2 py-0.5 rounded-full mt-1">
-                    Melhor Estado Geral
-                  </span>
-                )}
-              </div>
-
-              {/* Centro: diferença */}
-              <div className="px-4 py-5 flex flex-col items-center justify-center gap-1 min-w-[80px]">
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Δ Diferença</p>
-                <span className="text-xl font-black font-mono" style={{ color: activeIndConfig.color }}>
-                  {diff.toFixed(1)}<span className="text-xs">pp</span>
-                </span>
-                <p className="text-[8px] text-center font-bold text-slate-400 dark:text-zinc-600 leading-tight">
-                  {activeIndConfig.label}
-                </p>
-              </div>
-
-              {/* Painel B */}
-              <div className={`p-5 flex flex-col items-center gap-2 border-l border-slate-100 dark:border-zinc-800/50 ${!aLeads ? 'bg-indigo-50/40 dark:bg-indigo-950/10' : ''}`}>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" /> Unidade B
-                </span>
-                <span className="text-4xl font-black text-slate-800 dark:text-zinc-100 font-mono leading-none">
-                  {valB.toFixed(1)}<span className="text-lg font-bold text-slate-400 dark:text-zinc-550">%</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500 flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {statsB?.total || 0} alunos
-                </span>
-                {!aLeads && (
-                  <span className="text-[9px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-55/35 border border-indigo-200/50 dark:border-indigo-800/40 px-2 py-0.5 rounded-full mt-1">
-                    Melhor Estado Geral
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* ── Comparação linha a linha de todos os indicadores ── */}
           <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 space-y-4 animate-in fade-in duration-300">
             {/* Cabeçalho das colunas */}
@@ -504,7 +486,25 @@ export default function UbsComparisonSection() {
               <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Indicador</span>
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-1.5 min-w-[200px]">
+                <div className="flex items-center justify-end">
+                  {aLeads ? (
+                    <span className="text-[9.5px] font-black text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md leading-none flex items-center gap-0.5 shadow-sm">
+                      ★ <span className="translate-y-[0.5px]">Melhor</span>
+                    </span>
+                  ) : <span />}
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center px-2 leading-none">
+                  Indicador
+                </span>
+                <div className="flex items-center justify-start">
+                  {!aLeads ? (
+                    <span className="text-[9.5px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md leading-none flex items-center gap-0.5 shadow-sm">
+                      <span className="translate-y-[0.5px]">Melhor</span> ★
+                    </span>
+                  ) : <span />}
+                </div>
+              </div>
               <span className="text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 justify-end">
                 Unidade B <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block" />
               </span>
@@ -527,32 +527,45 @@ export default function UbsComparisonSection() {
             })}
 
             {/* Linha separadora com dados de alunos */}
-            {statsA && statsB && (
-              <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
-                  <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{statsA.total}</span>
+            {statsA && statsB && (() => {
+              const totalA = statsA.total;
+              const totalB = statsB.total;
+              const diffPct = totalB > 0 ? ((totalA - totalB) / totalB) * 100 : 0;
+              const diffPctString = diffPct > 0 ? `+${diffPct.toFixed(1)}%` : `${diffPct.toFixed(1)}%`;
+              const diffPctColor = diffPct >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-500 dark:text-rose-400';
+              return (
+                <div className="pt-3 border-t border-slate-100 dark:border-zinc-800/50 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados (A)</span>
+                    <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{totalA}</span>
+                  </div>
+                  <div className="text-center min-w-[200px]">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 leading-none">Diferença de Alunos (A vs B)</p>
+                    <span className={`text-xs font-black font-mono ${diffPctColor}`}>
+                      {diffPctString}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 items-end">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados (B)</span>
+                    <span className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">{totalB}</span>
+                  </div>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 text-center min-w-[72px]">Total Alunos</span>
-                <div className="flex flex-col gap-0.5 items-end">
-                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados</span>
-                  <span className="text-base font-black text-indigo-600 dark:text-indigo-400 font-mono">{statsB.total}</span>
-                </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* ── Gráfico temporal ── */}
           <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/60 bg-white dark:bg-[#111116] p-5 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
               <div>
-                <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-wider">
+                <h4 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider">
                   Evolução Histórica · {activeIndConfig.label}
                 </h4>
                 <p className="text-[9px] text-slate-400 dark:text-zinc-600 font-semibold mt-0.5">
                   2010–2025 · Projeções <span className="text-amber-500">★</span> 2026–2027
                 </p>
               </div>
+              
               <div className="flex items-center gap-4 text-[10px] font-bold">
                 <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400">
                   <span className="w-5 h-[3px] bg-teal-500 rounded-full inline-block" /> Unidade A

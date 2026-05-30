@@ -245,7 +245,7 @@ def upsert_previsoes_supabase(df, tipo_projecao):
     """Faz upsert do DataFrame na tabela previsoes_nutricionais do Supabase.
 
     Usa requests puro via REST API, seguindo o mesmo padrão de supabase_data.py.
-    A chave de conflito esperada na tabela é (cnes, ano, faixa_etaria_cod, tipo_projecao).
+    A chave de conflito esperada na tabela é (cnes, ano, faixa_etaria_cod, status, tipo_projecao).
     'tipo_projecao' diferencia as duas projeções ('obesidade' | 'desnutricao') na mesma tabela.
     """
     BATCH_SIZE = 500
@@ -291,9 +291,9 @@ def upsert_previsoes_supabase(df, tipo_projecao):
             print(f"[ERRO] Upsert lote {i // BATCH_SIZE + 1} ({tipo_projecao}): {e}")
 
     if erros == 0:
-        print(f"[OK] Upsert '{tipo_projecao}': {total} registros gravados em previsoes_nutricionais no Supabase.")
+        print(f"[OK] Upsert '{tipo_projecao}': {total} registros gravados em previsoes_nutricionais.")
     else:
-        print(f"[AVISO] Upsert '{tipo_projecao}': {total} registros processados, {erros} lote(s) com erro.")
+        print(f"[AVISO] Upsert '{tipo_projecao}': {total} registros, {erros} lote(s) com erro.")
 
 
 def run_pipeline(df_master=None):
@@ -348,18 +348,7 @@ def run_pipeline(df_master=None):
     df_final_futura['Delta_Predito'] = df_final_futura.get('Delta_Predito_Obesidade', 0.0)
     df_final_futura['Delta_Obesidade'] = df_final_futura['Delta_Predito_Obesidade']
 
-    # 1. Gravação dos arquivos locais para contingência offline do dashboard
-    caminho_obesidade = obter_caminho_salvamento('NutriAlerta_Projecao_Futura.csv')
-    caminho_obesidade_2 = obter_caminho_salvamento('NutriAlerta_Projecao_Futura-2.csv')
-    df_final_futura.to_csv(caminho_obesidade, index=False)
-    df_final_futura.to_csv(caminho_obesidade_2, index=False)
-
-    # 2. Upsert na tabela do Supabase em nuvem
-    try:
-        print("[Supabase Cloud Sync] Iniciando upsert das projeções de Obesidade...")
-        upsert_previsoes_supabase(df_final_futura, tipo_projecao='obesidade')
-    except Exception as e:
-        print(f"[ERRO Supabase Sync] Falha no upsert de obesidade: {e}")
+    upsert_previsoes_supabase(df_final_futura, tipo_projecao='obesidade')
 
     df_final_desnutricao = df_consolidado.copy()
     df_final_desnutricao['Magreza_Acentuada_Pct'] = df_final_desnutricao['Tendencia_Desnutricao']
@@ -374,18 +363,9 @@ def run_pipeline(df_master=None):
     df_final_desnutricao['Delta_Predito'] = df_final_desnutricao['Delta_Predito_Desnutricao']
     df_final_desnutricao['Delta_Desnutricao'] = df_final_desnutricao['Delta_Predito_Desnutricao']
 
-    # 1. Gravação dos arquivos locais para contingência offline do dashboard
-    caminho_desnutricao = obter_caminho_salvamento('NutriAlerta_Projecao_Desnutricao.csv')
-    df_final_desnutricao.to_csv(caminho_desnutricao, index=False)
+    upsert_previsoes_supabase(df_final_desnutricao, tipo_projecao='desnutricao')
 
-    # 2. Upsert na tabela do Supabase em nuvem
-    try:
-        print("[Supabase Cloud Sync] Iniciando upsert das projeções de Desnutrição...")
-        upsert_previsoes_supabase(df_final_desnutricao, tipo_projecao='desnutricao')
-    except Exception as e:
-        print(f"[ERRO Supabase Sync] Falha no upsert de desnutrição: {e}")
-
-    print(f'[OK] Arquivos locais gravados e sincronização em nuvem com Supabase realizada com sucesso!')
+    print('[OK] Upsert concluído para projeções de obesidade e desnutricao no Supabase.')
     return df_consolidado
 
 

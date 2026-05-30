@@ -2,35 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
-import { createClient } from '@supabase/supabase-js';
+import { getAdminSupabaseClient } from '@/lib/supabaseAdmin';
 import { kv } from '@vercel/kv';
 
 const CACHE_KEY = 'nutrialerta_data_cache';
 const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
-
-// Isolated thread-safe authenticated admin client to bypass RLS in the cloud database
-async function getAdminSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://peqvaslchaxrewhtxltc.supabase.co';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_knBFAKhSyTfdfRwMYaQGeg_pF5D6w33';
-  
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
-
-  const { data, error } = await client.auth.signInWithPassword({
-    email: 'nutrialerta@gmail.com',
-    password: '#Pangam123@'
-  });
-
-  if (error) {
-    throw new Error(`Auth RLS bypass failed: ${error.message}`);
-  }
-
-  return client;
-}
 
 // UBS CNES mapping from sync_db_data.js
 const UBS_CNES: Record<string, string> = {
@@ -46,7 +22,7 @@ const UBS_CNES: Record<string, string> = {
   "USF Palmeiras I/II “Dr. Gilson Giovanni”": "2033186",
   "USF Jardim Novo I E II “Dr. Dirceu Ferreira Penteado”": "2074214",
   "USF Benjamin de Castro": "7058865",
-  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2055902",
+  "USF Bonsucesso/Novo Wenzel “Célia Aparecida Ceccato da Silva”": "2046903",
   "USF Jardim das Flores “Dr. Moacir Camargo”": "2074419",
   "USF Guanabara “Dr. Celestino Donato”": "2074222",
   "USF Panorama “Dr. Osvaldo Akamine”": "2074346",
@@ -753,6 +729,107 @@ function projectSchoolMetricsForward(schoolMetrics: Record<string, any>, targetY
   return projectedSchoolMetrics;
 }
 
+async function loadSupabasePrevisoes() {
+  try {
+    const adminClient = await getAdminSupabaseClient();
+    const { data: rows, error } = await adminClient
+      .from('previsoes_nutricionais')
+      .select('*');
+
+    if (error) {
+      console.warn('[Supabase Previsoes] Failed to query previsoes_nutricionais:', error.message);
+      return null;
+    }
+
+    if (!rows || rows.length === 0) {
+      console.log('[Supabase Previsoes] Table is empty, fallback to local CSVs');
+      return null;
+    }
+
+    console.log(`[Supabase Previsoes] Loaded ${rows.length} prediction rows from Cloud Database.`);
+
+    const cnesToUbsMap: Record<string, string> = {};
+    Object.entries(UBS_CNES).forEach(([name, cnes]) => {
+      cnesToUbsMap[cnes] = name;
+    });
+
+    const regionalData: Record<string, Record<string, any>> = {};
+
+    const getOrInit = (year: string, ubsName: string, cnes: string) => {
+      regionalData[year] = regionalData[year] || {};
+      if (!regionalData[year][ubsName]) {
+        const ubsGeo = UNIDADES_SAUDE.find(u => u.nome === ubsName);
+        const lat = ubsGeo ? ubsGeo.lat : -22.41;
+        const lon = ubsGeo ? ubsGeo.lon : -47.56;
+
+        regionalData[year][ubsName] = {
+          nome: ubsName,
+          cnes: cnes,
+          lat: lat,
+          lon: lon,
+          ano: Number(year),
+          status: Number(year) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO'
+        };
+      }
+      return regionalData[year][ubsName];
+    };
+
+    rows.forEach((row: any) => {
+      const year = String(row.ano);
+      const ubsName = cnesToUbsMap[row.cnes];
+      if (!ubsName) return;
+
+      const rec = getOrInit(year, ubsName, row.cnes);
+
+      if (row.tipo_projecao === 'obesidade') {
+        rec.obesidade = Number((Number(row.obesidade_pct || 0) + Number(row.obesidade_grave_pct || 0)).toFixed(2));
+        rec.sobrepeso = Number(Number(row.sobrepeso_pct || 0).toFixed(2));
+        rec.eutrofia = Number(Number(row.eutrofia_pct || 58).toFixed(2));
+        rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
+        rec.total_avaliados = rec.total_avaliados || 0;
+      } else if (row.tipo_projecao === 'desnutricao') {
+        rec.desnutricao = Number(Number(row.magreza_acentuada_pct || 2.62).toFixed(2));
+        rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
+      }
+    });
+
+    Object.keys(regionalData).forEach((year) => {
+      Object.keys(regionalData[year]).forEach((ubsName) => {
+        const rec = regionalData[year][ubsName];
+        const normalized = normalizePercentages(
+          {
+            desnutricao: rec.desnutricao ?? 2.62,
+            magreza: rec.magreza ?? 0,
+            obesidade: rec.obesidade ?? 12.93,
+            sobrepeso: rec.sobrepeso ?? 15.2,
+            eutrofia: rec.eutrofia ?? 61.55
+          },
+          ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+        );
+
+        rec.desnutricao = normalized.desnutricao;
+        rec.magreza = normalized.magreza;
+        rec.obesidade = normalized.obesidade;
+        rec.sobrepeso = normalized.sobrepeso;
+        rec.eutrofia = normalized.eutrofia;
+      });
+    });
+
+    attachRegionalDeltaMetrics(regionalData);
+
+    return {
+      regionalData,
+      temporalData: buildTemporalDataFromRegionalData(regionalData),
+      bairroMetrics: {},
+      source: 'supabase-cloud' as const,
+      artifacts: ['previsoes_nutricionais']
+    };
+  } catch (err: any) {
+    console.error('[Supabase Previsoes ERROR]', err);
+    return null;
+  }
+}
+
 async function loadLocalCsvFallback(cwd: string) {
   const obesityPath = await findCSVFile(['NutriAlerta_Projecao_Futura-2.csv', 'NutriAlerta_Projecao_Futura.csv']);
   const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
@@ -891,13 +968,19 @@ export async function GET(req: NextRequest) {
           console.log("[Auto-ML Retrain] Base de dados modificada! Iniciando retreinamento assíncrono do modelo...");
           const modelScriptPath = path.join(cwd, '..', '..', 'models', 'unified_ML.py');
 
-          exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err) => {
-            if (err) {
-              console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
-              return;
-            }
-            console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
-          });
+          fs.access(modelScriptPath)
+            .then(() => {
+              exec(`python "${modelScriptPath}"`, { cwd: path.dirname(modelScriptPath) }, (err) => {
+                if (err) {
+                  console.error("[Auto-ML Retrain ERROR] Falha ao re-treinar o modelo de IA:", err);
+                  return;
+                }
+                console.log("[Auto-ML Retrain SUCCESS] Modelo de IA re-treinado com sucesso em tempo real!");
+              });
+            })
+            .catch(() => {
+              console.warn(`[Auto-ML Retrain WARNING] Script de ML não encontrado em: ${modelScriptPath}. Ignorando retreinamento.`);
+            });
         }
       } catch (statErr) {
         console.error("[Auto-ML Retrain Check ERROR]", statErr);
@@ -959,10 +1042,24 @@ export async function GET(req: NextRequest) {
 
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
 
-        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
-        attachRegionalDeltaMetrics(regionalData);
+        // Carrega prioritariamente as previsões epidemiológicas consolidada da nuvem do Supabase
+        const cloudPredictions = await loadSupabasePrevisoes();
+        if (cloudPredictions) {
+          regionalData = cloudPredictions.regionalData;
+          temporalData = cloudPredictions.temporalData;
+          sourceMeta = {
+            source: 'supabase',
+            fallbackReason: null,
+            artifacts: ['previsoes_nutricionais'],
+            lastUpdated: new Date().toISOString()
+          };
+        } else {
+          regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+          attachRegionalDeltaMetrics(regionalData);
+          temporalData = buildTemporalDataFromRegionalData(regionalData);
+        }
+
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
-        temporalData = buildTemporalDataFromRegionalData(regionalData);
         yearsList = temporalData.map((entry) => entry.ano);
       } else {
         throw new Error('Supabase returned empty school metrics');
@@ -984,7 +1081,23 @@ export async function GET(req: NextRequest) {
         schoolMetrics = {};
       }
 
-      if (Object.keys(schoolMetrics).length > 0) {
+      // Tenta prioritariamente carregar previsões em nuvem mesmo no cenário de contingência de escolas
+      const cloudPredictions = await loadSupabasePrevisoes();
+      if (cloudPredictions) {
+        regionalData = cloudPredictions.regionalData;
+        temporalData = cloudPredictions.temporalData;
+        sourceMeta = {
+          source: 'local-csv',
+          fallbackReason: dbErr?.message || 'School sync failed, using Cloud ML predictions',
+          artifacts: ['previsoes_nutricionais'],
+          lastUpdated: new Date().toISOString()
+        };
+        if (Object.keys(schoolMetrics).length > 0) {
+          schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+        }
+        bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
+        yearsList = temporalData.map((entry) => entry.ano);
+      } else if (Object.keys(schoolMetrics).length > 0) {
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
         regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
         attachRegionalDeltaMetrics(regionalData);

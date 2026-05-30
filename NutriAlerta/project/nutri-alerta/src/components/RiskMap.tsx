@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import { useAppStore } from '@/store/useAppStore';
+import { getSeverityLevel } from '@/lib/nutritionUtils';
+import { TILE_URL_DARK, TILE_URL_LIGHT, RIO_CLARO_CENTER } from '@/lib/mapConfig';
 import { ALL_POIS, getVoronoiGeoJSON, UNIDADES_SAUDE } from '@/lib/mockData';
 import { useMap } from 'react-leaflet';
 
@@ -68,34 +70,7 @@ const getChoroplethColor = (value: number, indicator: string) => {
   }
 };
 
-const getSeverityLevel = (value: number, indicator: string) => {
-  if (indicator === 'desnutricao') {
-    if (value < 1.5) return 0;
-    if (value < 2.5) return 1;
-    if (value < 3.5) return 2;
-    if (value < 4.5) return 3;
-    return 4;
-  } else if (indicator === 'magreza') {
-    if (value < 12) return 0;
-    if (value < 15) return 1;
-    if (value < 18) return 2;
-    if (value < 21) return 3;
-    return 4;
-  } else if (indicator === 'sobrepeso') {
-    if (value < 12) return 0;
-    if (value < 15) return 1;
-    if (value < 18) return 2;
-    if (value < 21) return 3;
-    return 4;
-  } else {
-    // Obesidade
-    if (value < 7) return 0;
-    if (value < 10) return 1;
-    if (value < 13) return 2;
-    if (value < 16) return 3;
-    return 4;
-  }
-};
+
 
 const indicatorLabels = {
   desnutricao: 'Desnutrição',
@@ -193,7 +168,7 @@ function MapController() {
         map.setView([ubsInfo.lat, ubsInfo.lon], 14, { animate: true, duration: 1.2 });
       }
     } else {
-      map.setView([-22.405, -47.555], 13, { animate: true, duration: 1.2 });
+      map.setView(RIO_CLARO_CENTER, 13, { animate: true, duration: 1.2 });
     }
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, map]);
   
@@ -224,8 +199,6 @@ export default function RiskMap() {
     const cleanYear = anoSelecionado.replace('★', '').trim();
     const bMetric = bairroMetrics?.[nomeReal];
     const bYearData = bMetric?.anos?.[cleanYear];
-
-    const safeNumber = (value: any, fallback: number) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 
     let dObs = 12.93;
     let dDes = 2.62;
@@ -346,33 +319,33 @@ export default function RiskMap() {
     if (indicador === 'global') {
       tooltipContent = `
         <div class="p-1.5 font-sans space-y-2.5 min-w-[340px] max-w-[520px]">
-          <div class="font-extrabold text-[12px] border-b border-slate-200 dark:border-zinc-700/80 pb-1.5 mb-2 flex items-center justify-between gap-5 w-full">
+          <div class="font-extrabold text-[12px] pb-1.5 mb-2 flex items-center justify-between gap-5 w-full" style="border-bottom: 1px solid var(--card-border, #e2e8f0);">
             <div class="flex flex-col min-w-0" style="white-space: nowrap !important;">
-              <span class="text-slate-800 dark:text-[#f5f5f7] font-extrabold" style="white-space: nowrap !important;">${nomeReal}</span>
-              <span class="text-[9px] font-semibold text-slate-400 dark:text-zinc-550" style="white-space: nowrap !important;">Ref: ${nome}</span>
+              <span class="font-extrabold" style="white-space: nowrap !important; color: var(--foreground, #1e293b);">${nomeReal}</span>
+              <span class="text-[9px] font-semibold" style="white-space: nowrap !important; color: var(--muted, #64748b);">Ref: ${nome}</span>
             </div>
-            <span class="text-[8px] uppercase tracking-wider bg-teal-100/50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 px-1.5 py-0.5 rounded font-black border border-teal-200/30 shrink-0">Visão Global</span>
+            <span class="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded font-black shrink-0" style="background-color: rgba(13, 148, 136, 0.15); color: #0d9488; border: 1px solid rgba(13, 148, 136, 0.3);">Visão Global</span>
           </div>
           <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-[10px]">
             <div class="flex items-center justify-between gap-2.5">
-              <span class="text-blue-500 font-bold">Desnutrição:</span>
-              <strong class="text-blue-600 dark:text-blue-400 font-mono font-black">${des.toFixed(2)}%</strong>
+              <span class="font-bold" style="color: #3b82f6;">Desnutrição:</span>
+              <strong class="font-mono font-black" style="color: #2563eb;">${des.toFixed(2)}%</strong>
             </div>
             <div class="flex items-center justify-between gap-2.5">
-              <span class="text-sky-500 font-bold">Magreza:</span>
-              <strong class="text-sky-600 dark:text-sky-400 font-mono font-black">${mag.toFixed(2)}%</strong>
+              <span class="font-bold" style="color: #0ea5e9;">Magreza:</span>
+              <strong class="font-mono font-black" style="color: #0284c7;">${mag.toFixed(2)}%</strong>
             </div>
             <div class="flex items-center justify-between gap-2.5">
-              <span class="text-emerald-500 font-bold">Peso Adeq.:</span>
-              <strong class="text-emerald-600 dark:text-emerald-400 font-mono font-black">${eut.toFixed(2)}%</strong>
+              <span class="font-bold" style="color: #10b981;">Peso Adeq.:</span>
+              <strong class="font-mono font-black" style="color: #059669;">${eut.toFixed(2)}%</strong>
             </div>
             <div class="flex items-center justify-between gap-2.5">
-              <span class="text-amber-500 font-bold">Sobrepeso:</span>
-              <strong class="text-amber-600 dark:text-amber-400 font-mono font-black">${sob.toFixed(2)}%</strong>
+              <span class="font-bold" style="color: #f59e0b;">Sobrepeso:</span>
+              <strong class="font-mono font-black" style="color: #d97706;">${sob.toFixed(2)}%</strong>
             </div>
             <div class="flex items-center justify-between gap-2.5">
-              <span class="text-red-500 font-bold">Obesidade:</span>
-              <strong class="text-red-600 dark:text-red-400 font-mono font-black">${obs.toFixed(2)}%</strong>
+              <span class="font-bold" style="color: #ef4444;">Obesidade:</span>
+              <strong class="font-mono font-black" style="color: #dc2626;">${obs.toFixed(2)}%</strong>
             </div>
           </div>
         </div>
@@ -380,40 +353,40 @@ export default function RiskMap() {
     } else {
       let activeVal = 0;
       let label = '';
-      let colorClass = '';
+      let activeColor = '';
       if (indicador === 'desnutricao') {
         activeVal = des;
         label = 'Desnutrição';
-        colorClass = 'text-blue-500';
+        activeColor = '#2563eb';
       } else if (indicador === 'sobrepeso') {
         activeVal = sob;
         label = 'Sobrepeso';
-        colorClass = 'text-amber-500';
+        activeColor = '#d97706';
       } else if (indicador === 'eutrofia') {
         activeVal = eut;
         label = 'Peso Adequado';
-        colorClass = 'text-emerald-500';
+        activeColor = '#059669';
       } else if (indicador === 'magreza') {
         activeVal = mag;
         label = 'Magreza';
-        colorClass = 'text-sky-500';
+        activeColor = '#0284c7';
       } else {
         activeVal = obs;
         label = 'Obesidade';
-        colorClass = 'text-red-500';
+        activeColor = '#dc2626';
       }
       tooltipContent = `
         <div class="p-1.5 font-sans space-y-2.5 min-w-[300px] max-w-[460px]">
-          <div class="border-b border-slate-100 dark:border-zinc-800/60 pb-1.5 mb-1.5 flex items-center justify-between gap-4 w-full">
+          <div class="pb-1.5 mb-1.5 flex items-center justify-between gap-4 w-full" style="border-bottom: 1px solid var(--card-border, #e2e8f0);">
             <div class="flex flex-col min-w-0" style="white-space: nowrap !important;">
-              <div class="font-extrabold text-[12px] text-slate-800 dark:text-[#f5f5f7]" style="white-space: nowrap !important;">${nomeReal}</div>
-              <div class="text-[9px] text-slate-450 dark:text-zinc-550" style="white-space: nowrap !important;">Ref: ${nome}</div>
+              <div class="font-extrabold text-[12px]" style="white-space: nowrap !important; color: var(--foreground, #1e293b);">${nomeReal}</div>
+              <div class="text-[9px]" style="white-space: nowrap !important; color: var(--muted, #64748b);">Ref: ${nome}</div>
             </div>
-            <span class="text-[8px] uppercase tracking-wider bg-slate-100 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 px-1.5 py-0.5 rounded font-black border border-slate-200/20 shrink-0">Indicador Ativo</span>
+            <span class="text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded font-black shrink-0" style="background-color: rgba(100, 116, 139, 0.1); color: var(--muted, #64748b); border: 1px solid rgba(100, 116, 139, 0.25);">Indicador Ativo</span>
           </div>
-          <div class="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 flex justify-between w-full">
+          <div class="text-[11px] font-semibold flex justify-between w-full" style="color: var(--foreground, #334155);">
             <span>${label}:</span>
-            <strong class="${colorClass} font-mono font-black text-xs">${activeVal.toFixed(2)}%</strong>
+            <strong class="font-mono font-black text-xs" style="color: ${activeColor};">${activeVal.toFixed(2)}%</strong>
           </div>
         </div>
       `;
@@ -425,12 +398,14 @@ export default function RiskMap() {
     );
   };
 
-  const visiblePois = ALL_POIS.filter(poi => {
-    if (activePoiTypes.includes('UBS')) {
-      if (['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária'].includes(poi.categoria)) return true;
-    }
-    return activePoiTypes.includes(poi.categoria as any);
-  });
+  const visiblePois = React.useMemo(() => {
+    return ALL_POIS.filter(poi => {
+      if (activePoiTypes.includes('UBS')) {
+        if (['UBS', 'Pronto-Atendimento', 'Saúde Mental', 'Vigilância Sanitária'].includes(poi.categoria)) return true;
+      }
+      return activePoiTypes.includes(poi.categoria as any);
+    });
+  }, [activePoiTypes]);
 
   if (!mounted) return null;
 
@@ -446,24 +421,7 @@ export default function RiskMap() {
   const indicatorLegend = getIndicatorLegend(indicador, darkMode);
 
   return (
-    <>
-      <style>{`
-        .custom-glass-tooltip {
-          background: ${darkMode ? 'rgba(28, 28, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)'} !important;
-          backdrop-filter: blur(8px) !important;
-          border: 1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(15, 23, 42, 0.1)'} !important;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.25) !important;
-          color: ${darkMode ? '#f5f5f7' : '#0f172a'} !important;
-          border-radius: 4px !important;
-          padding: 8px 14px !important;
-          font-weight: 600 !important;
-          white-space: nowrap !important;
-          pointer-events: none !important;
-        }
-        .custom-glass-tooltip::before { display: none !important; }
-        .leaflet-container { background: ${mapBackground} !important; }
-      `}</style>
-      <div className="h-full w-full relative">
+    <div className="h-full w-full relative">
         <div className="absolute bottom-4 right-4 z-[1000] pointer-events-none">
           <div className="rounded-2xl border border-slate-200/70 dark:border-zinc-800/80 bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-2 shadow-lg backdrop-blur-sm">
             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-zinc-400 mb-2">Legenda · {activeIndicatorLabel}</div>
@@ -481,20 +439,18 @@ export default function RiskMap() {
           </div>
         </div>
         <MapContainer
-          center={[-22.405, -47.555]}
+          center={RIO_CLARO_CENTER}
           zoom={13}
           minZoom={10}
           maxZoom={18}
           style={{ height: '100%', width: '100%', background: mapBackground }}
           zoomControl={false}
+          attributionControl={false}
         >
           <TileLayer
             key={darkMode ? 'dark-tiles' : 'light-tiles'}
-            url={darkMode 
-              ? "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-              : "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-            }
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url={darkMode ? TILE_URL_DARK : TILE_URL_LIGHT}
+            attribution=""
           />
           <MapController />
           {bairros && (
@@ -702,6 +658,5 @@ export default function RiskMap() {
           })}
         </MapContainer>
       </div>
-    </>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 import React from 'react';
-import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Bot, Hospital, Home, School, Search, X } from 'lucide-react';
+import { Activity, TrendingUp, Users, Stethoscope, Calendar, Map, ChevronLeft, Moon, Sun, ShieldCheck, Globe, Hospital, Home, School, Search, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { UNIDADES_SAUDE, ALL_POIS, getVoronoiGeoJSON } from '@/lib/mockData';
+import { UBS_LIST as ubsList, SCHOOLS_LIST as schoolsList, UNIQUE_BAIRROS_LIST as uniqueBairrosList } from '@/lib/staticLists';
 import { getScopedNutritionMetrics } from '@/lib/metricSelectors';
+import { useHudMetrics } from '@/hooks/useHudMetrics';
 
 export default function Sidebar() {
   const { 
@@ -53,36 +55,6 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Lista de UBSs
-  const ubsList = React.useMemo(() => {
-    return UNIDADES_SAUDE.filter(u => u.categoria === 'UBS').sort((a, b) => {
-      const nameA = a.nome.replace('UBS ', '').replace('USF ', '');
-      const nameB = b.nome.replace('UBS ', '').replace('USF ', '');
-      return nameA.localeCompare(nameB);
-    });
-  }, []);
-
-  // Lista de Bairros Únicos extraídos do GeoJSON
-  const uniqueBairrosList = React.useMemo(() => {
-    const bairrosGeoJSON = getVoronoiGeoJSON();
-    if (!bairrosGeoJSON || !bairrosGeoJSON.features) return [];
-    const setNames = new Set<string>();
-    const list: Array<{ nome: string; parentUbs: string }> = [];
-    bairrosGeoJSON.features.forEach((feat: any) => {
-      const name = feat.properties?.nome_real_bairro;
-      const ubs = feat.properties?.nome_bairro;
-      if (name && !setNames.has(name)) {
-        setNames.add(name);
-        list.push({ nome: name, parentUbs: ubs || '' });
-      }
-    });
-    return list.sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
-
-  // Lista de 88 Escolas Analisadas
-  const schoolsList = React.useMemo(() => {
-    return ALL_POIS.filter(p => p.categoria === 'Educação').sort((a, b) => a.nome.localeCompare(b.nome));
-  }, []);
 
   // Filtros aplicados baseados no searchQuery ativo e na hierarquia de foco
   const filteredUbs = React.useMemo(() => {
@@ -115,7 +87,7 @@ export default function Sidebar() {
     );
   }, [schoolsList, selectedBairroName, selectedUbs, searchQuery]);
 
-  const cleanYear = anoSelecionado.replace(' ★', '').trim();
+  const cleanYear = anoSelecionado.replace('★', '').trim();
   const isPrevisao = anoSelecionado.includes('★');
 
   const activeLabel = React.useMemo(() => {
@@ -145,68 +117,21 @@ export default function Sidebar() {
     });
   }, [analysisLevel, selectedUbs, selectedBairroName, selectedSchoolName, cleanYear, temporalData, regionalData, schoolMetrics, bairroMetrics]);
 
-  const hudMetrics = React.useMemo(() => {
-    let avaliados = 0;
-    let subUnitLabel = "UBS monitoradas";
-    let subUnitValue = String(ubsList.length);
-
-    if (analysisLevel === 'escola' && selectedSchoolName) {
-      const data = schoolMetrics[selectedSchoolName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      subUnitLabel = "Tipo de Escola";
-      const schoolInfo = schoolsList.find(s => s.nome === selectedSchoolName);
-      subUnitValue = schoolInfo?.categoria || "Educação";
-    } else if (analysisLevel === 'bairro' && selectedBairroName) {
-      const data = bairroMetrics[selectedBairroName]?.anos?.[cleanYear];
-      avaliados = data?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.bairro === selectedBairroName).length;
-      subUnitLabel = "Escolas no bairro";
-      subUnitValue = String(schoolCount);
-    } else if (analysisLevel === 'ubs' && selectedUbs) {
-      let ubsTotal = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.regiao_ubs === selectedUbs && sch.anos?.[cleanYear]?.total_avaliados) {
-          ubsTotal += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = ubsTotal || regionalData[cleanYear]?.[selectedUbs]?.total_avaliados || 0;
-      const schoolCount = schoolsList.filter(s => s.regiao_ubs === selectedUbs).length;
-      subUnitLabel = "Escolas na região";
-      subUnitValue = String(schoolCount);
-    } else {
-      let totalSchoolAvaliados = 0;
-      Object.values(schoolMetrics).forEach((sch: any) => {
-        if (sch.anos?.[cleanYear]?.total_avaliados) {
-          totalSchoolAvaliados += sch.anos[cleanYear].total_avaliados;
-        }
-      });
-      avaliados = totalSchoolAvaliados || 0;
-      subUnitLabel = "UBS monitoradas";
-      subUnitValue = String(ubsList.length);
-    }
-
-    const formatPct = (val: number) => {
-      if (val === undefined || val === null || isNaN(val)) return 'N/D';
-      return `${val.toFixed(2)}%`;
-    };
-
-    const formatAval = (val: number) => {
-      if (isPrevisao) return 'Projetado';
-      if (!val) return 'N/D';
-      return val >= 1000 ? `${(val / 1000).toFixed(1)}K` : String(val);
-    };
-
-    return {
-      avgObs: formatPct(scopeMetrics.obesidade),
-      avgMag: formatPct(scopeMetrics.magreza),
-      avgDes: formatPct(scopeMetrics.desnutricao),
-      avgSob: formatPct(scopeMetrics.sobrepeso),
-      avgEut: formatPct(scopeMetrics.eutrofia),
-      evaluatedStr: formatAval(avaliados),
-      subUnitLabel,
-      subUnitValue
-    };
-  }, [analysisLevel, selectedSchoolName, selectedBairroName, selectedUbs, anoSelecionado, cleanYear, scopeMetrics, regionalData, schoolMetrics, ubsList, schoolsList, bairroMetrics, isPrevisao]);
+  const hudMetrics = useHudMetrics({
+    analysisLevel,
+    selectedSchoolName,
+    selectedBairroName,
+    selectedUbs,
+    anoSelecionado,
+    cleanYear,
+    scopeMetrics,
+    regionalData,
+    schoolMetrics,
+    bairroMetrics,
+    ubsList,
+    schoolsList,
+    isPrevisao
+  });
 
   // Ocultar completamente o menu lateral caso esteja recolhido
   if (sidebarCollapsed) return null;
@@ -320,7 +245,8 @@ export default function Sidebar() {
                   }}
                   onFocus={() => setIsDropdownOpen(true)}
                   placeholder="Pesquisar..."
-                  className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 rounded-xl pl-3.5 pr-8 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100/60 dark:hover:bg-zinc-900"
+                  style={{ paddingRight: '44px' }}
+                  className="w-full bg-slate-50 dark:bg-zinc-900/40 border border-slate-200/80 dark:border-zinc-800/80 rounded-xl pl-3.5 py-2.5 text-xs font-semibold text-slate-700 dark:text-[#f5f5f7] placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-text hover:bg-slate-100/60 dark:hover:bg-zinc-900"
                 />
 
                 {searchQuery ? (
@@ -330,7 +256,7 @@ export default function Sidebar() {
                       setIsDropdownOpen(false);
                       setSelection('municipio', null, null, null);
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-[#f5f5f7] transition-colors p-0.5 cursor-pointer flex items-center justify-center z-10"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -562,13 +488,13 @@ export default function Sidebar() {
                 Resumo · {activeLabel} {anoSelecionado}
               </label>
               <div className="space-y-2">
-                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
-                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
-                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-sky-500" />}    label="Magreza" value={hudMetrics.avgMag} color="text-sky-600 dark:text-sky-400" />
                 <MetricRow icon={<Activity className="w-3.5 h-3.5 text-blue-500" />}   label="Desnutrição" value={hudMetrics.avgDes}  color="text-blue-600 dark:text-blue-400" />
+                <MetricRow icon={<Activity className="w-3.5 h-3.5 text-sky-500" />}    label="Magreza" value={hudMetrics.avgMag} color="text-sky-600 dark:text-sky-400" />
+                <MetricRow icon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />} label="Peso adequado" value={hudMetrics.avgEut} color="text-emerald-600 dark:text-emerald-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-amber-500" />} label="Sobrepeso" value={hudMetrics.avgSob} color="text-amber-600 dark:text-amber-400" />
+                <MetricRow icon={<TrendingUp className="w-3.5 h-3.5 text-red-500" />} label="Obesidade" value={hudMetrics.avgObs} color="text-red-600 dark:text-red-400" />
                 <MetricRow icon={<Users className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-555" />}    label="Avaliados" value={hudMetrics.evaluatedStr} color="text-slate-700 dark:text-zinc-300" />
-                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-600" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-600 dark:text-teal-400" />
+                <MetricRow icon={<Stethoscope className="w-3.5 h-3.5 text-teal-650" />} label={hudMetrics.subUnitLabel} value={hudMetrics.subUnitValue} color="text-teal-700 dark:text-teal-400" />
               </div>
             </div>
           </div>

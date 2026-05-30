@@ -1,0 +1,33 @@
+name: NutriAlerta ML Predictor
+
+on:
+  schedule:
+    # Roda automaticamente de forma gratuita todo dia à meia-noite (UTC)
+    - cron: '0 0 * * *'
+  # Permite que você ou sua equipe rode a IA manualmente a qualquer momento com 1 clique no botão do GitHub!
+  workflow_dispatch:
+
+jobs:
+  run-ml-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Machine Learning Dependencies
+        run: |
+          pip install numpy pandas scikit-learn requests
+
+      - name: Execute IA ML Pipeline & Sync Supabase
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_EMAIL: ${{ secrets.SUPABASE_EMAIL }}
+          SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD }}
+        run: |
+          python NutriAlerta/models/unified_ML.py

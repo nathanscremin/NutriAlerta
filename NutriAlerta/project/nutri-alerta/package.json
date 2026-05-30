@@ -6,13 +6,13 @@
     "dev": "node -e \"const { spawn } = require('child_process'); const nextCli = require.resolve('next/dist/bin/next'); const py = spawn('python', ['../../models/unified_ML.py', '--watch'], { stdio: 'inherit' }); const next = spawn(process.execPath, [nextCli, 'dev'], { stdio: 'inherit' }); const finish = (code) => { py.kill(); next.kill(); process.exit(code ?? 1); }; py.on('exit', finish); next.on('exit', finish);\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "@supabase/supabase-js": "^2.106.1",
     "@turf/turf": "^7.3.5",
-    "@types/leaflet": "^1.9.21",
     "@vercel/kv": "^1.0.0",
     "d3-delaunay": "^6.0.4",
     "framer-motion": "^12.38.0",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
