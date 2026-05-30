@@ -27,7 +27,14 @@ export default function Dashboard() {
         const { data: { session } } = await supabase.auth.getSession();
         clearTimeout(timer);
         if (!session) {
-          router.push('/login');
+          const getProjectRef = () => {
+            const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+            const match = url.match(/https:\/\/([^.]+)\.supabase\.(co|net)/);
+            return match ? match[1] : "peqvaslchaxrewhtxltc";
+          };
+          const projectRef = getProjectRef();
+          document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+          router.push('/');
         } else {
           setAuthorized(true);
         }
@@ -70,7 +77,7 @@ export default function Dashboard() {
             <p className="text-sm font-bold text-rose-400">A conexão está demorando mais do que o esperado.</p>
             <p className="text-xs text-zinc-400">Não conseguimos validar suas credenciais de acesso. Verifique sua conexão ou vá para o login.</p>
             <button 
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/')}
               className="mt-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-lg shadow-teal-500/10 cursor-pointer"
             >
               Acessar Login

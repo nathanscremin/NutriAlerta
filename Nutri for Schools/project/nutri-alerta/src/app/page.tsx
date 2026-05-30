@@ -1,29 +1,31 @@
 "use client";
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+
+/**
+ * Página raiz do Nutri for Schools (porta 3001)
+ *
+ * Comportamento:
+ *   - Se há sessão ativa → /dashboard
+ *   - Se não há sessão   → volta para http://localhost:3000 (login unificado)
+ *
+ * O middleware.ts já faz essa verificação no servidor.
+ * Este componente serve como fallback client-side para garantir
+ * que nenhum usuário sem sessão chegue a esta página sem ser redirecionado.
+ */
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check dark mode preference
-    if (typeof window !== 'undefined') {
-      const isDark = localStorage.getItem('theme') === 'dark' || 
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push('/dashboard');
+        router.replace("/dashboard");
       } else {
-        router.push('/login');
+        // Login unificado está sempre na porta 3000
+        window.location.href = "http://localhost:3000?logout=true";
       }
     };
     checkAuth();
@@ -33,7 +35,7 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-bold text-zinc-400">Direcionando para o portal...</p>
+        <p className="text-xs font-bold text-zinc-400">Verificando sessão...</p>
       </div>
     </div>
   );
