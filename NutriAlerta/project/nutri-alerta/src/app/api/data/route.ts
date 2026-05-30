@@ -924,8 +924,11 @@ async function loadLocalCsvFallback(cwd: string) {
 export async function GET(req: NextRequest) {
   const isKvConfigured = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
+  const { searchParams } = new URL(req.url);
+  const bypassCache = searchParams.get('bypassCache') === 'true' || searchParams.get('refresh') === 'true';
+
   // ── CACHE READ ──────────────────────────────────────────────────────────────
-  if (isKvConfigured) {
+  if (isKvConfigured && !bypassCache) {
     try {
       const cached = await kv.get(CACHE_KEY);
       if (cached) {
