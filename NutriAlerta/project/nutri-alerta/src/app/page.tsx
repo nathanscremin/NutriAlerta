@@ -18,7 +18,10 @@ interface WaveLine {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const NUTRISCHOOLS_SYNC_URL = "http://localhost:3001/auth/sync";
+const NUTRISCHOOLS_SYNC_URL =
+  process.env.NEXT_PUBLIC_NUTRISCHOOLS_URL
+    ? `${process.env.NEXT_PUBLIC_NUTRISCHOOLS_URL}/auth/sync`
+    : "http://localhost:3001/auth/sync";
 
 // Wave palette: vivid green → teal → cobalt blue
 const WAVE_PALETTE = [

@@ -55,7 +55,8 @@ export async function middleware(request: NextRequest) {
 
   if (!hasSbCookie && !hasAuthHeader) {
     // Sem sessão → redireciona para a página de login UNIFICADA na porta 3000 com flag de logout
-    const loginUrl = new URL("http://localhost:3000?logout=true");
+    const nutrialertaUrl = process.env.NEXT_PUBLIC_NUTRIALERTA_URL || "http://localhost:3000";
+    const loginUrl = new URL(`${nutrialertaUrl}?logout=true`);
     return NextResponse.redirect(loginUrl);
   }
 

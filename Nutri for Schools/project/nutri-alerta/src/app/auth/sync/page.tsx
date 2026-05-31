@@ -34,6 +34,8 @@ export default function AuthSyncPage() {
       // window.location.hash = "#access_token=xxx&refresh_token=yyy"
       const hash = window.location.hash.slice(1); // remove o "#"
 
+      const loginFallbackUrl = process.env.NEXT_PUBLIC_NUTRIALERTA_URL || "http://localhost:3000";
+
       if (!hash) {
         // Nenhum token no hash: o usuário acessou /auth/sync diretamente.
         // Verifica se já possui sessão ativa e redireciona.
@@ -41,7 +43,7 @@ export default function AuthSyncPage() {
         if (session) {
           router.replace("/dashboard");
         } else {
-          window.location.href = "http://localhost:3000";
+          window.location.href = loginFallbackUrl;
         }
         return;
       }
@@ -53,7 +55,7 @@ export default function AuthSyncPage() {
       if (!access_token || !refresh_token) {
         setErrorMsg("Token de sessão inválido ou ausente. Redirecionando para o login...");
         setStatus("error");
-        setTimeout(() => { window.location.href = "http://localhost:3000"; }, 2500);
+        setTimeout(() => { window.location.href = loginFallbackUrl; }, 2500);
         return;
       }
 
@@ -66,7 +68,7 @@ export default function AuthSyncPage() {
       if (error) {
         setErrorMsg(`Falha ao estabelecer sessão: ${error.message}. Redirecionando...`);
         setStatus("error");
-        setTimeout(() => { window.location.href = "http://localhost:3000"; }, 2500);
+        setTimeout(() => { window.location.href = loginFallbackUrl; }, 2500);
         return;
       }
 
