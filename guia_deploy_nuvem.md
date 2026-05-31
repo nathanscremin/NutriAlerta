@@ -1,100 +1,148 @@
-# 🚀 Guia Completo de Deploy na Nuvem (Gratuito & Tempo Real)
-> **Como hospedar o Ecossistema NutriAlerta e o Modelo de IA de forma profissional na nuvem**  
-> *Projeto Interdisciplinar · 2026*
+# 🚀 Guia Oficial de Deploy Duplo na Vercel & Automação Gratuita de IA
+> **Como hospedar o Ecossistema NutriAlerta e o Portal Nutri for Schools de forma profissional e gratuita**  
+> *Projeto Interdisciplinar · Versão de Produção*
 
-Este guia técnico detalha a arquitetura ideal e as mudanças necessárias para realizar o deploy público e gratuito de todos os módulos do ecossistema do **NutriAlerta** na nuvem, conectando-se em tempo real ao banco de dados Supabase.
+Este guia técnico descreve detalhadamente o passo a passo para colocar em produção ambos os portais do ecossistema (**NutriAlerta** para gestão municipal e **Nutri for Schools** para pesagem e exames escolares) na nuvem da **Vercel**, conectando-os ao banco de dados Supabase com sincronização automática e acionamento gratuito da inteligência artificial via **GitHub Actions**.
 
 ---
 
-## 🏛️ 1. A Arquitetura em Nuvem Ideal
-Na nuvem, as responsabilidades de hospedagem devem ser divididas para respeitar a natureza de cada tecnologia de forma gratuita:
+## 🏛️ 1. Arquitetura de Produção Unificada (Monorepo Híbrido)
 
-```mermaid
-graph TD
-    subgraph Cliente ["Navegador do Usuário"]
-        User[Portal do Gestor / Escolas]
-    end
+Ambas as aplicações Next.js estão hospedadas no mesmo repositório do GitHub (Monorepo), mas rodam de forma isolada na nuvem. A Vercel gerencia ambos de forma totalmente gratuita através da criação de dois projetos individuais a partir do mesmo repositório:
 
-    subgraph Vercel ["Hospedagem Frontend Vercel (Gratuito)"]
-        NextApp[Next.js App Serverless]
-    end
-
-    subgraph Supabase ["Nuvem Supabase (Gratuito)"]
-        DB[(Banco de Dados PostgreSQL)]
-    end
-
-    subgraph Render ["Hospedagem ML Render (Gratuito)"]
-        MLScript[Script Python ML - Background Worker]
-    end
-
-    User <-->|HTTPS / JSON| NextApp
-    NextApp <-->|Leitura/Escrita de Dados| DB
-    MLScript <-->|Leitura de Pesagens| DB
-    MLScript -->|Gravação de Previsões| DB
+```
+                  ┌──────────────────────────────┐
+                  │   Tela de Login Unificada    │
+                  │   (https://nutrialerta...)   │
+                  └──────────────┬───────────────┘
+                                 │
+                 Selecione o Sistema no Slide
+                                 │
+            ┌────────────────────┴────────────────────┐
+            ▼ (Dashboard Gestor)                      ▼ (Portal de Pesagem)
+┌───────────────────────┐                 ┌───────────────────────┐
+│     Projeto Vercel 1  │                 │     Projeto Vercel 2  │
+│      [NutriAlerta]    │                 │  [Nutri for Schools]  │
+│   (Porta Local 3000)  │                 │   (Porta Local 3001)  │
+└───────────┬───────────┘                 └───────────┬───────────┘
+            │                                         │
+            │          Consultas / Escritas           │
+            └────────────────────┬────────────────────┘
+                                 ▼
+                    ┌─────────────────────────┐
+                    │      Supabase DB        │
+                    │   (Tabelas Relacionais) │
+                    └────────────▲────────────┘
+                                 │ Upsert de Projeções (RandomForest)
+                    ┌────────────┴────────────┐
+                    │     GitHub Actions      │
+                    │  (ML Engine Executável) │
+                    └─────────────────────────┘
 ```
 
-1.  **Frontend (Vercel)**: Perfeito para aplicações Next.js. Hospeda o portal municipal (`3000`) e escolar (`3001`) gratuitamente com certificado SSL automático e escalabilidade infinita.
-2.  **Banco de Dados (Supabase Cloud)**: Já está na nuvem. A Vercel e o script Python comunicam-se com ele por conexões de rede seguras.
-3.  **Pipeline de Machine Learning (Render ou Railway)**: A Vercel **não** suporta scripts Python de execução perpétua (`--watch`) e não tem disco persistente. Usaremos o **Render** (no plano *Background Worker* gratuito) para rodar o pipeline Python.
+Esta arquitetura garante que:
+1. Os dois portais fiquem isolados, garantindo a divisão de privilégios de acesso.
+2. Eles sincronizem as sessões de login de forma segura no navegador através de parâmetros de criptografia na URL de Redirecionamento (`access_token` e `refresh_token`).
+3. O deploy, o tráfego de dados e as execuções do pipeline de IA permaneçam **100% gratuitos**.
 
 ---
 
-## ⚠️ 2. A Mudança Crítica: Adeus arquivos `.csv` locais!
-Atualmente, no ambiente local, o script Python de ML lê/escreve as projeções futuras em arquivos locais como `NutriAlerta_Projecao_Futura.csv`, e o Next.js lê esses arquivos do disco rígido da sua máquina.
+## 🤖 Passo 1: Configurar a Automação da IA (GitHub Actions)
 
-**Na nuvem (Vercel), o sistema de arquivos é Somente Leitura (Read-Only) e Temporário.** Se o script Python rodar em outra máquina (Render), a Vercel nunca conseguirá ler esses arquivos `.csv` gerados em disco.
+Antes de subir o frontend, configure o processador de inteligência artificial na nuvem para garantir que os dados estejam prontos. Substituímos a necessidade de servidores pagos (como o Render Cron/Background Workers) pelo pipeline gratuito do GitHub Actions:
 
-### A Solução Profissional em Tempo Real:
-1.  **Criar uma tabela no Supabase** chamada `previsoes_epidemiologicas` (contendo colunas como `cnes`, `ano`, `indicador`, `taxa_predita`, `delta_predito`, etc.).
-2.  **No Script Python (`unified_ML.py`)**: Em vez de salvar com `df.to_csv(...)`, mude a linha final para fazer um `INSERT` / `UPSERT` das linhas preditas diretamente nessa nova tabela do Supabase.
-3.  **No Next.js (Dashboard)**: Em vez de importar o `.csv` local, faça uma consulta à API do Supabase na tabela `previsoes_epidemiologicas` para puxar os dados.
+1. Acesse a página do seu repositório no **GitHub**.
+2. Vá nas configurações em **Settings ➔ Secrets and variables ➔ Actions**.
+3. Clique no botão **New repository secret** para cadastrar as 4 chaves secretas necessárias:
 
-**Resultado**: O sincronismo fica **100% em tempo real na nuvem**. Uma pesagem nova em uma escola dispara o re-treinamento no Render, que atualiza a tabela no Supabase, refletindo instantaneamente no dashboard hospedado na Vercel!
-
----
-
-## 🛠️ 3. Passo a Passo do Deploy
-
-### Passo A: Deploy dos Portais Next.js (Vercel)
-A Vercel hospeda o repositório diretamente do GitHub com deploy contínuo (qualquer commit atualiza a nuvem automaticamente).
-
-1.  Crie uma conta gratuita em [vercel.com](https://vercel.com) (usando seu login do GitHub).
-2.  Clique em **"Add New"** $\rightarrow$ **"Project"** e selecione o seu repositório unificado.
-3.  Como temos dois portais em subpastas, você fará **dois projetos separados na Vercel**:
-    *   **Projeto 1 (Gestor)**: Defina a *Root Directory* (pasta raiz) como `NutriAlerta/project/nutri-alerta`.
-    *   **Projeto 2 (Escolar)**: Defina a *Root Directory* como `Nutri for Schools/project/nutri-alerta`.
-4.  No campo **Environment Variables** de cada projeto na Vercel, cadastre as chaves do seu `.env.local`:
-    *   `NEXT_PUBLIC_SUPABASE_URL`
-    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-    *   `GEMINI_API_KEY` (apenas no Gestor)
-    *   `ENCRYPTION_KEY`
-    *   `HASH_SALT`
-    *   `SUPABASE_ADMIN_EMAIL` e `SUPABASE_ADMIN_PASSWORD`
-5.  Clique em **"Deploy"**. Seu portal estará online em segundos em uma URL pública (ex: `nutrialerta.vercel.app`)!
-
----
-
-### Passo B: Deploy do Pipeline de ML (Render)
-O **Render** ([render.com](https://render.com)) oferece hospedagem de serviços em segundo plano gratuita.
-
-1.  Crie uma conta no Render (integrada ao GitHub).
-2.  Clique em **"New"** $\rightarrow$ **"Background Worker"**.
-3.  Selecione o seu repositório.
-4.  Configure as definições do serviço:
-    *   **Language**: `Python`
-    *   **Build Command**: `pip install -r requirements.txt` (crie um arquivo `requirements.txt` listando as dependências `pandas`, `numpy`, `scikit-learn`, `requests` e `supabase`).
-    *   **Start Command**: `python NutriAlerta/models/unified_ML.py --watch --interval 300` (roda o loop de monitoramento a cada 5 minutos).
-5.  Em **Environment Variables** do Render, adicione as mesmas variáveis de conexão com o Supabase.
-6.  Pronto! Seu robô de IA estará rodando na nuvem monitorando o banco de dados.
-
----
-
-## 📈 4. Comparativo: Local vs. Nuvem com Banco de Dados
-
-| Característica | Funcionamento Local (Atual) | Funcionamento em Nuvem (Deploy) |
+| Nome da Secret | Valor Recomendado | Finalidade |
 | :--- | :--- | :--- |
-| **Hospedagem Web** | `localhost:3000` / `3001` (Apenas sua máquina) | URL Pública Vercel Https (Qualquer dispositivo) |
-| **Banco de Dados** | Supabase Cloud (Internet) | Supabase Cloud (Internet) |
-| **Armazenamento ML** | Arquivo físico `.csv` no seu HD | Tabela Relacional `previsoes` no Supabase |
-| **Tempo Real** | **Instantâneo**: monitoramento direto em tempo real. | **Sincronizado**: a IA atualiza a nuvem por demanda. |
-| **Persistência** | Perdida se apagar a pasta local. | Segura e protegida por backups automáticos. |
+| `NEXT_PUBLIC_SUPABASE_URL` | *Sua URL do Supabase* | Link de conexão com o banco de dados. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Sua Anon Key do Supabase* | Chave anônima de leitura rápida. |
+| `SUPABASE_EMAIL` | `nutrialerta@gmail.com` | Email de serviço da IA. |
+| `SUPABASE_PASSWORD` | `#Pangam123@` | Senha da conta de serviço para realizar o bypass RLS. |
+
+4. **Para testar a IA:** Vá até a aba **Actions** no topo do GitHub, selecione **NutriAlerta ML Predictor** à esquerda, clique em **Run workflow** ➔ **Run workflow** (botão verde). O script rodará o RandomForest, treinará a IA e persistirá as projeções do ano 2026 no Supabase na nuvem em segundos!
+
+---
+
+## 🎨 Passo 2: Hospedar o Portal do Gestor (Projeto Vercel 1)
+
+O primeiro projeto hospedará o portal principal do município (**NutriAlerta**), que gerencia os mapas epidemiológicos, gráficos temporais e contém a tela de login integrada:
+
+1. Acesse [vercel.com](https://vercel.com) e faça login integrado com sua conta do GitHub.
+2. Clique em **"Add New" ➔ "Project"** e selecione o seu repositório `NutriAlerta`.
+3. Nas configurações do projeto, defina os seguintes parâmetros:
+   *   **Project Name:** `nutrialerta` (ou similar)
+   *   **Framework Preset:** `Next.js`
+   *   **Root Directory (Pasta Raiz):** Clique em *Edit* e selecione a pasta:
+       `NutriAlerta/project/nutri-alerta`
+4. Expanda a seção **Environment Variables** e adicione exatamente as seguintes chaves do seu arquivo `.env.local`:
+
+| Nome da Variável | Valor Recomendado |
+| :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | *Sua URL do Supabase* |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Sua Anon Key do Supabase* |
+| `SUPABASE_ADMIN_EMAIL` | `nutrialerta@gmail.com` |
+| `SUPABASE_ADMIN_PASSWORD` | `#Pangam123@` |
+| `GEMINI_API_KEY` | *Sua Chave do Google Gemini* (Alimenta o chatbot NutriBot) |
+| `NEXT_PUBLIC_NUTRISCHOOLS_URL` | `https://[SUBDOMINIO-DO-SEU-PROJETO-ESCOLAR].vercel.app` |
+
+*(A variável `NEXT_PUBLIC_NUTRISCHOOLS_URL` deve apontar para o link público do segundo projeto que será criado no Passo 3. Se você ainda não o criou, pode cadastrá-la com uma URL temporária e atualizá-la depois nas configurações da Vercel).*
+
+5. Clique em **Deploy**. A Vercel compilará a aplicação e gerará uma URL criptografada HTTPS gratuita (exemplo: `https://nutrialerta.vercel.app`).
+
+---
+
+## 🏫 Passo 3: Hospedar o Portal de Pesagem Escolar (Projeto Vercel 2)
+
+O segundo projeto hospedará a interface do portal coletor escolar (**Nutri for Schools**), onde as escolas registram a pesagem e exames antropométricos dos alunos:
+
+1. No dashboard da Vercel, clique em **Add New ➔ Project**.
+2. Selecione o **mesmo repositório** `NutriAlerta`.
+3. Configure os parâmetros da seguinte forma:
+   *   **Project Name:** `nutriforschools` (ou similar)
+   *   **Framework Preset:** `Next.js`
+   *   **Root Directory (Pasta Raiz):** Clique em *Edit* e aponte para a subpasta:
+       `Nutri for Schools/project/nutri-alerta`
+4. Expanda a seção **Environment Variables** e configure as variáveis de ambiente:
+
+| Nome da Variável | Valor Recomendado |
+| :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | *Sua URL do Supabase* |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *Sua Anon Key do Supabase* |
+| `NEXT_PUBLIC_NUTRIALERTA_URL` | `https://[SEU-SITE-NUTRIALERTA-DO-PASSO-2].vercel.app` |
+
+*(A variável `NEXT_PUBLIC_NUTRIALERTA_URL` deve conter a URL pública gerada no Passo 2 pelo portal principal, garantindo que o sistema de segurança redirecione os alunos sem sessão de volta à tela de login).*
+
+5. Clique em **Deploy**. O portal escolar estará no ar! (exemplo: `https://nutriforschools.vercel.app`).
+
+---
+
+## ⚡ Passo 4: Atualizando o Cache do Vercel KV (Bypass)
+
+O portal NutriAlerta utiliza o cache em nuvem Vercel KV para otimizar as conexões e evitar custos adicionais de banco de dados, retendo as informações da API por **6 horas**. 
+
+Sempre que a IA rodar no GitHub Actions ou você inserir novas pesagens, você pode forçar a atualização imediata do cache global na nuvem acessando uma vez no seu navegador o seguinte link de API com a flag de bypass:
+
+```
+https://[SEU-SITE-DO-GESTOR].vercel.app/api/data?refresh=true
+```
+
+Ao fazer isso:
+1. O Next.js ignora o cache antigo.
+2. Consulta as projeções recalculadas e as pesagens diretamente no Supabase em tempo real.
+3. Grava o novo conjunto de dados atualizado de volta no cache para todos os usuários.
+4. O dashboard apresentará os novos dados instantaneamente!
+
+---
+
+## 🔄 Fluxo de Teste End-to-End no Ar
+
+Com os dois deploys verdes e ativos na Vercel:
+1. Acesse o portal escolar (`https://nutriforschools.vercel.app`). Como não há sessão ativa, o middleware irá redirecioná-lo automaticamente para o portal principal (`https://nutrialerta.vercel.app`) contendo a flag de logout.
+2. Faça login escolhendo a opção **"Nutri for Schools"** e inserindo as credenciais.
+3. Você será redirecionado para a página escolar automaticamente com a sessão sincronizada de forma transparente. Cadastre uma pesagem de teste de obesidade infantil na **UBS Jardim Chervezon**.
+4. Acesse o **GitHub Actions** e clique em **Run workflow** para re-treinar a IA na nuvem.
+5. Visite `https://[SEU-SITE-DO-GESTOR].vercel.app/api/data?refresh=true` para atualizar o cache.
+6. Ao abrir o portal do gestor e mudar o seletor de ano para **2026**, as tendências da IA da UBS Chervezon estarão adaptadas para incluir as novas pesagens simuladas em tempo real!
