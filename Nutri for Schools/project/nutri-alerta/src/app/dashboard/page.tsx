@@ -149,7 +149,14 @@ export default function UnifiedSchoolPortal() {
 
       // Redirect if no session is present
       if (!session) {
-        router.push('/login');
+        const getProjectRef = () => {
+          const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+          const match = url.match(/https:\/\/([^.]+)\.supabase\.(co|net)/);
+          return match ? match[1] : "peqvaslchaxrewhtxltc";
+        };
+        const projectRef = getProjectRef();
+        document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        window.location.href = "http://localhost:3000?logout=true";
         return;
       }
 
@@ -588,7 +595,17 @@ export default function UnifiedSchoolPortal() {
   // Logout Handler
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    
+    // Clear session cookie
+    const getProjectRef = () => {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+      const match = url.match(/https:\/\/([^.]+)\.supabase\.(co|net)/);
+      return match ? match[1] : "peqvaslchaxrewhtxltc";
+    };
+    const projectRef = getProjectRef();
+    document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    
+    window.location.href = "http://localhost:3000?logout=true";
   };
 
   // Live filter computation (Regular User)

@@ -147,6 +147,22 @@ GEMINI_API_KEY=sua-chave-api-gemini
 
 ---
 
+## 🔐 Autenticação Unificada & Sessão Cross-Port (SSO Local)
+
+O ecossistema implementa um fluxo de **Single Sign-On (SSO) local** para unificar o acesso aos dois portais:
+
+1. **Entrada Única:** A tela de login unificada reside na raiz do **NutriAlerta** (`http://localhost:3000/`). O portal escolar (porta 3001) não possui tela de login própria; qualquer tentativa de acesso não autenticado é redirecionada para a porta 3000.
+2. **Sincronização de Sessão (Cross-Port):**
+   - Ao selecionar **Nutri for Schools** no login e autenticar com sucesso, o usuário é redirecionado para `http://localhost:3001/auth/sync#access_token=...&refresh_token=...`.
+   - A rota de sincronização lê os tokens do hash da URL (garantindo que não passem pelos servidores em texto claro) e estabelece a sessão no Supabase local da porta 3001, gravando o cookie de sessão necessário.
+3. **Middlewares de Proteção:**
+   - **Porta 3000:** Protege `/dashboard`. Se sem sessão, redireciona para `/`. Se logado tentar acessar `/`, redireciona para `/dashboard`.
+   - **Porta 3001:** Protege `/dashboard` e demais rotas. Se sem sessão, redireciona o usuário para `http://localhost:3000?logout=true`.
+4. **Single Sign-Out (Sair Unificado):**
+   - Ao clicar em "Sair" em qualquer uma das duas portas, a sessão local é destruída, o cookie correspondente é apagado e o usuário é redirecionado passando `?logout=true`. Isso força a limpeza imediata do cache de sessão (`localStorage`) da outra porta, impedindo redirecionamentos em loop.
+
+---
+
 ## 🔒 Segurança, LGPD & Privacidade (Complacência Total)
 
 A arquitetura do ecossistema **NutriAlerta** passou por um rigoroso processo de auditoria de segurança e adequação à **Lei Geral de Proteção de Dados (LGPD)**:
