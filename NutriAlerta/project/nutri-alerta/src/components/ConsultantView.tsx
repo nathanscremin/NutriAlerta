@@ -119,6 +119,7 @@ export default function ConsultantView() {
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(loadMessages);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -368,10 +369,10 @@ export default function ConsultantView() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-4rem)] w-full lg:overflow-hidden p-4 sm:p-6 gap-6 bg-slate-50/30 dark:bg-zinc-950/20 transition-colors duration-300"
+      className="flex flex-col lg:flex-row h-[calc(100vh-4.5rem)] sm:h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] w-full overflow-hidden lg:overflow-hidden p-4 sm:p-6 gap-6 bg-slate-50/30 dark:bg-zinc-950/20 transition-colors duration-300"
     >
       {/* Left: Chatbot */}
-      <div className="w-full lg:w-[60%] h-[550px] lg:h-full flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
+      <div className="w-full lg:w-[60%] h-full lg:h-full flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
@@ -391,6 +392,14 @@ export default function ConsultantView() {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Botão de gaveta mobile */}
+            <button
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-50/60 dark:bg-teal-955/20 text-teal-700 dark:text-teal-400 border border-teal-100 dark:border-teal-900/50 text-xs font-black shadow-sm cursor-pointer"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              <span>Filtros</span>
+            </button>
             {/* Menu de Ações (3 Pontinhos para apagar histórico) */}
             <div className="relative">
               <button
@@ -505,8 +514,29 @@ export default function ConsultantView() {
         </div>
       </div>
 
-      {/* Right: Unified Geographic Selection Panel */}
-      <div className="w-full lg:w-[40%] h-[450px] lg:h-full flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
+      {/* Overlay escuro de fundo para fechar gaveta mobile */}
+      {isMobileFiltersOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-[999] lg:hidden"
+          onClick={() => setIsMobileFiltersOpen(false)}
+        />
+      )}
+
+      {/* Right: Unified Geographic Selection Panel (Drawer no mobile) */}
+      <div className={`fixed lg:relative top-0 right-0 h-full lg:h-full w-[85%] sm:w-[380px] lg:w-[40%] bg-white dark:bg-[#1c1c1e] border-l lg:border-l-0 border-slate-200 dark:border-[#2c2c2e] lg:border border-slate-200 dark:border-[#2c2c2e] lg:rounded-2xl z-[1000] lg:z-10 transition-transform duration-300 lg:transform-none flex flex-col shadow-xl lg:shadow-sm ${
+        isMobileFiltersOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'
+      }`}>
+        
+        {/* Mobile Drawer Header */}
+        <div className="lg:hidden p-4 border-b border-slate-100 dark:border-zinc-900/40 flex items-center justify-between bg-slate-50 dark:bg-zinc-900/20">
+          <span className="text-xs font-black uppercase text-slate-500 dark:text-zinc-400">Filtros de Localidade</span>
+          <button
+            onClick={() => setIsMobileFiltersOpen(false)}
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-655 dark:hover:text-[#f5f5f7] cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
         
         {/* Permanent Search Bar Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50 flex flex-col gap-4">

@@ -94,10 +94,10 @@ export default function UrbanConflictSection() {
       </div>
 
       {/* Mapa + Donut */}
-      <div className="flex flex-col md:flex-row gap-4 h-[380px]">
+      <div className="flex flex-col md:flex-row gap-4 h-auto md:h-[380px]">
 
         {/* Mapa de Conflito */}
-        <div className="w-full md:w-[65%] bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl overflow-hidden relative shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300">
+        <div className="w-full md:w-[65%] h-[300px] md:h-full bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl overflow-hidden relative shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300">
           <div className="absolute top-3 left-3 z-10 pointer-events-none">
             <p className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-800/80 shadow-sm">
               Mapa de Análise Territorial — Distribuição de Equipamentos
@@ -126,7 +126,7 @@ export default function UrbanConflictSection() {
         </div>
 
         {/* Gráfico de proporção */}
-        <div className="w-full md:w-[35%] bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-5 flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300">
+        <div className="w-full md:w-[35%] h-[260px] md:h-full bg-white dark:bg-[#121316]/90 border border-slate-200/70 dark:border-zinc-900/70 rounded-2xl p-5 flex flex-col shadow-[0_2px_8px_rgba(0,0,0,0.01)] transition-colors duration-300">
           <h3 className="text-xs font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider mb-1">
             Proporção de Infraestrutura
           </h3>
