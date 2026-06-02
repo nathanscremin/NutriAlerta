@@ -50,7 +50,7 @@ async function updateConsolidatedCSV(ubsName: string, classificacao: string) {
     // Caminhos para atualizar nos dois subprojetos
     const pathsToUpdate: string[] = [];
     const pathNA = path.join(cwd, '..', 'csv', csvFilename);
-    const pathNFS = path.join(cwd, '..', '..', '..', 'Nutri for Schools', 'project', 'csv', csvFilename);
+    const pathNFS = path.join(cwd, '..', '..', '..', 'Nutri-for-Schools', 'project', 'csv', csvFilename);
     
     for (const p of [pathNA, pathNFS]) {
       try {

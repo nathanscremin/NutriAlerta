@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 set "ROOT=%~dp0"
 set "MANAGER_DIR=%ROOT%NutriAlerta\project\nutri-alerta"
-set "SCHOOLS_DIR=%ROOT%Nutri for Schools\project\nutri-alerta"
+set "SCHOOLS_DIR=%ROOT%Nutri-for-Schools\project\nutri-alerta"
 set "MANAGER_PACKAGE=%MANAGER_DIR%\package.json"
 set "SCHOOLS_PACKAGE=%SCHOOLS_DIR%\package.json"
 set "MANAGER_NODE_MODULES=%MANAGER_DIR%\node_modules"
