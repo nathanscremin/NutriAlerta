@@ -72,13 +72,13 @@ graph TD
 
 ### 2.1. O Fluxo de Sincronização Dinâmica (ETL)
 A integração de dados baseia-se nos seguintes scripts chaves:
-1.  **[sync_db_data.js](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/project/nutri-alerta/sync_db_data.js)** (Backend Node.js): Sincroniza dinamicamente as tabelas em nuvem (`registros_saude` e `escolas`), cruza-as no servidor Next.js usando metadados e localizações de Pontos de Interesse (POIs) de `extractedPois.json`, calcula as curvas de IMC individuais e consolida o arquivo `Base_Nutricional_Consolidada_Final.csv`.
-2.  **[supabase_data.py](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/models/supabase_data.py)** (ETL Python): Consome os registros unificados das UBSs e realiza a extração de variáveis geográficas urbanas ao redor do raio de cobertura de cada UBS (ambiente obesogênico vs. oásis alimentares, saneamento e infraestrutura de esporte).
+1.  **[sync_db_data.js](../NutriAlerta/project/nutri-alerta/sync_db_data.js)** (Backend Node.js): Sincroniza dinamicamente as tabelas em nuvem (`registros_saude` e `escolas`), cruza-as no servidor Next.js usando metadados e localizações de Pontos de Interesse (POIs) de `extractedPois.json`, calcula as curvas de IMC individuais e consolida o arquivo `Base_Nutricional_Consolidada_Final.csv`.
+2.  **[supabase_data.py](../NutriAlerta/models/supabase_data.py)** (ETL Python): Consome os registros unificados das UBSs e realiza a extração de variáveis geográficas urbanas ao redor do raio de cobertura de cada UBS (ambiente obesogênico vs. oásis alimentares, saneamento e infraestrutura de esporte).
 
 ---
 
 ## 🧠 3. Motor de Machine Learning (Modelagem Preditiva)
-O coração estatístico e preditivo do **NutriAlerta** é implementado no script **[unified_ML.py](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/models/unified_ML.py)**. O sistema cria modelos independentes para monitorar 5 indicadores clínicos e biológicos de antropometria infantil baseados em Z-score da OMS:
+O coração estatístico e preditivo do **NutriAlerta** é implementado no script **[unified_ML.py](../NutriAlerta/models/unified_ML.py)**. O sistema cria modelos independentes para monitorar 5 indicadores clínicos e biológicos de antropometria infantil baseados em Z-score da OMS:
 *   **Desnutrição** (Magreza Acentuada): $IMC < -3$ desvios padrão (DP).
 *   **Magreza**: $-3 \le IMC < -2$ DP.
 *   **Eutrofia** (Peso saudável): $-2 \le IMC \le +1$ DP.
@@ -176,7 +176,7 @@ Isso garante que os dados enviados ao banco e exibidos no dashboard somem **rigo
 ---
 
 ## 🤖 5. Inteligência Computacional e IA Generativa (NutriBot & RAG)
-O ecossistema implementa conceitos avançados de IA Generativa através do **NutriBot**, o assistente digital integrado no backend Next.js: **[route.ts (API Chat)](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/project/nutri-alerta/src/app/api/chat/route.ts)**.
+O ecossistema implementa conceitos avançados de IA Generativa através do **NutriBot**, o assistente digital integrado no backend Next.js: **[route.ts (API Chat)](../NutriAlerta/project/nutri-alerta/src/app/api/chat/route.ts)**.
 
 ```mermaid
 graph LR
@@ -207,7 +207,7 @@ A API consome o modelo **Gemini 2.5 Flash** do Google, configurado dinamicamente
 ---
 
 ## 🗺️ 6. Geoprocessamento e Particionamento Espacial (Diagramas de Voronoi)
-A visualização territorial no frontend do NutriAlerta (**[RiskMap.tsx](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/project/nutri-alerta/src/components/RiskMap.tsx)**) utiliza a técnica de **Tesselação de Voronoi** (Diagramas de Voronoi).
+A visualização territorial no frontend do NutriAlerta (**[RiskMap.tsx](../NutriAlerta/project/nutri-alerta/src/components/RiskMap.tsx)**) utiliza a técnica de **Tesselação de Voronoi** (Diagramas de Voronoi).
 
 O território municipal de Rio Claro é matematicamente subdividido em células cujas fronteiras definem a área de menor distância euclidiana em relação a cada Unidade Básica de Saúde (UBS):
 
@@ -220,7 +220,7 @@ $$ R_k = \{ x \in X \mid d(x, P_k) \le d(x, P_j) \quad \forall j \ne k \} $$
 ---
 
 ## ⚖️ 7. Auditoria de Viés e Justiça Algorítmica (Fairness)
-Previsões de saúde pública não podem reproduzir preconceitos socioeconômicos estruturais. O NutriAlerta integra o script **[bias_audit.py](file:///c:/Users/Hiroshi/Desktop/Estudos/Programação/PythonS/pessoal/trabalho/NutriAlerta/NutriAlerta/models/bias_audit.py)**, que executa uma auditoria de equidade ética sobre o modelo preditivo utilizando a regra dos quatro quintos do **EEOC** (Equal Employment Opportunity Commission), que estipula que a razão de impacto disparate (DIR) deve situar-se na faixa de $0.8$ a $1.25$:
+Previsões de saúde pública não podem reproduzir preconceitos socioeconômicos estruturais. O NutriAlerta integra o script **[bias_audit.py](../NutriAlerta/models/bias_audit.py)**, que executa uma auditoria de equidade ética sobre o modelo preditivo utilizando a regra dos quatro quintos do **EEOC** (Equal Employment Opportunity Commission), que estipula que a razão de impacto disparate (DIR) deve situar-se na faixa de $0.8$ a $1.25$:
 
 $$ \text{DIR} = \frac{\text{Risco Médio do Grupo Vulnerável (Alta densidade de escolas públicas)}}{\text{Risco Médio do Grupo de Controle (Baixa densidade)}} $$
 
