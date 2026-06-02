@@ -25,7 +25,8 @@ export default function Home() {
         router.replace("/dashboard");
       } else {
         // Login unificado está sempre na porta 3000
-        window.location.href = "http://localhost:3000?logout=true";
+        const loginFallbackUrl = process.env.NEXT_PUBLIC_NUTRIALERTA_URL || "http://localhost:3000";
+        window.location.href = `${loginFallbackUrl}?logout=true`;
       }
     };
     checkAuth();

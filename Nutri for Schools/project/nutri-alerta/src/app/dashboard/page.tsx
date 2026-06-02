@@ -46,6 +46,7 @@ function NutriAlertaLogo({ className = "w-6 h-6 text-white" }: { className?: str
 
 export default function UnifiedSchoolPortal() {
   const router = useRouter();
+  const nutrialertaUrl = process.env.NEXT_PUBLIC_NUTRIALERTA_URL || "http://localhost:3000";
   
   // Theme & Session states
   const [darkMode, setDarkMode] = useState(false);
@@ -156,7 +157,7 @@ export default function UnifiedSchoolPortal() {
         };
         const projectRef = getProjectRef();
         document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-        window.location.href = "http://localhost:3000?logout=true";
+        window.location.href = `${nutrialertaUrl}?logout=true`;
         return;
       }
 
@@ -605,7 +606,7 @@ export default function UnifiedSchoolPortal() {
     const projectRef = getProjectRef();
     document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
     
-    window.location.href = "http://localhost:3000?logout=true";
+    window.location.href = `${nutrialertaUrl}?logout=true`;
   };
 
   // Live filter computation (Regular User)
@@ -735,7 +736,7 @@ export default function UnifiedSchoolPortal() {
 
           {/* Epidemiological Dashboard Link (Redirects to port 3000) */}
           <a
-            href="http://localhost:3000"
+            href={nutrialertaUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-500/10 to-teal-500/10 hover:from-indigo-500/20 hover:to-teal-500/20 border border-indigo-500/20 rounded-xl transition-all text-[10px] font-black text-indigo-700 dark:text-indigo-300 shadow-sm cursor-pointer"
