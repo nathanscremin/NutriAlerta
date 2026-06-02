@@ -40,6 +40,8 @@ Para mover qualquer item para a coluna "Concluído" (*Done*), a entrega precisou
 
 Ambos os portais foram completamente implementados e testados. Abaixo está o status do backlog final homologado pelo Product Owner:
 
+### 3.1. Quadro de Épicos do Projeto
+
 | ID | Épico | Entregável Final | Responsável | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **EP-01** | Geoespacial Base | Mapeamento interativo de Rio Claro, contendo tooltips, popups e polígonos das UBS e escolas. | Equipe do Projeto | **[Concluído]** |
@@ -49,6 +51,36 @@ Ambos os portais foram completamente implementados e testados. Abaixo está o st
 | **EP-05** | Modelagem preditiva | Modelo preditivo classificador *Random Forest* (ML) treinado e gerando projeções para 2026/2027. | Equipe do Projeto | **[Concluído]** |
 | **EP-06** | Mapa de Risco | Visualização espacial de Voronoi e coroplética por níveis de gravidade da desnutrição/sobrepeso. | Equipe do Projeto | **[Concluído]** |
 | **EP-07** | Relatório de Produção | Homologação final, documentações e deploy seguro integrado na nuvem da Vercel. | Equipe do Projeto | **[Concluído]** |
+
+---
+
+### 3.2. Histórias de Usuário (User Stories) e Efetivação Técnica
+
+Com base nas demandas registradas no Trello e nas necessidades da vigilância epidemiológica municipal, as seguintes Histórias de Usuário foram formuladas e implementadas:
+
+#### 🗺️ US-01: Visualização Territorial (Vínculo: EP-01 & EP-06)
+*   **Declaração:** *Como gestor municipal de saúde, quero visualizar um mapa interativo dos bairros de Rio Claro, para identificar áreas com maior vulnerabilidade e desvios nutricionais.*
+*   **Efetivação no Projeto:** Implementação de mapas coropléticos interativos baseados em Leaflet no portal do gestor ([ConflictMap.tsx](file:///c:/Users/natha/Documents/GitHub/NutriAlerta/NutriAlerta/project/nutri-alerta/src/components/ConflictMap.tsx) e [RiskMap.tsx](file:///c:/Users/natha/Documents/GitHub/NutriAlerta/NutriAlerta/project/nutri-alerta/src/components/RiskMap.tsx)). As divisões geográficas são renderizadas dinamicamente a partir de arquivos GeoJSON que delimitam os bairros e as regiões sob a cobertura territorial de cada Unidade Básica de Saúde (UBS).
+
+#### 📊 US-02: Cruzamento Epidemiológico (Vínculo: EP-02 & EP-04)
+*   **Declaração:** *Como cientista de dados do projeto, quero cruzar os dados históricos do SISVAN com os setores censitários do IBGE para encontrar correlações socioeconômicas e comorbidades.*
+*   **Efetivação no Projeto:** Criação do script de inteligência artificial e processamento de dados (`unified_ML.py`), que realiza o cruzamento de variáveis do censo (infraestrutura, renda média familiar e saneamento por bairro) com o histórico de registros antropométricos e morbidades locais do DATASUS e SISVAN, gerando a base de dados integrada de treinamento do modelo.
+
+#### 📈 US-03: Dashboard Analítico para Gestão (Vínculo: EP-03)
+*   **Declaração:** *Como gestor municipal de saúde, quero acessar um dashboard web com visualizações do estado nutricional das crianças por escola e UBS, facilitando o monitoramento e a tomada de decisão.*
+*   **Efetivação no Projeto:** Desenvolvimento do painel principal de visualização de dados (**NutriAlerta**), contendo gráficos de séries temporais empilhadas, comparativos dinâmicos de prevalência de distúrbios alimentares entre as diferentes UBSs do município, pirâmides demográficas e gráficos analíticos de conflito urbano alimentar.
+
+#### 🔮 US-04: Antecipação de Tendências Preditivas (Vínculo: EP-05 & EP-06)
+*   **Declaração:** *Como gestor municipal de saúde, quero visualizar no mapa de Rio Claro o nível de risco nutricional predito por região para os próximos anos, permitindo ações proativas.*
+*   **Efetivação no Projeto:** Integração do modelo *Random Forest Regressor* treinado ao banco de dados Supabase. O mapa do gestor utiliza diagramas de Voronoi para regionalizar as previsões e colorir os polígonos correspondentes com as projeções de prevalência de eutrofia, sobrepeso, obesidade e desnutrição para os anos de 2026 e 2027.
+
+#### 🏫 US-05: Coleta de Dados Descentralizada e Anônima (Vínculo: EP-05)
+*   **Declaração:** *Como diretor de uma escola, quero saber se estou entregando a melhor alimentação possível para os estudantes com base nos seus dados antropométricos, de forma rápida e segura.*
+*   **Efetivação no Projeto:** Desenvolvimento do portal **Nutri-for-Schools**, um ambiente de coleta isolado e simplificado para as secretarias escolares. A interface permite a inserção rápida de registros antropométricos individuais (calculando na hora o IMC e sua classificação com base nos parâmetros da OMS) e a importação massiva via planilhas CSV, exibindo gráficos estatísticos de eutrofia específicos de cada unidade de ensino para auditoria do cardápio escolar. O portal é a única porta de entrada ativa do ecossistema e atua sem coletar dados pessoais identificáveis (PII), garantindo anonimização desde a origem.
+
+#### 💬 US-06: Suporte de Decisão em Linguagem Natural (Vínculo: EP-04)
+*   **Declaração:** *Como usuário leigo em análise de dados, gostaria de um chatbot interativo para facilitar minha navegação, extração de relatórios e entendimento dos dados epidemiológicos.*
+*   **Efetivação no Projeto:** Implementação do **NutriBot** ([ConsultantView.tsx](file:///c:/Users/natha/Documents/GitHub/NutriAlerta/NutriAlerta/project/nutri-alerta/src/components/ConsultantView.tsx)), um agente de suporte cognitivo que consome a API do Google Gemini. Ele é munido do contexto das estatísticas do município filtradas pela seleção do usuário na tela (UBS, bairro ou escola selecionada), respondendo dúvidas complexas, correlacionando estatísticas e traduzindo dados brutos de saúde em relatórios legíveis em linguagem natural.
 
 ---
 
