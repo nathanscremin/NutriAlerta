@@ -213,7 +213,7 @@ export default function DemographicsSection() {
     <div className="space-y-6">
       
       {/* 1. Dashboard Header (Sem ícones decorativos ou badges de escopo/tags) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
         <div>
           <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-4 h-4 text-teal-500 shrink-0" />
@@ -225,9 +225,9 @@ export default function DemographicsSection() {
         </div>
 
         {/* Barra de Pesquisa e Seletor de Ano Customizado */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           {/* Unified Search Box for region, UBS or school */}
-          <div ref={searchDropdownRef} className="relative w-72">
+          <div ref={searchDropdownRef} className="relative w-full sm:w-72">
             <div className="relative">
               <input
                 type="text"
@@ -408,7 +408,7 @@ export default function DemographicsSection() {
       </div>
 
       {/* 2. Top-tier KPI Cards Grid (Average Ages - Clean Visual) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         
         {/* KPI Desnutrição (Blue) */}
         <KpiCard

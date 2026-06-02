@@ -368,10 +368,10 @@ export default function ConsultantView() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="flex h-[calc(100vh-4rem)] w-full overflow-hidden p-6 gap-6 bg-slate-50/30 dark:bg-zinc-950/20 transition-colors duration-300"
+      className="flex flex-col lg:flex-row h-auto lg:h-[calc(100vh-4rem)] w-full lg:overflow-hidden p-4 sm:p-6 gap-6 bg-slate-50/30 dark:bg-zinc-950/20 transition-colors duration-300"
     >
       {/* Left: Chatbot */}
-      <div className="w-[60%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
+      <div className="w-full lg:w-[60%] h-[550px] lg:h-full flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden relative shadow-sm transition-colors duration-300">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-[#1c1c1e]/50">
@@ -506,7 +506,7 @@ export default function ConsultantView() {
       </div>
 
       {/* Right: Unified Geographic Selection Panel */}
-      <div className="w-[40%] flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
+      <div className="w-full lg:w-[40%] h-[450px] lg:h-full flex flex-col bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-[#2c2c2e] rounded-2xl overflow-hidden shadow-sm transition-colors duration-300">
         
         {/* Permanent Search Bar Header */}
         <div className="p-5 border-b border-slate-200 dark:border-[#2c2c2e] bg-slate-50/50 dark:bg-[#1c1c1e]/50 flex flex-col gap-4">

@@ -581,7 +581,7 @@ export default function ExpertView() {
       className="p-6 space-y-6 max-w-7xl mx-auto w-full transition-colors duration-300 relative"
     >
       {/* ── Cabeçalho da view ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           {displayTitle && (
             <div>
@@ -595,7 +595,7 @@ export default function ExpertView() {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap md:w-auto justify-start md:justify-end">
           {/* Indicador Principal Dropdown */}
           <div className="relative">
             <button
@@ -884,7 +884,7 @@ export default function ExpertView() {
               )}
             </div>
 
-            <div className="absolute top-4 left-[305px] z-10 pointer-events-none flex flex-col gap-2">
+            <div className="absolute top-4 left-[305px] z-10 pointer-events-none hidden md:flex flex-col gap-2">
               <span className="text-[10px] font-bold text-slate-700 dark:text-zinc-200 uppercase tracking-widest bg-white/95 dark:bg-[#1c1c1e]/95 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-[#2c2c2e] shadow-sm inline-block w-fit">
                 Mapa de Risco por Região
               </span>
@@ -918,7 +918,7 @@ export default function ExpertView() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 300, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className="absolute top-16 right-4 w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-3.5 space-y-3 max-h-[calc(100%-80px)] overflow-y-auto shrink-0 scrollbar-thin"
+                className="absolute top-16 right-4 w-[calc(100%-2rem)] max-w-xs sm:w-72 z-[1000] bg-white/95 dark:bg-[#1c1c1e]/95 backdrop-blur-md border border-slate-200 dark:border-zinc-800/80 rounded-2xl shadow-2xl flex flex-col p-3.5 space-y-3 max-h-[calc(100%-80px)] overflow-y-auto shrink-0 scrollbar-thin"
               >
                 {/* Header do Painel */}
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-900/60 pb-2">

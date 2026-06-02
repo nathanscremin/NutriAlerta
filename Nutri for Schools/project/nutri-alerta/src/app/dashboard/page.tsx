@@ -693,8 +693,8 @@ export default function UnifiedSchoolPortal() {
         </AnimatePresence>
       </div>
 
-      <header className="h-16 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-zinc-800/85 px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="h-16 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-zinc-800/85 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="w-9 h-9 bg-gradient-to-tr from-teal-600 to-emerald-400 rounded-xl flex items-center justify-center shadow-sm">
             <NutriAlertaLogo className="w-4 h-4 text-white" />
           </div>
@@ -1020,7 +1020,7 @@ export default function UnifiedSchoolPortal() {
 
           {/* PRIMARY ZONE: Focus on Registration Form (Centered & Large) */}
           <section className="max-w-2xl mx-auto w-full">
-            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-8 rounded-3xl shadow-sm transition-shadow duration-300 hover:shadow-md relative overflow-hidden">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-4 sm:p-8 rounded-3xl shadow-sm transition-shadow duration-300 hover:shadow-md relative overflow-hidden">
               
               {/* Ambient Background decoration */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />

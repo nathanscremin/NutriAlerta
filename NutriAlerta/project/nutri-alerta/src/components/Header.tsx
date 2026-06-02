@@ -72,35 +72,35 @@ export default function Header() {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200/50 dark:border-zinc-800/50 px-8 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 shadow-sm">
+    <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200/50 dark:border-zinc-800/50 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 transition-all duration-300 shadow-sm gap-2">
       {/* Subtle Top Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 via-teal-400 to-emerald-400 opacity-70" />
       
       {/* Brand Section */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         <motion.div 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setViewMode('map')}
-          className="w-10 h-10 bg-gradient-to-tr from-teal-600 to-teal-500 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 shadow-md"
+          className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-teal-600 to-teal-500 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-300 shadow-md"
         >
-          <NutriAlertaLogo className="w-5 h-5 text-white" />
+          <NutriAlertaLogo className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </motion.div>
-        <div className="ml-1">
-          <h1 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">NutriAlerta</h1>
-          <p className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium tracking-wide uppercase">Rio Claro · SP</p>
+        <div className="ml-0.5 hidden xs:block">
+          <h1 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight">NutriAlerta</h1>
+          <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-zinc-400 font-medium tracking-wide uppercase">Rio Claro · SP</p>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center bg-slate-100/80 dark:bg-zinc-900/60 border border-slate-200/50 dark:border-zinc-800/60 rounded-xl p-1 gap-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+      <div className="flex items-center bg-slate-100/80 dark:bg-zinc-900/60 border border-slate-200/50 dark:border-zinc-800/60 rounded-xl p-1 gap-1 sm:gap-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] min-w-0 overflow-x-auto scrollbar-none">
         {navItems.map((item) => {
           const isActive = viewMode === item.id;
           return (
             <button
               key={item.id}
               onClick={() => setViewMode(item.id)}
-              className={`relative px-4 py-2 rounded-lg text-xs font-bold transition-all duration-250 cursor-pointer flex items-center select-none ${
+              className={`relative px-2.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all duration-250 cursor-pointer flex items-center gap-1.5 select-none shrink-0 ${
                 isActive
                   ? 'text-teal-600 dark:text-teal-400'
                   : 'text-slate-500 dark:text-zinc-450 hover:text-slate-800 dark:hover:text-zinc-200'
@@ -113,45 +113,46 @@ export default function Header() {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
-              <span className="hidden sm:inline">{item.label}</span>
+              <item.icon className="w-4 h-4" />
+              <span className="hidden md:inline">{item.label}</span>
             </button>
           );
         })}
       </div>
 
       {/* User Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* Dark Mode Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all duration-200 cursor-pointer flex items-center justify-center"
+          className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-100 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all duration-200 cursor-pointer flex items-center justify-center"
           title={darkMode ? "Modo Claro" : "Modo Escuro"}
         >
           {darkMode ? (
-            <Sun className="w-5 h-5 text-emerald-500" />
+            <Sun className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
           ) : (
-            <Moon className="w-5 h-5 text-slate-600" />
+            <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
           )}
         </button>
 
         {/* User Info */}
-        <div className="flex items-center gap-3 border-l border-slate-200 dark:border-zinc-800 pl-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{userEmail}</p>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">Administrador</p>
+        <div className="flex items-center gap-2 sm:gap-3 border-l border-slate-200 dark:border-zinc-800 pl-2 sm:pl-4">
+          <div className="text-right hidden lg:block">
+            <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[120px]">{userEmail}</p>
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 font-medium">Administrador</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-zinc-800 flex items-center justify-center">
-            <UserCircle className="w-6 h-6 text-slate-600 dark:text-zinc-400" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-slate-200 dark:bg-zinc-800 flex items-center justify-center">
+            <UserCircle className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 dark:text-zinc-400" />
           </div>
         </div>
         
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="p-2 rounded-lg text-slate-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 cursor-pointer flex items-center justify-center ml-1"
+          className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-200 cursor-pointer flex items-center justify-center ml-0.5 sm:ml-1"
           title="Sair"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
     </header>

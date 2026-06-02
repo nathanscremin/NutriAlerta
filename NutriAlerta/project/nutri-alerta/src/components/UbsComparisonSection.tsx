@@ -186,8 +186,8 @@ function MetricRow({
       </div>
 
       {/* Label Central */}
-      <div className="text-center min-w-[200px] flex flex-col items-center justify-center gap-0.5">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-505 dark:text-zinc-400 leading-tight">{label}</p>
+      <div className="text-center min-w-[100px] sm:min-w-[200px] flex flex-col items-center justify-center gap-0.5">
+        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider text-slate-505 dark:text-zinc-400 leading-tight">{label}</p>
         <DeltaBadge delta={delta} isRuim={lowerIsBetter} />
       </div>
 
@@ -340,7 +340,7 @@ export default function UbsComparisonSection() {
     <div className="space-y-6">
 
       {/* ── Cabeçalho Equivalente e Proporcional com Seletor de Ano ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/50 dark:border-zinc-800/50 pb-5">
         <div>
           <h2 className="text-sm font-black text-slate-800 dark:text-[#f5f5f7] uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-4 h-4 text-teal-500 shrink-0" />
@@ -352,7 +352,7 @@ export default function UbsComparisonSection() {
         </div>
 
         {/* Seletores de Ano e Indicador Customizados */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-3 w-full md:w-auto">
           {/* Seletor do Indicador Ativo */}
           <div className="relative">
             <button
@@ -429,7 +429,7 @@ export default function UbsComparisonSection() {
 
       {/* ── Seletores de UBS ── */}
       <div
-        className="grid grid-cols-[1fr_auto_1fr] gap-3 items-end"
+        className="flex flex-col sm:grid sm:grid-cols-[1fr_auto_1fr] gap-3 items-stretch sm:items-end"
         onClick={() => { if (openA || openB) { setOpenA(false); setOpenB(false); } }}
       >
         <UbsDropdown
@@ -438,16 +438,16 @@ export default function UbsComparisonSection() {
           onChange={setUbsA}
           list={ubsList}
           disabledItem={ubsB}
-          accentClass="bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400"
+          accentClass="bg-teal-50 dark:bg-teal-955/20 text-teal-700 dark:text-teal-400"
           pinColor="text-teal-500"
           open={openA}
           setOpen={(v) => { setOpenA(v); if (v) setOpenB(false); }}
           zIndex={40}
         />
 
-        <div className="flex flex-col items-center justify-center pb-1.5 gap-0.5">
-          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 flex items-center justify-center">
-            <span className="text-[10px] font-black text-slate-400 dark:text-zinc-500">VS</span>
+        <div className="flex flex-col items-center justify-center pb-1.5 gap-0.5 sm:self-end">
+          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/60 flex items-center justify-center my-1 sm:my-0">
+            <span className="text-[10px] font-black text-slate-400 dark:text-zinc-550">VS</span>
           </div>
         </div>
 
@@ -486,7 +486,7 @@ export default function UbsComparisonSection() {
               <span className="text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Unidade A
               </span>
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-1.5 min-w-[200px]">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center justify-center gap-1.5 min-w-[100px] sm:min-w-[200px]">
                 <div className="flex items-center justify-end">
                   {aLeads ? (
                     <span className="text-[9.5px] font-black text-teal-600 dark:text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md leading-none flex items-center gap-0.5 shadow-sm">
@@ -539,7 +539,7 @@ export default function UbsComparisonSection() {
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600">Avaliados (A)</span>
                     <span className="text-base font-black text-teal-600 dark:text-teal-400 font-mono">{totalA}</span>
                   </div>
-                  <div className="text-center min-w-[200px]">
+                  <div className="text-center min-w-[100px] sm:min-w-[200px]">
                     <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 leading-none">Diferença de Alunos (A vs B)</p>
                     <span className={`text-xs font-black font-mono ${diffPctColor}`}>
                       {diffPctString}
