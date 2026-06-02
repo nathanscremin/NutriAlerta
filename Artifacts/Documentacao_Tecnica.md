@@ -1,5 +1,5 @@
 # 📖 Dossiê de Documentação Técnica Assistida
-## 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
+## 🥗 Ecossistema NutriAlerta & Nutri for Schools
 > **Engenharia de Software, Modelagem Preditiva (ML), Segurança LGPD e Infraestrutura**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Manual Técnico Final*
 
@@ -12,7 +12,7 @@ O ecossistema foi estruturado sob o conceito de **Monorepo Híbrido Isolado**. A
 ```
                       ┌──────────────────────────────┐
                       │   Tela de Login Unificada    │
-                      │  (https://nutri-alerta...)   │
+                      │  (https://nutrialerta...)    │
                       └──────────────┬───────────────┘
                                      │
                      Selecione o Sistema no Selector
@@ -21,7 +21,7 @@ O ecossistema foi estruturado sob o conceito de **Monorepo Híbrido Isolado**. A
                 ▼ (Dashboard Gestor)                      ▼ (Portal de Pesagem)
     ┌───────────────────────┐                 ┌───────────────────────┐
     │     Projeto Vercel 1  │                 │     Projeto Vercel 2  │
-    │      [NutriAlerta]    │                 │  [Nutri-for-Schools]  │
+    │      [NutriAlerta]    │                 │  [Nutri for Schools]  │
     │   (Porta Local 3000)  │                 │   (Porta Local 3001)  │
     └───────────┬───────────┘                 └───────────┬───────────┘
                 │                                         │
@@ -48,25 +48,42 @@ O banco de dados relacional está hospedado na nuvem do Supabase. A segurança e
 ### 📊 Estrutura de Tabelas Principais
 
 #### 1. Tabela `escolas`
-Armazena a identificação e geolocalização de cada uma das 88 escolas de Rio Claro.
+Armazena a identificação e geolocalização de cada uma das escolas monitoradas de Rio Claro.
 *   `id` (bigint, Primary Key): Identificador único.
 *   `nome` (text): Nome da escola.
 *   `bairro` (text): Bairro onde está localizada.
 *   `created_at` (timestamp with time zone).
 
 #### 2. Tabela `registros_saude`
-Registros antropométricos individuais de pesagem das crianças.
+Registros antropométricos individuais de pesagem e exames antropométricos coletados das crianças.
 *   `id` (bigint, Primary Key): Identificador único.
 *   `escola_id` (bigint, Foreign Key ➔ `escolas.id`): Escola de origem do aluno.
 *   `genero` (character(1)): `M` (Masculino) ou `F` (Feminino).
-*   `idade` (integer): Idade em anos (0 a 18).
-*   `peso` (numeric): Peso corporal em kg.
-*   `altura` (numeric): Altura em metros.
-*   `data_coleta` (timestamp with time zone): Data da pesagem.
+*   `idade_anos` (integer): Idade em anos do aluno.
+*   `peso_kg` (numeric): Peso corporal em kg.
+*   `altura_m` (numeric): Altura em metros.
+*   `classificacao` (text): Classificação do estado nutricional calculada pela OMS (Eutrofia, Magreza, Desnutrição, Sobrepeso, Obesidade).
+*   `alerta_risco` (boolean): Flag que sinaliza estado de risco clínico ativo.
+*   `cnes_ubs` (text): CNES da Unidade Básica de Saúde vinculada ao território do aluno.
+
+#### 3. Tabela `previsoes_nutricionais`
+Tabela central que armazena os cálculos de prevalência nutricional histórica e as projeções estimadas de inteligência artificial.
+*   `cnes` (text, Primary Key part): CNES identificador da UBS.
+*   `ano` (integer, Primary Key part): Ano correspondente ao dado (histórico ou previsão ★).
+*   `faixa_etaria_cod` (integer, Primary Key part): Código identificador da faixa etária avaliada.
+*   `tipo_projecao` (text, Primary Key part): Identificador da linha da IA (`obesidade` ou `desnutricao`).
+*   `status` (text): Estado do registro (`DADO HISTÓRICO` ou `PREVISÃO FUTURA`).
+*   `magreza_acentuada_pct` (numeric): Taxa de desnutrição/magreza severa (%).
+*   `magreza_pct` (numeric): Taxa de magreza populacional (%).
+*   `eutrofia_pct` (numeric): Taxa de peso adequado/eutrofia (%).
+*   `sobrepeso_pct` (numeric): Taxa de sobrepeso populacional (%).
+*   `obesidade_pct` (numeric): Taxa de obesidade grau I/II (%).
+*   `obesidade_grave_pct` (numeric): Taxa de obesidade grave/mórbida (%).
+*   `delta_predito` (numeric): Taxa de variação predita pela IA em relação ao ano anterior.
 
 ### 🛡️ Políticas de Segurança (Row Level Security - RLS)
-*   **Acesso de Leitura Pública Limitada:** Qualquer usuário autenticado (gestores e escolas) pode ler as escolas e estatísticas de registro.
-*   **Bypass de Escrita Administrativa:** A inserção de dados sensíveis de triagem utiliza uma chave de serviço administrativo no servidor para criptografia e validação, garantindo conformidade com a LGPD antes da gravação física dos dados.
+*   **Acesso de Leitura Pública:** Qualquer usuário autenticado (gestores e escolas) pode ler as predições e estatísticas de registro.
+*   **Bypass de Escrita Administrativa:** A gravação física dos dados sensíveis e predições de ML é feita exclusivamente por JWT autenticado da conta de serviço (`nutrialerta@gmail.com`), bloqueando qualquer tentativa de injeção externa de dados.
 
 ---
 
@@ -74,14 +91,14 @@ Registros antropométricos individuais de pesagem das crianças.
 
 Para a análise de tendências epidemiológicas, foi desenvolvido um pipeline de aprendizado de máquina supervisionado em **Python**.
 
-### 🧠 Algoritmo: Classificador Random Forest
+### 🧠 Algoritmo: Regressor Random Forest
 *   **Dataset:** Dados históricos reais do SISVAN correlacionados a censos demográficos do IBGE de Rio Claro.
 *   **Feature Engineering:** Mapeamento histórico por ano, UBS de origem, faixas etárias, e índices históricos de magreza, eutrofia, sobrepeso e obesidade.
 *   **Pipeline de Treinamento (`unified_ML.py`):** 
-    1.  O script treina estimadores paralelos de florestas de decisão (*Random Forest Classifiers*).
+    1.  O script treina estimadores paralelos de florestas de regressão (*Random Forest Regressor* com 300 estimadores).
     2.  Gera projeções matemáticas de risco para o ano de **2026** e **2027**.
-    3.  Grava as projeções em nuvem e gera arquivos consolidados para atualização de mapas.
-*   **Automação Gratuita (GitHub Actions):** O modelo é re-treinado automaticamente na nuvem sem custos utilizando um workflow do GitHub Actions (`monthly_update.yml`), disparado por cronograma mensal ou manualmente via *workflow_dispatch*.
+    3.  Faz o Upsert em lote das predições diretamente no Supabase na nuvem e atualiza backups em CSV.
+*   **Automação Gratuita (GitHub Actions):** O modelo é re-treinado automaticamente na nuvem sem custos utilizando um workflow do GitHub Actions (`run_ml.yml`), disparado por cronograma diário ou manualmente via *workflow_dispatch*.
 
 ---
 
@@ -110,7 +127,7 @@ Dados de identificação como o nome do aluno e do responsável são criptografa
 
 Para prover uma experiência premium e integrada sem que o usuário tenha de autenticar em cada porta separadamente, desenvolvemos um fluxo de **Single Sign-On (SSO)** seguro:
 
-1.  **Login Unificado:** O usuário se autentica na porta `3000` (`NutriAlerta`) e seleciona o destino "Nutri-for-Schools".
+1.  **Login Unificado:** O usuário se autentica na porta `3000` (`NutriAlerta`) e seleciona o destino "Nutri for Schools".
 2.  **Redirecionamento Criptográfico via Hash:**
     O servidor da porta 3000 autentica as credenciais com o Supabase e redireciona o usuário para:
     `https://nutriforschools.vercel.app/auth/sync#access_token=XXX&refresh_token=YYY`

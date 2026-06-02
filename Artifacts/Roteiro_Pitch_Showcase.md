@@ -1,5 +1,5 @@
 # 🎤 Roteiro de Pitch de 3 Minutos: Showcase do Ecossistema
-## 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
+## 🥗 Ecossistema NutriAlerta & Nutri for Schools
 > **Mapeamento Epidemiológico e Gestão de Saúde Nutricional Escolar em Rio Claro - SP**  
 > *Projeto Interdisciplinar do 3º Semestre · Apresentação para Empresas e Bancas Técnicas*
 
@@ -28,9 +28,9 @@
 ### 💡 2. A Solução: Conectando os Pontos de Forma Integrada (0:30 – 1:15)
 > *(Passa o slide para a Arquitetura Geral do Ecossistema)*
 > 
-> "Para resolver esse apagão decisório, nós criamos o **Ecossistema NutriAlerta & Nutri-for-Schools**.
+> "Para resolver esse apagão decisório, nós criamos o **Ecossistema NutriAlerta & Nutri for Schools**.
 > Desenvolvemos uma plataforma integrada e inteligente dividida em duas frentes complementares:
-> Primeiro, o **Nutri-for-Schools**: um portal escolar ágil onde diretores e nutricionistas registram em segundos as pesagens dos alunos, calculando curvas de IMC oficiais da OMS Z-score de forma automatizada e monitorando a qualidade da alimentação escolar.
+> Primeiro, o **Nutri for Schools**: um portal escolar ágil onde diretores e nutricionistas registram em segundos as pesagens dos alunos, calculando curvas de IMC oficiais da OMS Z-score de forma automatizada e monitorando a qualidade da alimentação escolar.
 > Segundo, o **NutriAlerta**: um painel de vigilância epidemiológica municipal onde o Secretário de Saúde e os gestores visualizam o panorama completo em tempo real."
 
 ---

@@ -1,12 +1,12 @@
 # 📋 Documento de Requisitos de Produto (PRD) Consolidado
-## 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
+## 🥗 Ecossistema NutriAlerta & Nutri for Schools
 > **Vigilância Epidemiológica Municipal e Monitoramento Antropométrico Escolar**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Versão Final Homologada*
 
 ---
 
 ## 1. 🏛️ Visão Geral do Ecossistema e Objetivos
-O ecossistema **NutriAlerta & Nutri-for-Schools** é um conjunto unificado de soluções de software e inteligência artificial projetado para combater a desnutrição, o sobrepeso e a obesidade infantil no município de **Rio Claro - SP**. 
+O ecossistema **NutriAlerta & Nutri for Schools** é um conjunto unificado de soluções de software e inteligência artificial projetado para combater a desnutrição, o sobrepeso e a obesidade infantil no município de **Rio Claro - SP**. 
 
 O projeto preenche o ciclo completo de ponta a ponta (E2E) exigido para a gestão pública de saúde:
 1. **Entrada de Dados:** Registro descentralizado e seguro de pesagens e dados antropométricos efetuado pelas escolas públicas (portal escolar).
@@ -42,13 +42,13 @@ Ambos os portais foram completamente implementados e testados. Abaixo está o st
 
 | ID | Épico | Entregável Final | Responsável | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **EP-01** | Geoespacial Base | Mapeamento interativo de Rio Claro, contendo tooltips, popups e polígonos das UBS e escolas. | Nicolas | **[Concluído]** |
-| **EP-02** | Validação SISVAN | ETL e consistência histórica da série epidemiológica do SISVAN. | Nathan / Matheus | **[Concluído]** |
-| **EP-03** | Dashboard Web | Interface com gráficos temporais, filtros dinâmicos e painéis de UBS. | Arthur / Pedro | **[Concluído]** |
-| **EP-04** | Correlacionamento | Cruzamento de dados de desnutrição e obesidade por sub-regiões e bairros censitários. | Dev Team | **[Concluído]** |
-| **EP-05** | Modelagem preditiva | Modelo preditivo classificador *Random Forest* (ML) treinado e gerando projeções para 2026/2027. | Dev Team | **[Concluído]** |
-| **EP-06** | Mapa de Risco | Visualização espacial de Voronoi e coroplética por níveis de gravidade da desnutrição/sobrepeso. | Nicolas / Dev Team | **[Concluído]** |
-| **EP-07** | Relatório de Produção | Homologação final, documentações e deploy seguro integrado na nuvem da Vercel. | Todos | **[Concluído]** |
+| **EP-01** | Geoespacial Base | Mapeamento interativo de Rio Claro, contendo tooltips, popups e polígonos das UBS e escolas. | Equipe do Projeto | **[Concluído]** |
+| **EP-02** | Validação SISVAN | ETL e consistência histórica da série epidemiológica do SISVAN. | Equipe do Projeto | **[Concluído]** |
+| **EP-03** | Dashboard Web | Interface com gráficos temporais, filtros dinâmicos e painéis de UBS. | Equipe do Projeto | **[Concluído]** |
+| **EP-04** | Correlacionamento | Cruzamento de dados de desnutrição e obesidade por sub-regiões e bairros censitários. | Equipe do Projeto | **[Concluído]** |
+| **EP-05** | Modelagem preditiva | Modelo preditivo classificador *Random Forest* (ML) treinado e gerando projeções para 2026/2027. | Equipe do Projeto | **[Concluído]** |
+| **EP-06** | Mapa de Risco | Visualização espacial de Voronoi e coroplética por níveis de gravidade da desnutrição/sobrepeso. | Equipe do Projeto | **[Concluído]** |
+| **EP-07** | Relatório de Produção | Homologação final, documentações e deploy seguro integrado na nuvem da Vercel. | Equipe do Projeto | **[Concluído]** |
 
 ---
 
