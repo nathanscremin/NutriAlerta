@@ -1,21 +1,62 @@
-# Next.js build and dependencies
+# ─── NEXT.JS / NODE DEPENDENCIES & BUILDS ───
 **/node_modules/
 **/.next/
 **/out/
+**/dist/
+**/build/
+**/.cache/
+**/.vercel/
 
-# Environments
+# ─── ENVIRONMENT VARIABLES & SECRETS ───
 **/.env*.local
+**/.env.production
+**/.env
+**/secrets.json
 
-# OS files
+# ─── PYTHON / MACHINE LEARNING ARTIFACTS ───
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+**/.virtualenv/
+**/venv/
+**/.venv/
+**/env/
+**/.env/
+**/htmlcov/
+**/.tox/
+**/.coverage
+**/.cache
+**/*.gdoc
+
+# ─── SYSTEM & TEMPORARY FILES ───
 .DS_Store
 Thumbs.db
-
-# Other temp files
+Desktop.ini
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 temp_setores/
 temp_bairros/
+
+# ─── PACKAGES & ARCHIVES ───
 *.zip
-*.pdf
 *.rar
 *.7z
 *.tar.gz
-*.log
+*.tar
+*.gz
+*.iso
+
+# ─── IDE CONFIGURATIONS ───
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
