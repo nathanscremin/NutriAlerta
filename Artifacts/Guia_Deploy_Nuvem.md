@@ -1,8 +1,8 @@
 # 🚀 Guia Oficial de Deploy Duplo na Vercel & Automação Gratuita de IA
-> **Como hospedar o Ecossistema NutriAlerta e o Portal Nutri for Schools de forma profissional e gratuita**  
+> **Como hospedar o Ecossistema NutriAlerta e o Portal Nutri-for-Schools de forma profissional e gratuita**  
 > *Projeto Interdisciplinar · Versão de Produção Final*
 
-Este guia técnico descreve detalhadamente o passo a passo para colocar em produção ambos os portais do ecossistema (**NutriAlerta** para gestão municipal e **Nutri for Schools** para pesagem e exames escolares) na nuvem da **Vercel**, conectando-os ao banco de dados Supabase com sincronização automática e acionamento gratuito da inteligência artificial via **GitHub Actions**.
+Este guia técnico descreve detalhadamente o passo a passo para colocar em produção ambos os portais do ecossistema (**NutriAlerta** para gestão municipal e **Nutri-for-Schools** para pesagem e exames escolares) na nuvem da **Vercel**, conectando-os ao banco de dados Supabase com sincronização automática e acionamento gratuito da inteligência artificial via **GitHub Actions**.
 
 ---
 
@@ -22,7 +22,7 @@ Ambas as aplicações Next.js estão hospedadas no mesmo repositório do GitHub 
             ▼ (Dashboard Gestor)                      ▼ (Portal de Pesagem)
 ┌───────────────────────┐                 ┌───────────────────────┐
 │     Projeto Vercel 1  │                 │     Projeto Vercel 2  │
-│      [NutriAlerta]    │                 │  [Nutri for Schools]  │
+│      [NutriAlerta]    │                 │  [Nutri-for-Schools]  │
 │   (Porta Local 3000)  │                 │   (Porta Local 3001)  │
 └───────────┬───────────┘                 └───────────┬───────────┘
             │                                         │
@@ -96,7 +96,7 @@ O primeiro projeto hospedará o portal principal do município (**NutriAlerta**)
 
 ## 🏫 Passo 3: Hospedar o Portal de Pesagem Escolar (Projeto Vercel 2)
 
-O segundo projeto hospedará a interface do portal coletor escolar (**Nutri for Schools**), onde as escolas registram a pesagem e exames antropométricos dos alunos:
+O segundo projeto hospedará a interface do portal coletor escolar (**Nutri-for-Schools**), onde as escolas registram a pesagem e exames antropométricos dos alunos de forma 100% anônima:
 
 1. No dashboard da Vercel, clique em **Add New ➔ Project**.
 2. Selecione o **mesmo repositório** `NutriAlerta`.
@@ -104,7 +104,7 @@ O segundo projeto hospedará a interface do portal coletor escolar (**Nutri for 
    *   **Project Name:** `nutriforschools` (ou similar)
    *   **Framework Preset:** `Next.js`
    *   **Root Directory (Pasta Raiz):** Clique em *Edit* e aponte para a subpasta:
-       `Nutri for Schools/project/nutri-alerta`
+       `Nutri-for-Schools/project/nutri-alerta`
 4. Expanda a seção **Environment Variables** e configure as variáveis de ambiente:
 
 | Nome da Variável | Valor Recomendado |
@@ -141,7 +141,7 @@ Ao fazer isso:
 
 Com os dois deploys verdes e ativos na Vercel:
 1. Acesse o portal escolar (`https://nutriforschools.vercel.app`). Como não há sessão activa, o middleware irá redirecioná-lo automaticamente para o portal principal (`https://nutri-alerta.vercel.app`) contendo a flag de logout.
-2. Faça login escolhendo a opção **"Nutri for Schools"** e inserindo as credenciais.
+2. Faça login escolhendo a opção **"Nutri-for-Schools"** e inserindo as credenciais.
 3. Você será redirecionado para a página escolar automaticamente com a sessão sincronizada de forma transparente. Cadastre uma pesagem de teste de obesidade infantil na **UBS Jardim Chervezon**.
 4. Acesse o **GitHub Actions** e clique em **Run workflow** para re-treinar a IA na nuvem.
 5. Visite `https://[SEU-SITE-DO-GESTOR].vercel.app/api/data?refresh=true` para atualizar o cache.

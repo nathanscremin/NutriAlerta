@@ -1,15 +1,15 @@
 # 📋 Documento de Requisitos de Produto (PRD) Consolidado
-## 🥗 Ecossistema NutriAlerta & Nutri for Schools
+## 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
 > **Vigilância Epidemiológica Municipal e Monitoramento Antropométrico Escolar**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Versão Final Homologada*
 
 ---
 
 ## 1. 🏛️ Visão Geral do Ecossistema e Objetivos
-O ecossistema **NutriAlerta & Nutri for Schools** é um conjunto unificado de soluções de software e inteligência artificial projetado para combater a desnutrição, o sobrepeso e a obesidade infantil no município de **Rio Claro - SP**. 
+O ecossistema **NutriAlerta & Nutri-for-Schools** é um conjunto unificado de soluções de software e inteligência artificial projetado para combater a desnutrição, o sobrepeso e a obesidade infantil no município de **Rio Claro - SP**. 
 
 O projeto preenche o ciclo completo de ponta a ponta (E2E) exigido para a gestão pública de saúde:
-1. **Entrada de Dados:** Registro descentralizado e seguro de pesagens e dados antropométricos efetuado pelas escolas públicas (portal escolar).
+1. **Entrada de Dados:** Registro descentralizado e 100% anônimo de pesagens e dados antropométricos efetuado exclusivamente pelas escolas públicas através do portal escolar.
 2. **Processamento Inteligente:** Análise automatizada de risco baseada no Z-score da OMS e projeções de tendências epidemiológicas geradas em tempo real por um classificador de Aprendizado de Máquina (*Random Forest*).
 3. **Interface de Saída:** Mapas interativos (Voronoi + Coroplético), painéis estatísticos e assistente de IA conversacional (**NutriBot**) para suporte à decisão do gestor municipal de saúde.
 
@@ -57,11 +57,11 @@ Ambos os portais foram completamente implementados e testados. Abaixo está o st
 Sob a ótica de segurança cibernética e de governança ética em Inteligência Artificial, o ecossistema foi estruturado sobre os seguintes pilares de conformidade estrita:
 
 ### 🛡️ 4.1. Conformidade com a LGPD (Lei Geral de Proteção de Dados)
-Como lidamos com prontuários médicos e dados antropométricos de **menores de idade** (crianças e adolescentes de 0 a 18 anos), implementamos uma arquitetura defensiva avançada de privacidade:
-*   **Pseudonimização Obrigatória:** O CPF dos alunos é imediatamente transformado em um ID criptográfico irreversível por meio de um algoritmo SHA-256 hash de mão única com `HASH_SALT` único de servidor. Isso impede que invasores relacionem os dados antropométricos com a identidade real da criança no banco de dados.
-*   **Criptografia Simétrica de Ponta a Ponta (AES-256-GCM):** Informações sensíveis legíveis (como o nome do aluno e o nome do responsável) são criptografadas com chave simétrica no servidor de API antes de serem gravadas no banco de dados em nuvem.
-*   **Políticas de Bloqueio Automático:** Se as chaves de segurança (`ENCRYPTION_KEY` ou `HASH_SALT`) estiverem ausentes no servidor de produção, os endpoints do backend bloqueiam preventivamente qualquer escrita/leitura para evitar vazamento ou armazenamento inseguro.
-*   **Timeouts Defensivos:** Telas de carregamento e autenticação de usuários expiram e efetuam auto-redirecionamento caso a conexão enfrente latências extremas, protegendo o sistema contra varreduras e acessos concorrentes não autorizados.
+Como lidamos com prontuários nutricionais e dados antropométricos de **menores de idade** (crianças e adolescentes de 0 a 18 anos), implementamos uma arquitetura de **Privacy-by-Design absoluto** focada em anonimização nativa na origem:
+*   **Zero Coleta de Dados Pessoais Identificáveis (PII):** A triagem de pesagem escolar **não** coleta, transmite ou armazena qualquer Dado Pessoal Identificável (como nomes de alunos, CPFs, RGs ou dados de responsáveis). A tabela `registros_saude` no banco central na nuvem (Supabase) persiste exclusivamente dimensões biométricas e demográficas anônimas (`escola_id`, `genero`, `idade`, `peso`, `altura` e data da coleta). Conforme o Artigo 12 da LGPD, dados anonimizados não sofrem incidência de vazamentos ou penalidades de privacidade, pois a identidade civil dos alunos nunca entra no sistema.
+*   **Isolamento Rígido de Responsabilidades:** O portal **NutriAlerta (Gestor)** opera como uma ferramenta estritamente analítica e passiva de **somente leitura**, consumindo as predições de inteligência artificial e os agregados estatísticos. O portal **Nutri-for-Schools (Escolar)** é o único e exclusivo canal de coleta descentralizada do ecossistema, onde profissionais escolares inserem os dados antropométricos de forma rápida, fluindo as métricas anônimas diretamente para o banco de dados na nuvem.
+*   **Bypass Seguro com Row Level Security (RLS):** A proteção do banco de dados na nuvem é exercida por regras ativas de RLS no Supabase, garantindo que mesmo os registros de medição anônimos só possam ser lidos ou gravados por conexões autenticadas via SSO cross-port ou tokens de JWT administrativos devidamente autorizados.
+*   **Orquestração Isolada de Segredos:** Chaves de API do Supabase e credenciais da engine de IA são tratadas como segredos de servidor e inseridas de forma isolada via variáveis de ambiente nas plataformas de deploy (Vercel e GitHub Actions), mantendo o código público 100% livre de segredos expostos.
 
 ### 🤖 4.2. Ética em Inteligência Artificial e Modelos Preditivos
 *   **Equidade e Prevenção de Viés (Fairness):** O modelo *Random Forest* foi calibrado com amostragem real e balanceado utilizando dados demográficos locais. Ele não discrimina escolas ou UBS com base em fatores estritamente socioeconômicos descontextualizados, limitando-se a prever riscos puramente antropométricos baseados no histórico epidemiológico real.

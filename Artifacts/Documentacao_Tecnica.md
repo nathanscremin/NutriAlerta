@@ -1,5 +1,5 @@
 # 📖 Dossiê de Documentação Técnica Assistida
-## 🥗 Ecossistema NutriAlerta & Nutri for Schools
+## 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
 > **Engenharia de Software, Modelagem Preditiva (ML), Segurança LGPD e Infraestrutura**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Manual Técnico Final*
 
@@ -21,7 +21,7 @@ O ecossistema foi estruturado sob o conceito de **Monorepo Híbrido Isolado**. A
                 ▼ (Dashboard Gestor)                      ▼ (Portal de Pesagem)
     ┌───────────────────────┐                 ┌───────────────────────┐
     │     Projeto Vercel 1  │                 │     Projeto Vercel 2  │
-    │      [NutriAlerta]    │                 │  [Nutri for Schools]  │
+    │      [NutriAlerta]    │                 │  [Nutri-for-Schools]  │
     │   (Porta Local 3000)  │                 │   (Porta Local 3001)  │
     └───────────┬───────────┘                 └───────────┬───────────┘
                 │                                         │
@@ -102,32 +102,34 @@ Para a análise de tendências epidemiológicas, foi desenvolvido um pipeline de
 
 ---
 
-## 🔐 4. Protocolo de Segurança, LGPD & Criptografia
+## 🔐 4. Protocolo de Segurança, LGPD & Anonimização Nativa
 
-A proteção de dados sensíveis e pessoais de menores de idade é efetuada no servidor Next.js através de técnicas rigorosas:
+A proteção e a privacidade dos menores no ecossistema são garantidas no nível mais alto de conformidade jurídica através de uma arquitetura defensiva focada em **Anonimização Nativa desde a Origem (Privacy-by-Design)**:
 
-### 4.1. Pseudonimização (SHA-256 HMAC com Salt)
-O CPF do aluno nunca é salvo de forma legível. O CPF e o Salt do servidor são convertidos em um ID imutável:
-```typescript
-function pseudonymize(cpf: string): string {
-  const normalizedCpf = cpf.replace(/\D/g, ''); // Remove pontuações
-  return crypto.createHmac('sha256', process.env.HASH_SALT).update(normalizedCpf).digest('hex');
-}
-```
+### 4.1. Ausência Total de Dados Pessoais Identificáveis (PII)
+Por diretriz estrita de design e respeito aos direitos fundamentais de privacidade infantil, o ecossistema **não** coleta, trafega ou armazena qualquer dado pessoal identificável dos alunos da rede municipal (como CPF, RG, nomes civis completos ou filiação). 
 
-### 4.2. Criptografia Simétrica (AES-256-GCM)
-Dados de identificação como o nome do aluno e do responsável são criptografados:
-*   **Algoritmo:** `aes-256-gcm` (criptografia simétrica com autenticação de integridade de dados).
-*   **Chave:** `ENCRYPTION_KEY` de exatamente 256 bits (32 caracteres).
-*   **IV (Initialization Vector):** 12 bytes aleatórios gerados a cada nova criptografia, garantindo que o mesmo nome resulte em cifras diferentes a cada salvamento.
+### 4.2. Triagem e Armazenamento 100% Anônimo
+A tabela central `registros_saude` no Supabase persiste estritamente variáveis clínicas e demográficas anônimas:
+*   `escola_id` (vínculo geográfico do colégio, sem expor endereço residencial).
+*   `genero` (apenas dimensão epidemiológica `M` ou `F`).
+*   `idade_anos` (idade discreta).
+*   `peso_kg` e `altura_m` (dimensões biométricas brutas para cálculo do IMC).
+*   `data_coleta` (momento cronológico da triagem).
 
+Essa abordagem garante que, nos termos do **Artigo 12 da Lei Geral de Proteção de Dados (LGPD - Lei 13.709/18)**, os dados antropométricos sejam considerados dados anônimos e, por consequência, fiquem fora da incidência da lei. Isso elimina por completo qualquer vetor de ataque de quebra de confidencialidade de identidade de menores.
+
+### 4.3. Regras de Acesso e Segurança Operacional
+A segurança e a integridade da base de dados são mantidas através de:
+*   **Políticas de RLS (Row Level Security):** Filtros ativos a nível de banco no Supabase que barram consultas e inserções sem privilégios ou escopos apropriados.
+*   **Orquestração Isolada de Variáveis Ambientais:** Todas as chaves secretas de acesso à nuvem, tokens JWT do Supabase e as chaves de API para os modelos preditivos e chatbot de IA são configuradas exclusivamente via painel administrativo de variáveis na Vercel e no GitHub Actions. Isso assegura que nenhuma credencial confidencial seja injetada no repositório de código público.
 ---
 
 ## 🔄 5. Protocolo de Sincronização de Login (SSO Cross-Port)
 
 Para prover uma experiência premium e integrada sem que o usuário tenha de autenticar em cada porta separadamente, desenvolvemos um fluxo de **Single Sign-On (SSO)** seguro:
 
-1.  **Login Unificado:** O usuário se autentica na porta `3000` (`NutriAlerta`) e seleciona o destino "Nutri for Schools".
+1.  **Login Unificado:** O usuário se autentica na porta `3000` (`NutriAlerta`) e seleciona o destino "Nutri-for-Schools".
 2.  **Redirecionamento Criptográfico via Hash:**
     O servidor da porta 3000 autentica as credenciais com o Supabase e redireciona o usuário para:
     `https://nutriforschools.vercel.app/auth/sync#access_token=XXX&refresh_token=YYY`

@@ -9,15 +9,11 @@ import { classifyNutritionWHO } from '@/lib/nutritionUtils';
 // Algoritmo de criptografia irrefutável para dados pessoais de menores (LGPD)
 const ALGORITHM = 'aes-256-gcm';
 
-const SECRET_KEY = process.env.ENCRYPTION_KEY;
-const SALT = process.env.HASH_SALT;
+const SECRET_KEY = process.env.ENCRYPTION_KEY || '';
+const SALT = process.env.HASH_SALT || '';
 
-if (!SECRET_KEY || SECRET_KEY.length !== 32) {
-  throw new Error('LGPD Security Module failed: ENCRYPTION_KEY environment variable is not defined or is not exactly 32 bytes/characters long.');
-}
-
-if (!SALT) {
-  throw new Error('LGPD Security Module failed: HASH_SALT environment variable is not defined.');
+if (!SECRET_KEY || SECRET_KEY.length !== 32 || !SALT) {
+  console.warn('[LGPD Security Module Warning] ENCRYPTION_KEY ou HASH_SALT legados não foram definidos na nuvem do gestor. O endpoint de cadastro manual desativado operará sem chaves.');
 }
 
 // UBS CNES mapping to resolve codes into textual names for local processing
@@ -224,169 +220,10 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  // 1. Rate Limiting para mitigar ataques de negação de serviço e varredura de API
-  const ip = req.headers.get('x-forwarded-for') || (req as any).ip || '127.0.0.1';
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { success: false, error: 'Muitas requisições. Por favor, tente novamente em um minuto.' },
-      { status: 429 }
-    );
-  }
-
-  try {
-    const body = await req.json();
-    const { nome, cpf, nome_responsavel, idade_anos, peso_kg, altura_m, genero, cnes_ubs } = body;
-
-    // Se cnes_ubs for código numérico, converte para o nome da UBS correspondente
-    let resolvedUbsName = cnes_ubs;
-    if (cnes_ubs && /^\d+$/.test(cnes_ubs)) {
-      const matchedName = Object.keys(UBS_CNES).find(key => UBS_CNES[key] === cnes_ubs);
-      if (matchedName) {
-        resolvedUbsName = matchedName;
-      }
-    }
-
-    // 2. Validação Funcional Estrita de QA (Prevenção de injeção e dados anômalos)
-    if (!nome || typeof nome !== 'string' || nome.trim().length < 3) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Nome inválido.' }, { status: 400 });
-    }
-    
-    // Regex para validar CPF (previne SQL injection e garante formato correto)
-    const cpfRegex = /^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/;
-    if (!cpf || typeof cpf !== 'string' || !cpfRegex.test(cpf)) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: CPF inválido.' }, { status: 400 });
-    }
-
-    if (!nome_responsavel || typeof nome_responsavel !== 'string' || nome_responsavel.trim().length < 3) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Nome do responsável inválido.' }, { status: 400 });
-    }
-
-    // Validação fisiológica antropométrica estrita (Caso 2 de QA: Out of Bounds)
-    const idade = Number(idade_anos);
-    if (isNaN(idade) || idade < 0 || idade > 18) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Idade deve ser entre 0 e 18 anos.' }, { status: 400 });
-    }
-
-    const peso = Number(peso_kg);
-    if (isNaN(peso) || peso <= 1.0 || peso > 200.0) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Peso fora dos limites fisiológicos aceitáveis (1.0kg - 200.0kg).' }, { status: 400 });
-    }
-
-    const altura = Number(altura_m);
-    if (isNaN(altura) || altura <= 0.3 || altura > 2.5) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Altura fora dos limites fisiológicos aceitáveis (0.3m - 2.5m).' }, { status: 400 });
-    }
-
-    if (!genero || (genero !== 'Masculino' && genero !== 'Feminino')) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: Gênero deve ser Masculino ou Feminino.' }, { status: 400 });
-    }
-
-    if (!cnes_ubs || typeof cnes_ubs !== 'string' || cnes_ubs.trim().length < 4) {
-      return NextResponse.json({ success: false, error: 'Validação de QA: CNES da UBS de origem é obrigatório.' }, { status: 400 });
-    }
-
-    // 3. Aplicação do Cálculo de Risco Antropométrico baseando-se no Z-score da OMS
-    const bmi = peso / (altura * altura);
-    const { classificacao, alertaRisco, condutaClinica } = classifyNutritionWHO(idade, genero, bmi);
-
-    // 4. Tratamento de Segurança e Privacidade LGPD (Criptografia AES-GCM e Pseudonimização)
-    const idPseudonimizado = pseudonymize(cpf);
-    const dadosNomeCriptografados = encrypt(nome);
-    const dadosResponsavelCriptografados = encrypt(nome_responsavel);
-
-    // 5. Salvar o registro diretamente na nuvem (Supabase)
-    let savedToCloud = false;
-    let cloudRecordId = null;
-    try {
-      const adminClient = await getAdminSupabaseClient();
-      
-      // Busca todas as escolas
-      const { data: dbSchools, error: schoolsErr } = await adminClient.from('escolas').select('*');
-      
-      if (!schoolsErr && dbSchools && dbSchools.length > 0) {
-        // Encontra o melhor school_id correspondente à região da UBS (fuzzy matching)
-        let schoolId = dbSchools[0].id;
-        
-        try {
-          const poisPath = path.join(process.cwd(), 'src', 'lib', 'extractedPois.json');
-          const poisContent = await fs.readFile(poisPath, 'utf8');
-          const extractedPois = JSON.parse(poisContent);
-          
-          const regionalPois = extractedPois.filter((p: any) => p.categoria === 'Educação' && p.regiao_ubs === resolvedUbsName);
-          if (regionalPois.length > 0) {
-            const norm = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
-            const matchedSchool = dbSchools.find((s: any) => {
-              const dbNorm = norm(s.nome);
-              return regionalPois.some((p: any) => norm(p.nome).includes(dbNorm) || dbNorm.includes(norm(p.nome)));
-            });
-            if (matchedSchool) {
-              schoolId = matchedSchool.id;
-            }
-          }
-        } catch (poiErr) {
-          console.warn("[Supabase Cloud Insert] Erro ao carregar extração de POIs, usando primeira escola.", poiErr);
-        }
-
-        // Insere o novo registro antropométrico no banco de dados na nuvem (registros_saude)
-        const { data: insertResult, error: insertErr } = await adminClient
-          .from('registros_saude')
-          .insert({
-            escola_id: schoolId,
-            genero: genero === 'Masculino' ? 'M' : 'F',
-            idade: idade,
-            peso: peso,
-            altura: altura,
-            data_coleta: new Date().toISOString()
-          })
-          .select('id');
-
-        if (insertErr) {
-          console.error("[Supabase Cloud Insert ERROR] Falha ao inserir registros_saude na nuvem:", insertErr.message);
-        } else {
-          console.log("[Supabase Cloud Insert SUCCESS] Registro salvo na nuvem com ID:", insertResult?.[0]?.id);
-          savedToCloud = true;
-          cloudRecordId = insertResult?.[0]?.id;
-        }
-      }
-    } catch (cloudErr) {
-      console.error("[Supabase Cloud Auth ERROR] Falha na conexão ou autenticação de nuvem:", cloudErr);
-    }
-
-    // 6. Atualizar a base de dados consolidada local e re-treinar o modelo de IA em tempo real
-    await updateConsolidatedCSV(resolvedUbsName, classificacao);
-
-    // 7. Retorno Seguro (Dados Pessoais Sensíveis ocultados e pseudonimizados de acordo com a LGPD)
-    return NextResponse.json({
-      success: true,
-      message: savedToCloud ? 'Paciente cadastrado, triado e sincronizado com a nuvem!' : 'Paciente cadastrado e triado com sucesso!',
-      dadosProcessados: {
-        idPseudonimizado, // SHA-256 Salted
-        cnes_ubs,
-        idade_anos: idade,
-        genero,
-        peso_kg: peso,
-        altura_m: altura,
-        imc: Number(bmi.toFixed(2)),
-        classificacao,
-        alertaRisco,
-        condutaClinica,
-        savedToCloud,
-        cloudRecordId,
-        // Envia as tags de criptografia para comprovar a segurança no banco de dados
-        criptografiaSegurança: {
-          nomeAlgoritmo: ALGORITHM,
-          nomeIV: dadosNomeCriptografados.iv,
-          dadosCriptografados: dadosNomeCriptografados.encryptedData,
-          authTag: dadosNomeCriptografados.authTag
-        }
-      }
-    });
-
-  } catch (err: any) {
-    console.error('ERRO CADASTRO PACIENTE:', err);
-    return NextResponse.json(
-      { success: false, error: 'Erro interno de servidor.', details: err.message },
-      { status: 500 }
-    );
-  }
+  // O portal do gestor (NutriAlerta) é estritamente analítico e somente leitura.
+  // Toda coleta e cadastro biométrico descentralizado foi direcionada para o portal escolar Nutri-for-Schools de forma 100% anônima.
+  return NextResponse.json({
+    success: false,
+    error: 'Este endpoint de cadastro manual legado foi desativado no portal do gestor. A triagem e inserção antropométrica escolar ocorre exclusivamente de forma 100% anônima e sem coleta de CPFs/nomes no portal Nutri-for-Schools.'
+  }, { status: 400 });
 }

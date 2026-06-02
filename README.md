@@ -1,4 +1,4 @@
-# 🥗 Ecossistema NutriAlerta & Nutri for Schools
+# 🥗 Ecossistema NutriAlerta & Nutri-for-Schools
 > **Mapeamento Epidemiológico, Gestão de Saúde Coletiva e Inteligência Artificial Preditiva**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Saúde Pública & Inovação Tecnológica · Versão de Produção*
 
@@ -25,8 +25,8 @@ O **NutriAlerta** é um ecossistema integrado de saúde pública e tecnologia qu
 
 O ecossistema divide-se em duas vertentes interdependentes que atuam em perfeita sintonia e segurança por meio de um banco de dados integrado Supabase na nuvem:
 
-1. **NutriAlerta (Portal do Gestor Municipal):** Painel analítico de alta performance para gestores públicos de saúde e analistas, contendo mapas epidemiológicos coropléticos, diagramas de Voronoi, projeções preditivas a dois anos e o assistente de decisão inteligente **NutriBot** (integrado ao Google Gemini).
-2. **Nutri for Schools (Portal Escolar/Coletor):** Interface dedicada e simplificada para as escolas do município realizarem o cadastro antropométrico (peso, altura e classificação de IMC pela OMS) dos alunos de forma rápida e segura.
+1. **NutriAlerta (Portal do Gestor Municipal):** Painel analítico de alta performance para gestores públicos de saúde e analistas, contendo mapas epidemiológicos coropléticos, diagramas de Voronoi, projeções preditivas a dois anos e o assistente de decisão inteligente **NutriBot** (integrado ao Google Gemini). O portal atua como uma interface consultiva de **somente leitura**, sem manipulação ou inserção direta de dados.
+2. **Nutri-for-Schools (Portal Escolar/Coletor):** Interface dedicada, simplificada e descentralizada nas escolas do município, sendo o **único canal de coleta ativa** do ecossistema, onde profissionais realizam o cadastro antropométrico de triagem (peso, altura e classificação de IMC pela OMS) de forma rápida e 100% anônima.
 
 ```mermaid
 graph TD
@@ -46,7 +46,7 @@ graph TD
         Bot[NutriBot: Suporte de Decisão Gemini]
     end
 
-    subgraph App2 ["Portal 2: Nutri for Schools (Porta 3001)"]
+    subgraph App2 ["Portal 2: Nutri-for-Schools (Porta 3001)"]
         NFS_App[Next.js App Escolar]
         Stats[Estatísticas de IMC e Eutrofia]
         Auth[Registro de Medições Antropométricas]
@@ -119,7 +119,7 @@ NutriAlerta/                   # Raiz do Repositório
 │       ├── csv/               # Históricos e backups das projeções da IA
 │       └── nutri-alerta/      # Aplicação Next.js (Dashboard do Gestor)
 │
-└── Nutri for Schools/         # 2. Portal de Pesagem Escolar (Porta 3001)
+└── Nutri-for-Schools/         # 2. Portal de Pesagem Escolar (Porta 3001)
     └── project/
         └── nutri-alerta/      # Aplicação Next.js (Coletor Escolar)
 ```
@@ -160,20 +160,20 @@ Para maior praticidade em demonstrações locais, o projeto conta com um script 
     npm install
     npm run dev
     ```
-2.  **Portal Escolar (Nutri for Schools - Porta 3001):**
+2.  **Portal Escolar (Nutri-for-Schools - Porta 3001):**
     ```bash
-    cd "Nutri for Schools/project/nutri-alerta"
+    cd "Nutri-for-Schools/project/nutri-alerta"
     npm install
     npm run dev
     ```
 
 ---
 
-## 🔒 Segurança, LGPD & Privacidade (Conformidade Total)
+## 🔒 Segurança, LGPD & Privacidade (Conformidade Total por Privacy-by-Design)
 
-A engenharia do ecossistema NutriAlerta foi desenhada sob os pilares de **Privacy by Design** e em total conformidade com a **Lei Geral de Proteção de Dados (LGPD)**:
+A engenharia do ecossistema foi projetada sob o pilar de **Privacy-by-Design absoluto** e em total conformidade com a **Lei Geral de Proteção de Dados (LGPD)**:
 
-1.  **Zero Credenciais Expostas**: Nenhuma chave de banco de dados, privilégio administrativo ou credencial de IA está exposta no histórico do git. A validação é isolada no servidor via variáveis de ambiente robustas.
-2.  **Pseudonimização Criptográfica (SHA-256 HMAC)**: Dados sensíveis de menores de idade, como o CPF das crianças na pesagem, são submetidos a hash irreversível utilizando chave secreta municipal antes de serem persistidos no banco de dados.
-3.  **Criptografia Simétrica Avançada (AES-256-GCM)**: Nomes de alunos e responsáveis são criptografados a nível de servidor, impossibilitando a identificação dos menores mesmo em cenários extremos de vazamento do banco de dados.
-4.  **Bypass Seguro de Segurança RLS**: A comunicação do motor de ML e das APIs administrativas ocorre por conexões JWT seguras com a conta de serviço `nutrialerta@gmail.com`, permitindo o fluxo seguro de dados públicos sem comprometer a integridade do banco.
+1.  **Zero Coleta de Dados Pessoais Identificáveis (PII)**: Por escolha de arquitetura defensiva e respeito à privacidade infantil, o sistema **não** coleta, transmite ou armazena qualquer dado pessoal identificável dos alunos (como CPF, RG, nome completo ou dados dos responsáveis). A triagem de pesagem e IMC é 100% anônima desde a origem.
+2.  **Anonimização Nativa desde a Coleta**: A tabela `registros_saude` no banco centralizado na nuvem do Supabase armazena apenas dimensões biométricas e demográficas anônimas (`escola_id`, `genero`, `idade`, `peso`, `altura` e data da coleta). Conforme o Artigo 12 da LGPD, dados anonimizados não são considerados dados pessoais para fins de incidência da lei, eliminando qualquer risco à privacidade de identidade dos menores.
+3.  **Bypass Seguro com Row Level Security (RLS)**: Embora os registros antropométricos sejam 100% anônimos, a segurança a nível de banco de dados no Supabase é mantida rigorosamente com RLS, permitindo que apenas sessões devidamente autorizadas (autenticadas via SSO cross-port) ou conexões JWT e tokens administrativos realizem gravações.
+4.  **Zero Credenciais Expostas**: Nenhuma chave de API, segredo de banco de dados ou credencial de inteligência artificial está exposta no repositório. A orquestração das chaves ocorre de forma isolada a nível de servidor por meio de variáveis de ambiente robustas na Vercel e no GitHub Actions.
