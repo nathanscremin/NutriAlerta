@@ -1,5 +1,6 @@
 # Roteiro Estratégico de Apresentação de Alto Impacto (10 Minutos)
 ## Ecossistema Preditivo Epidemiológico NutriAlerta
+> *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Guia de Banca e Apresentação Sênior*
 
 Este guia foi elaborado para capacitar a equipe do **NutriAlerta** a apresentar todo o ecossistema de software, dados e inteligência artificial de forma brilhante no curto espaço de tempo de **10 minutos**. 
 
@@ -59,7 +60,7 @@ A estratégia principal baseia-se em **Show, Don't Tell** (demonstrar o software
 
 ---
 
-### 🟡 PARTE 4: Prontidão de Nuvem e Visão de Futuro (08:00 - 09:00)
+### ➔ PARTE 4: Prontidão de Nuvem e Visão de Futuro (08:00 - 09:00)
 *   **Slide 6: Escalabilidade e o Futuro**
 *   **O que falar:**
     > *"O NutriAlerta foi desenvolvido com arquitetura moderna e escalável. O ecossistema está tecnicamente pronto para deploy serverless gratuito em nuvem através da Vercel integrado ao banco Supabase, operando de forma 100% dinâmica. Para além disso, geramos uma base de conhecimento técnico detalhado sobre todo o modelo de Machine Learning, pronta para alimentar o **NutriBot**, nossa inteligência artificial consultora em formato de Chatbot que apoia o gestor a tirar dúvidas sobre o funcionamento do modelo e diretrizes do Ministério da Saúde."*
@@ -85,9 +86,9 @@ A banca tentará achar vulnerabilidades técnicas nos 10 minutos. Com este rotei
 *   **Resposta de Mestre (O golpe final de domínio matemático):**
     > *"Pelo contrário, o $R^2$ negativo é um fenômeno matemático amplamente documentado e **completamente esperado** nesta modelagem. O $R^2$ mede a proporção de variância explicada em relação à variância total dos dados de teste.*
     
-    > *Como a saúde populacional das UBSs de Rio Claro é relativamente estável ano a ano, a variação real (o Delta) histórica oscila de forma mínima, extremamente próxima de zero. Sob um denominador de variância total praticamente nulo, qualquer resíduo residual mínimo faz com que a fração de erro exceda 1.0, gerando um $R^2$ negativo.*
+    > *Como a saúde populacional das UBSs de Rio Claro é relativamente estável ano a ano, a variação real (o Delta) histórica oscila de forma mínima, extremamente próxima de zero. Sob um denominador de variância total praticamente nulo, qualquer desvio residual mínimo faz com que a fração de erro exceda 1.0, gerando um $R^2$ negativo.*
     
-    > *Para modelos preditivos baseados em **primeiras diferenças (Deltas)** em séries curtas e estáveis, o $R^2$ deixa de ser a métrica ideal de fidelidade. A métrica soberana na medicina e gestão pública é o **MAE (Erro Absoluto Médio)**. Nosso MAE médio de **0.41% na desnutrição e 0.64% na obesidade** atesta de forma inequívoca que a previsão das taxas é de alta precisão operacional."*
+    > *Para modelos preditivos baseados em **primeiras diferenças (Deltas)** em séries curtas e estáveis, o $R^2$ deixa de ser a métrica ideal de influência. A métrica soberana na medicina e gestão pública é o **MAE (Erro Absoluto Médio)**. Nosso MAE médio de **0.41% na desnutrição e 0.64% na obesidade** atesta de forma inequívoca que a previsão das taxas é de alta precisão operacional."*
 
 ### ❓ Pergunta 3: *"Os dados de projeção do dashboard realmente refletem as saídas puras do modelo de Python?"*
 *   **Resposta de Mestre:**

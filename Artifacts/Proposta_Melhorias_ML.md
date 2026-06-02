@@ -1,6 +1,6 @@
 # 🧠 Proposta de Evolução e Auditoria do Modelo de IA (NutriAlerta)
 > **Recomendações Técnicas para Aprimoramento e Validação da Inteligência Científica do Ecossistema**  
-> *Projeto Interdisciplinar · FATEC Rio Claro · 2026*
+> *Projeto Interdisciplinar · FATEC Rio Claro · 2026 · Dossiê de Artefatos*
 
 Este documento consolida uma série de diretrizes avançadas de Ciência de Dados e Engenharia de Machine Learning para elevar a precisão, confiabilidade clínica e governança ética dos modelos preditivos de tendência do **NutriAlerta**. 
 

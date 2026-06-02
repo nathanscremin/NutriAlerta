@@ -1,5 +1,6 @@
 # Relatório Técnico de Engenharia de Machine Learning
 ## Sistema Preditivo Epidemiológico NutriAlerta
+> *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · 2026 · Documentação de IA Avançada*
 
 Este documento descreve detalhadamente a arquitetura de Inteligência Artificial e Aprendizado de Máquina desenvolvida para o ecossistema **NutriAlerta**. O modelo é projetado para predizer a evolução dos perfis nutricionais (Desnutrição, Magreza, Eutrofia, Sobrepeso e Obesidade) da população atendida pelas Unidades Básicas de Saúde (UBS) do município para os próximos dois anos, utilizando variáveis socioambientais, estruturais e epidemiológicas urbanas.
 
@@ -113,7 +114,7 @@ Onde $SS_{\text{res}}$ é a soma dos quadrados dos resíduos (erros do modelo) e
 Em séries de saúde populacional consolidadas de municípios estáveis:
 1. **Baixa Variância das Variações ($\Delta$)**: O perfil nutricional de uma UBS não sofre mudanças violentas de um ano para o outro. Assim, os deltas reais históricos ($y_i$) oscilam de forma extremamente suave, muito próximos de zero.
 2. **Denominador Nulo**: Como os deltas reais são quase estáveis e próximos de zero, a variação total dos dados de teste ($SS_{\text{tot}}$) é **extremamente pequena** (próxima de zero).
-3. **Penalização Estatística**: Sob um denominador ($SS_{\text{tot}}$) minúsculo, qualquer desvio residual residual mínimo por parte do modelo ($\hat{y}_i - y_i$) faz com que a razão $\frac{SS_{\text{res}}}{SS_{\text{tot}}}$ exceda 1.0, empurrando o $R^2$ para valores negativos.
+3. **Penalização Estatística**: Sob um denominador ($SS_{\text{tot}}$) minúsculo, qualquer desvio residual mínimo por parte do modelo ($\hat{y}_i - y_i$) faz com que a razão $\frac{SS_{\text{res}}}{SS_{\text{tot}}}$ exceda 1.0, empurrando o $R^2$ para valores negativos.
 
 > [!IMPORTANT]
 > Na literatura estatística avançada, um $R^2$ negativo em modelos baseados em **primeiras diferenças (deltas)** de séries temporais curtas e altamente estáveis é **completamente normal e esperado**. Ele simplesmente indica que prever a direção exata de micro-oscilações é matematicamente mais complexo do que usar o valor médio histórico como baseline estrutural. No entanto, para fins de planejamento e vigilância em saúde, o **MAE (abaixo de 1.0%)** é a métrica soberana de validação prática, demonstrando um grau de confiabilidade médica e operacional formidável.
