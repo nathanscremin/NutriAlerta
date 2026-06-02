@@ -2,6 +2,14 @@
 > **Mapeamento Epidemiológico, Gestão de Saúde Coletiva e Inteligência Artificial Preditiva**  
 > *Projeto Interdisciplinar do 3º Semestre · FATEC Rio Claro · Saúde Pública & Inovação Tecnológica · Versão de Produção*
 
+---
+
+### 🌐 Link de Produção (Acesse Agora)
+O portal principal do ecossistema já está publicado na nuvem da Vercel integrado em tempo real ao Supabase!  
+👉 **[nutri-alerta.vercel.app](https://nutri-alerta.vercel.app/)**
+
+---
+
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -84,7 +92,7 @@ O desenvolvimento seguiu rigorosamente os ritos ágeis do framework **Scrum**, e
 
 ---
 
-## 📁 Estrutura do Repositório & Dossiê Técnico
+## 📂 Estrutura do Repositório
 
 O repositório está organizado como um **Monorepo Híbrido** sem espaços em pastas chave para total compatibilidade com pipelines de integração contínua (CI/CD) e hospedagem moderna na nuvem:
 
@@ -92,6 +100,15 @@ O repositório está organizado como um **Monorepo Híbrido** sem espaços em pa
 NutriAlerta/                   # Raiz do Repositório
 ├── .github/workflows/         # Automação CI/CD
 │   └── run_ml.yml             # Pipeline gratuito da IA (GitHub Actions)
+│
+├── Artifacts/                 # Dossiê de Documentos Oficiais do Showcase
+│   ├── Documentacao_Modelo_IA.md   # IA, RandomForest e Matemática de Projeções
+│   ├── Documentacao_Tecnica.md     # Tabelas DB, RLS, SSO e Segurança LGPD
+│   ├── Guia_Deploy_Nuvem.md        # Passo-a-passo detalhado para Deploy
+│   ├── PRD_Final.md                # Requisitos de Produto, Backlog e Métricas
+│   ├── Proposta_Melhorias_ML.md    # Auditoria de viés e ideias de expansão
+│   ├── Roteiro_Pitch_Showcase.md   # Pitch de 3 minutos para empresas
+│   └── roteiro_apresentacao_10min.md  # Roteiro de 10 minutos para Banca
 │
 ├── NutriAlerta/               # 1. Sistema do Gestor Municipal (Porta 3000)
 │   ├── models/                # Algoritmos e Motor de IA em Python
@@ -102,20 +119,24 @@ NutriAlerta/                   # Raiz do Repositório
 │       ├── csv/               # Históricos e backups das projeções da IA
 │       └── nutri-alerta/      # Aplicação Next.js (Dashboard do Gestor)
 │
-├── Nutri for Schools/         # 2. Portal de Pesagem Escolar (Porta 3001)
-│   └── project/
-│       └── nutri-alerta/      # Aplicação Next.js (Coletor Escolar)
-│
-├── iniciar_servidores.bat     # Utilitário para inicialização local automática
-├── documentacao_modelo_IA.md  # Dossiê acadêmico e científico da Inteligência Artificial
-├── guia_deploy_nuvem.md       # Guia oficial passo-a-passo para deploy na Vercel e Actions
-└── roteiro_apresentacao_10min.md # Roteiro de slides e Q&A para apresentação do projeto
+└── Nutri for Schools/         # 2. Portal de Pesagem Escolar (Porta 3001)
+    └── project/
+        └── nutri-alerta/      # Aplicação Next.js (Coletor Escolar)
 ```
 
-### 📚 Documentos Técnicos Relevantes:
-*   📖 **[Dossiê do Modelo de IA](documentacao_modelo_IA.md):** Fundamentação científica da escolha do Random Forest Regressor, validação cruzada temporal *Walk-Forward*, cálculo matemático dos deltas nutricionais e normalização L1.
-*   📖 **[Guia Oficial de Deploy Nuvem](guia_deploy_nuvem.md):** Passo a passo para configurar as chaves de segurança (Secrets) nas duas instâncias da Vercel e orquestrar a automação do pipeline.
-*   📖 **[Roteiro de Apresentação de 10 Minutos](roteiro_apresentacao_10min.md):** Estrutura minuto a minuto de slides e guia de defesa contra perguntas difíceis da banca examinadora.
+---
+
+## 📖 Dossiê de Documentos de Suporte (Clique para Ler)
+
+Para entender a fundo os detalhes do projeto, clique nos links abaixo para acessar diretamente os documentos explicativos oficiais do repositório (links relativos compatíveis com o GitHub):
+
+*   📄 **[Requisitos de Produto & Escopo (PRD_Final.md)](Artifacts/PRD_Final.md):** Apresenta o escopo do produto, a metodologia ágil adotada pelo time, o backlog final unificado e o checklist de conformidade ética em IA.
+*   📄 **[Manual e Documentação Técnica (Documentacao_Tecnica.md)](Artifacts/Documentacao_Tecnica.md):** Explica a arquitetura de software, o mapeamento de tabelas do banco Supabase (como `registros_saude` e `previsoes_nutricionais`), as regras de segurança RLS e o Single Sign-On (SSO) cross-port.
+*   📄 **[Dossiê do Modelo de IA & Matemática (Documentacao_Modelo_IA.md)](Artifacts/Documentacao_Modelo_IA.md):** Fundamenta cientificamente o uso do *Random Forest Regressor*, a validação cruzada temporal *Walk-Forward*, a modelagem de Deltas, restrição L1 e a projeção recursiva a dois anos.
+*   📄 **[Guia Prático de Deploy Nuvem (Guia_Deploy_Nuvem.md)](Artifacts/Guia_Deploy_Nuvem.md):** Guia com o passo a passo para orquestrar as chaves e variáveis de ambiente no deploy duplo na Vercel e disparadores automáticos no GitHub Actions.
+*   📄 **[Melhorias Futuras da IA (Proposta_Melhorias_ML.md)](Artifacts/Proposta_Melhorias_ML.md):** Auditoria de viés geográfico e de gênero (*Fairness*) e sugestões avançadas de melhoria para o modelo (LightGBM/XGBoost).
+*   📄 **[Roteiro de Pitch Executivo de 3 Minutos (Roteiro_Pitch_Showcase.md)](Artifacts/Roteiro_Pitch_Showcase.md):** Roteiro cronometrado focado em encantar representantes de empresas parceiras na feira do Showcase FATEC.
+*   📄 **[Roteiro de Apresentação de 10 Minutos para Banca (roteiro_apresentacao_10min.md)](Artifacts/roteiro_apresentacao_10min.md):** Roteiro estratégico de slides, dicas de ensaio e as táticas de defesa de perguntas difíceis para a banca examinadora.
 
 ---
 
