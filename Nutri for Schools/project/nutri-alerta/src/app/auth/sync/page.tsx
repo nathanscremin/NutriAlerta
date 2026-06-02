@@ -87,7 +87,7 @@ export default function AuthSyncPage() {
       // Substituímos o history entry para que os tokens não fiquem no histórico
       // do browser mesmo que o usuário pressione "voltar".
       window.history.replaceState(null, "", "/auth/sync");
-      router.replace("/dashboard");
+      window.location.href = "/dashboard";
     };
 
     run();
