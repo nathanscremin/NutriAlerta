@@ -22,6 +22,12 @@ export async function middleware(request: NextRequest) {
 
   // ── 1. Rota pública: raiz (/) ──────────────────────────────────────────────
   if (pathname === "/") {
+    // Se a rota for acionada com flag de logout, passa direto para processamento client-side
+    const isLogout = request.nextUrl.searchParams.get("logout") === "true";
+    if (isLogout) {
+      return NextResponse.next();
+    }
+
     const hasSbCookie = [...request.cookies.getAll()].some(
       (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
     );
