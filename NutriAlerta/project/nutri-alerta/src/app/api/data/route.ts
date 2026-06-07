@@ -202,7 +202,20 @@ async function fetchAndSyncDbData() {
     schoolYearGroups[key].Total++;
   });
 
-  const schoolMetrics: Record<string, any> = {};
+  // Load existing metrics for merging to avoid wiping out local historical data
+  let existingSchoolMetrics: Record<string, any> = {};
+  let existingSchoolMap: Record<string, any> = {};
+  try {
+    const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
+    const existingContent = await fs.readFile(jsonDestPath, 'utf8');
+    const existingData = JSON.parse(existingContent);
+    existingSchoolMetrics = existingData.schoolMetrics || {};
+    existingSchoolMap = existingData.schoolMap || {};
+  } catch (err) {
+    console.warn('[Supabase Cloud Sync] Could not read existing dbConsolidatedData.json for merging:', err);
+  }
+
+  const liveSchoolMetrics: Record<string, any> = {};
   Object.values(schoolYearGroups).forEach((g: any) => {
     const schMeta = schoolMap[g.escola_id];
     if (!schMeta) return;
@@ -211,8 +224,8 @@ async function fetchAndSyncDbData() {
     const total = g.Total;
     if (total === 0) return;
 
-    if (!schoolMetrics[schoolName]) {
-      schoolMetrics[schoolName] = {
+    if (!liveSchoolMetrics[schoolName]) {
+      liveSchoolMetrics[schoolName] = {
         nome: schoolName,
         lat: schMeta.poi ? schMeta.poi.lat : -22.41,
         lon: schMeta.poi ? schMeta.poi.lon : -47.56,
@@ -222,7 +235,7 @@ async function fetchAndSyncDbData() {
       };
     }
 
-    schoolMetrics[schoolName].anos[g.ano] = {
+    liveSchoolMetrics[schoolName].anos[g.ano] = {
       desnutricao: Number(((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(2)),
       magreza: Number(((g.Magreza_Qtd / total) * 100).toFixed(2)),
       eutrofia: Number(((g.Eutrofia_Qtd / total) * 100).toFixed(2)),
@@ -232,9 +245,32 @@ async function fetchAndSyncDbData() {
     };
   });
 
-  const dbConsolidatedResult = {
-    schoolMetrics,
-    schoolMap: Object.keys(schoolMap).reduce((acc: any, id: string) => {
+  // Merge live metrics into existing local metrics
+  const mergedSchoolMetrics = { ...existingSchoolMetrics };
+  Object.keys(liveSchoolMetrics).forEach((schoolName) => {
+    const liveSchool = liveSchoolMetrics[schoolName];
+    const existingSchool = mergedSchoolMetrics[schoolName];
+
+    if (!existingSchool) {
+      mergedSchoolMetrics[schoolName] = liveSchool;
+    } else {
+      mergedSchoolMetrics[schoolName] = {
+        ...existingSchool,
+        lat: liveSchool.lat ?? existingSchool.lat,
+        lon: liveSchool.lon ?? existingSchool.lon,
+        bairro: liveSchool.bairro ?? existingSchool.bairro,
+        regiao_ubs: liveSchool.regiao_ubs ?? existingSchool.regiao_ubs,
+        anos: {
+          ...(existingSchool.anos || {}),
+          ...(liveSchool.anos || {})
+        }
+      };
+    }
+  });
+
+  const mergedSchoolMap = {
+    ...existingSchoolMap,
+    ...Object.keys(schoolMap).reduce((acc: any, id: string) => {
       acc[id] = {
         nome: schoolMap[id].dbSchool.nome,
         bairro: schoolMap[id].bairro,
@@ -244,12 +280,17 @@ async function fetchAndSyncDbData() {
     }, {})
   };
 
+  const dbConsolidatedResult = {
+    schoolMetrics: mergedSchoolMetrics,
+    schoolMap: mergedSchoolMap
+  };
+
   try {
     const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
     await fs.writeFile(jsonDestPath, JSON.stringify(dbConsolidatedResult, null, 2), 'utf8');
   } catch (err) {}
 
-  return schoolMetrics;
+  return mergedSchoolMetrics;
 }
 
 const UNIDADES_SAUDE = [
