@@ -785,7 +785,6 @@ async function loadSupabasePrevisoes() {
         rec.obesidade = Number((Number(row.obesidade_pct || 0) + Number(row.obesidade_grave_pct || 0)).toFixed(2));
         rec.sobrepeso = Number(Number(row.sobrepeso_pct || 0).toFixed(2));
         rec.eutrofia = Number(Number(row.eutrofia_pct || 58).toFixed(2));
-        rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
         rec.total_avaliados = rec.total_avaliados || 0;
       } else if (row.tipo_projecao === 'desnutricao') {
         rec.desnutricao = Number(Number(row.magreza_acentuada_pct || 2.62).toFixed(2));
@@ -870,7 +869,6 @@ async function loadLocalCsvFallback(cwd: string) {
     rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
     rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
     rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
-    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
     rec.total_avaliados = Number(row.Total || 0);
   });
 
