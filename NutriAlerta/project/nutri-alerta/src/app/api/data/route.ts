@@ -921,6 +921,27 @@ async function loadLocalCsvFallback(cwd: string) {
   };
 }
 
+function mergeRegionalData(
+  historical: Record<string, Record<string, any>>,
+  predicted: Record<string, Record<string, any>>
+): Record<string, Record<string, any>> {
+  const merged = { ...historical };
+  Object.keys(predicted).forEach((year) => {
+    if (!merged[year]) {
+      merged[year] = { ...predicted[year] };
+    } else {
+      merged[year] = { ...merged[year] };
+      Object.keys(predicted[year]).forEach((ubsName) => {
+        merged[year][ubsName] = {
+          ...(merged[year][ubsName] || {}),
+          ...predicted[year][ubsName]
+        };
+      });
+    }
+  });
+  return merged;
+}
+
 export async function GET(req: NextRequest) {
   const isKvConfigured = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 
@@ -1044,12 +1065,14 @@ export async function GET(req: NextRequest) {
         });
 
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+        const historicalRegionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
 
         // Carrega prioritariamente as previsões epidemiológicas consolidada da nuvem do Supabase
         const cloudPredictions = await loadSupabasePrevisoes();
         if (cloudPredictions) {
-          regionalData = cloudPredictions.regionalData;
-          temporalData = cloudPredictions.temporalData;
+          regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
+          attachRegionalDeltaMetrics(regionalData);
+          temporalData = buildTemporalDataFromRegionalData(regionalData);
           sourceMeta = {
             source: 'supabase',
             fallbackReason: null,
@@ -1057,7 +1080,7 @@ export async function GET(req: NextRequest) {
             lastUpdated: new Date().toISOString()
           };
         } else {
-          regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+          regionalData = historicalRegionalData;
           attachRegionalDeltaMetrics(regionalData);
           temporalData = buildTemporalDataFromRegionalData(regionalData);
         }
@@ -1084,25 +1107,29 @@ export async function GET(req: NextRequest) {
         schoolMetrics = {};
       }
 
+      if (Object.keys(schoolMetrics).length > 0) {
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+      }
+      const historicalRegionalData = Object.keys(schoolMetrics).length > 0
+        ? buildRegionalDataFromSchoolMetrics(schoolMetrics)
+        : {};
+
       // Tenta prioritariamente carregar previsões em nuvem mesmo no cenário de contingência de escolas
       const cloudPredictions = await loadSupabasePrevisoes();
       if (cloudPredictions) {
-        regionalData = cloudPredictions.regionalData;
-        temporalData = cloudPredictions.temporalData;
+        regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
+        attachRegionalDeltaMetrics(regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
         sourceMeta = {
-          source: 'local-csv',
+          source: 'local-json',
           fallbackReason: dbErr?.message || 'School sync failed, using Cloud ML predictions',
           artifacts: ['previsoes_nutricionais'],
           lastUpdated: new Date().toISOString()
         };
-        if (Object.keys(schoolMetrics).length > 0) {
-          schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
-        }
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         yearsList = temporalData.map((entry) => entry.ano);
       } else if (Object.keys(schoolMetrics).length > 0) {
-        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
-        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        regionalData = historicalRegionalData;
         attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         temporalData = buildTemporalDataFromRegionalData(regionalData);
@@ -1115,8 +1142,9 @@ export async function GET(req: NextRequest) {
           artifacts: localFallback.artifacts,
           lastUpdated: new Date().toISOString()
         };
-        regionalData = localFallback.regionalData;
-        temporalData = localFallback.temporalData;
+        regionalData = mergeRegionalData(historicalRegionalData, localFallback.regionalData);
+        attachRegionalDeltaMetrics(regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
         bairroMetrics = localFallback.bairroMetrics;
         yearsList = temporalData.map((entry) => entry.ano);
       }
