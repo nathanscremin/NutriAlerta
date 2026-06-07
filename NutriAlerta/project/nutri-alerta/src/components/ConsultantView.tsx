@@ -136,6 +136,11 @@ export default function ConsultantView() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Persiste as mensagens no localStorage
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
+
 
 
   const filteredUbs = React.useMemo(() => {
@@ -293,6 +298,7 @@ export default function ConsultantView() {
               indicador,
               obesidade: dadosAno.obesidade,
               desnutricao: dadosAno.desnutricao,
+              magreza: dadosAno.magreza,
             }
           }
         })
