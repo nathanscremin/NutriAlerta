@@ -4,6 +4,8 @@ import path from 'path';
 import { exec } from 'child_process';
 import { getAdminSupabaseClient } from '@/lib/supabaseAdmin';
 import { kv } from '@vercel/kv';
+import dbConsolidatedLocal from '@/lib/dbConsolidatedData.json';
+import extractedPoisLocal from '@/lib/extractedPois.json';
 
 const CACHE_KEY = 'nutrialerta_data_cache';
 const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
@@ -79,14 +81,7 @@ async function fetchAndSyncDbData() {
   
   console.log(`[Supabase Cloud Sync] Loaded ${allRecords.length} records from Supabase.`);
 
-  const poisPath = path.join(cwd, 'src', 'lib', 'extractedPois.json');
-  let extractedPois: any[] = [];
-  try {
-    const poisContent = await fs.readFile(poisPath, 'utf8');
-    extractedPois = JSON.parse(poisContent);
-  } catch (err) {
-    console.warn('[Supabase Cloud Sync] extractedPois.json not found, using empty array.');
-  }
+  const extractedPois = (extractedPoisLocal as any[]) || [];
 
   const schoolMap: Record<string, any> = {};
   dbSchools.forEach((s: any) => {
@@ -202,18 +197,9 @@ async function fetchAndSyncDbData() {
     schoolYearGroups[key].Total++;
   });
 
-  // Load existing metrics for merging to avoid wiping out local historical data
-  let existingSchoolMetrics: Record<string, any> = {};
-  let existingSchoolMap: Record<string, any> = {};
-  try {
-    const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
-    const existingContent = await fs.readFile(jsonDestPath, 'utf8');
-    const existingData = JSON.parse(existingContent);
-    existingSchoolMetrics = existingData.schoolMetrics || {};
-    existingSchoolMap = existingData.schoolMap || {};
-  } catch (err) {
-    console.warn('[Supabase Cloud Sync] Could not read existing dbConsolidatedData.json for merging:', err);
-  }
+  // Load existing metrics from the statically imported JSON to ensure Vercel bundles it properly
+  const existingSchoolMetrics = (dbConsolidatedLocal as any).schoolMetrics || {};
+  const existingSchoolMap = (dbConsolidatedLocal as any).schoolMap || {};
 
   const liveSchoolMetrics: Record<string, any> = {};
   Object.values(schoolYearGroups).forEach((g: any) => {
@@ -1138,10 +1124,7 @@ export async function GET(req: NextRequest) {
       };
 
       try {
-        const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
-        const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
-        const dbConsolidated = JSON.parse(dbConsolidatedContent);
-        schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics || {}));
+        schoolMetrics = JSON.parse(JSON.stringify((dbConsolidatedLocal as any).schoolMetrics || {}));
       } catch (cacheErr) {
         schoolMetrics = {};
       }
