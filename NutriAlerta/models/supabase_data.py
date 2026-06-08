@@ -63,8 +63,8 @@ def get_supabase_config():
     return {
         'url': env_values.get('NEXT_PUBLIC_SUPABASE_URL', DEFAULT_SUPABASE_URL),
         'anon_key': env_values.get('NEXT_PUBLIC_SUPABASE_ANON_KEY', DEFAULT_SUPABASE_ANON_KEY),
-        'email': env_values.get('SUPABASE_EMAIL', DEFAULT_SUPABASE_EMAIL),
-        'password': env_values.get('SUPABASE_PASSWORD', DEFAULT_SUPABASE_PASSWORD),
+        'email': env_values.get('SUPABASE_EMAIL') or env_values.get('SUPABASE_ADMIN_EMAIL') or DEFAULT_SUPABASE_EMAIL,
+        'password': env_values.get('SUPABASE_PASSWORD') or env_values.get('SUPABASE_ADMIN_PASSWORD') or DEFAULT_SUPABASE_PASSWORD,
     }
 
 
