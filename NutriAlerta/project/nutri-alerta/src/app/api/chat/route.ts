@@ -140,6 +140,7 @@ function getSystemInstruction(context: any, contextoRAG: string) {
     const obs = screenData?.obesidade ?? 'não informado';
     const sob = screenData?.sobrepeso ?? 'não informado';
     const eut = screenData?.eutrofia ?? 'não informado';
+    const mag = screenData?.magreza ?? 'não informado';
 
     contextStr = `
     [[CONTEXTO DE ANÁLISE MULTINÍVEL]]
@@ -153,6 +154,7 @@ function getSystemInstruction(context: any, contextoRAG: string) {
     - % Obesidade: ${obs}%
     - % Sobrepeso: ${sob}%
     - % Desnutrição: ${des}%
+    - % Magreza: ${mag}%
     `;
 
     if (level === 'escola') {
@@ -201,6 +203,8 @@ function getLocalFallbackResponse(message: string, screenData: any) {
   let valor = 0;
   if (indicador === 'desnutricao') {
     valor = screenData?.desnutricao || 2.62;
+  } else if (indicador === 'magreza') {
+    valor = screenData?.magreza || 0.0;
   } else if (indicador === 'sobrepeso') {
     valor = screenData?.sobrepeso || 16.3;
   } else if (indicador === 'eutrofia') {
@@ -210,6 +214,7 @@ function getLocalFallbackResponse(message: string, screenData: any) {
   }
 
   const isHighRisk = (indicador === 'desnutricao' && valor > 3.0) || 
+                     (indicador === 'magreza' && valor > 4.0) || 
                      (indicador === 'obesidade' && valor > 13.0) ||
                      (indicador === 'sobrepeso' && valor > 18.0) ||
                      (indicador === 'eutrofia' && valor < 55.0);
@@ -305,7 +310,7 @@ const model = genAI.getGenerativeModel({
     role: "system",
     parts: [{ text: systemInstruction }]
   }
-});
+}, { apiVersion: 'v1beta' });
 
 const chat = model.startChat({ 
   history: historyForAPI,
@@ -338,7 +343,11 @@ const text = parts
 
   return NextResponse.json({ response: text, thinking: thinking || null });
     } catch (geminiErr: any) {
-      console.error("Gemini API call failed, falling back to smart local response:", geminiErr);
+      console.error("Gemini API call failed, falling back to smart local response. Exact error detail:", {
+        message: geminiErr.message,
+        stack: geminiErr.stack,
+        raw: geminiErr
+      });
       const fallbackText = getLocalFallbackResponse(message, context.screenData);
       return NextResponse.json({ response: fallbackText });
     }

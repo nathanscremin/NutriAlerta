@@ -27,7 +27,9 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_EMAIL: ${{ secrets.SUPABASE_EMAIL }}
-          SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD }}
+          SUPABASE_EMAIL: ${{ secrets.SUPABASE_EMAIL || secrets.SUPABASE_ADMIN_EMAIL }}
+          SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD || secrets.SUPABASE_ADMIN_PASSWORD }}
+          SUPABASE_ADMIN_EMAIL: ${{ secrets.SUPABASE_ADMIN_EMAIL || secrets.SUPABASE_EMAIL }}
+          SUPABASE_ADMIN_PASSWORD: ${{ secrets.SUPABASE_ADMIN_PASSWORD || secrets.SUPABASE_PASSWORD }}
         run: |
           python NutriAlerta/models/unified_ML.py

@@ -4,6 +4,8 @@ import path from 'path';
 import { exec } from 'child_process';
 import { getAdminSupabaseClient } from '@/lib/supabaseAdmin';
 import { kv } from '@vercel/kv';
+import dbConsolidatedLocal from '@/lib/dbConsolidatedData.json';
+import extractedPoisLocal from '@/lib/extractedPois.json';
 
 const CACHE_KEY = 'nutrialerta_data_cache';
 const CACHE_TTL = 60 * 60 * 6; // 6 horas em segundos
@@ -79,14 +81,7 @@ async function fetchAndSyncDbData() {
   
   console.log(`[Supabase Cloud Sync] Loaded ${allRecords.length} records from Supabase.`);
 
-  const poisPath = path.join(cwd, 'src', 'lib', 'extractedPois.json');
-  let extractedPois: any[] = [];
-  try {
-    const poisContent = await fs.readFile(poisPath, 'utf8');
-    extractedPois = JSON.parse(poisContent);
-  } catch (err) {
-    console.warn('[Supabase Cloud Sync] extractedPois.json not found, using empty array.');
-  }
+  const extractedPois = (extractedPoisLocal as any[]) || [];
 
   const schoolMap: Record<string, any> = {};
   dbSchools.forEach((s: any) => {
@@ -202,7 +197,11 @@ async function fetchAndSyncDbData() {
     schoolYearGroups[key].Total++;
   });
 
-  const schoolMetrics: Record<string, any> = {};
+  // Load existing metrics from the statically imported JSON to ensure Vercel bundles it properly
+  const existingSchoolMetrics = (dbConsolidatedLocal as any).schoolMetrics || {};
+  const existingSchoolMap = (dbConsolidatedLocal as any).schoolMap || {};
+
+  const liveSchoolMetrics: Record<string, any> = {};
   Object.values(schoolYearGroups).forEach((g: any) => {
     const schMeta = schoolMap[g.escola_id];
     if (!schMeta) return;
@@ -211,8 +210,8 @@ async function fetchAndSyncDbData() {
     const total = g.Total;
     if (total === 0) return;
 
-    if (!schoolMetrics[schoolName]) {
-      schoolMetrics[schoolName] = {
+    if (!liveSchoolMetrics[schoolName]) {
+      liveSchoolMetrics[schoolName] = {
         nome: schoolName,
         lat: schMeta.poi ? schMeta.poi.lat : -22.41,
         lon: schMeta.poi ? schMeta.poi.lon : -47.56,
@@ -222,7 +221,7 @@ async function fetchAndSyncDbData() {
       };
     }
 
-    schoolMetrics[schoolName].anos[g.ano] = {
+    liveSchoolMetrics[schoolName].anos[g.ano] = {
       desnutricao: Number(((g.Magreza_Acentuada_Qtd / total) * 100).toFixed(2)),
       magreza: Number(((g.Magreza_Qtd / total) * 100).toFixed(2)),
       eutrofia: Number(((g.Eutrofia_Qtd / total) * 100).toFixed(2)),
@@ -232,9 +231,32 @@ async function fetchAndSyncDbData() {
     };
   });
 
-  const dbConsolidatedResult = {
-    schoolMetrics,
-    schoolMap: Object.keys(schoolMap).reduce((acc: any, id: string) => {
+  // Merge live metrics into existing local metrics
+  const mergedSchoolMetrics = { ...existingSchoolMetrics };
+  Object.keys(liveSchoolMetrics).forEach((schoolName) => {
+    const liveSchool = liveSchoolMetrics[schoolName];
+    const existingSchool = mergedSchoolMetrics[schoolName];
+
+    if (!existingSchool) {
+      mergedSchoolMetrics[schoolName] = liveSchool;
+    } else {
+      mergedSchoolMetrics[schoolName] = {
+        ...existingSchool,
+        lat: liveSchool.lat ?? existingSchool.lat,
+        lon: liveSchool.lon ?? existingSchool.lon,
+        bairro: liveSchool.bairro ?? existingSchool.bairro,
+        regiao_ubs: liveSchool.regiao_ubs ?? existingSchool.regiao_ubs,
+        anos: {
+          ...(existingSchool.anos || {}),
+          ...(liveSchool.anos || {})
+        }
+      };
+    }
+  });
+
+  const mergedSchoolMap = {
+    ...existingSchoolMap,
+    ...Object.keys(schoolMap).reduce((acc: any, id: string) => {
       acc[id] = {
         nome: schoolMap[id].dbSchool.nome,
         bairro: schoolMap[id].bairro,
@@ -244,12 +266,17 @@ async function fetchAndSyncDbData() {
     }, {})
   };
 
+  const dbConsolidatedResult = {
+    schoolMetrics: mergedSchoolMetrics,
+    schoolMap: mergedSchoolMap
+  };
+
   try {
     const jsonDestPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
     await fs.writeFile(jsonDestPath, JSON.stringify(dbConsolidatedResult, null, 2), 'utf8');
   } catch (err) {}
 
-  return schoolMetrics;
+  return mergedSchoolMetrics;
 }
 
 const UNIDADES_SAUDE = [
@@ -774,22 +801,40 @@ async function loadSupabasePrevisoes() {
       return regionalData[year][ubsName];
     };
 
+    const schoolPredictions: Record<string, Record<string, any>> = {};
+
     rows.forEach((row: any) => {
       const year = String(row.ano);
       const ubsName = cnesToUbsMap[row.cnes];
-      if (!ubsName) return;
-
-      const rec = getOrInit(year, ubsName, row.cnes);
-
-      if (row.tipo_projecao === 'obesidade') {
-        rec.obesidade = Number((Number(row.obesidade_pct || 0) + Number(row.obesidade_grave_pct || 0)).toFixed(2));
-        rec.sobrepeso = Number(Number(row.sobrepeso_pct || 0).toFixed(2));
-        rec.eutrofia = Number(Number(row.eutrofia_pct || 58).toFixed(2));
-        rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
-        rec.total_avaliados = rec.total_avaliados || 0;
-      } else if (row.tipo_projecao === 'desnutricao') {
-        rec.desnutricao = Number(Number(row.magreza_acentuada_pct || 2.62).toFixed(2));
-        rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
+      
+      if (ubsName) {
+        const rec = getOrInit(year, ubsName, row.cnes);
+        if (row.tipo_projecao === 'obesidade') {
+          rec.obesidade = Number((Number(row.obesidade_pct || 0) + Number(row.obesidade_grave_pct || 0)).toFixed(2));
+          rec.sobrepeso = Number(Number(row.sobrepeso_pct || 0).toFixed(2));
+          rec.eutrofia = Number(Number(row.eutrofia_pct || 58).toFixed(2));
+          rec.total_avaliados = rec.total_avaliados || 0;
+        } else if (row.tipo_projecao === 'desnutricao') {
+          rec.desnutricao = Number(Number(row.magreza_acentuada_pct || 2.62).toFixed(2));
+          rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
+        }
+      } else {
+        const schoolName = row.cnes;
+        schoolPredictions[schoolName] = schoolPredictions[schoolName] || {};
+        schoolPredictions[schoolName][year] = schoolPredictions[schoolName][year] || {
+          ano: Number(year),
+          status: Number(year) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO'
+        };
+        const rec = schoolPredictions[schoolName][year];
+        if (row.tipo_projecao === 'obesidade') {
+          rec.obesidade = Number((Number(row.obesidade_pct || 0) + Number(row.obesidade_grave_pct || 0)).toFixed(2));
+          rec.sobrepeso = Number(Number(row.sobrepeso_pct || 0).toFixed(2));
+          rec.eutrofia = Number(Number(row.eutrofia_pct || 58).toFixed(2));
+          rec.total_avaliados = rec.total_avaliados || 0;
+        } else if (row.tipo_projecao === 'desnutricao') {
+          rec.desnutricao = Number(Number(row.magreza_acentuada_pct || 2.62).toFixed(2));
+          rec.magreza = Number(Number(row.magreza_pct || 0).toFixed(2));
+        }
       }
     });
 
@@ -815,12 +860,34 @@ async function loadSupabasePrevisoes() {
       });
     });
 
+    Object.keys(schoolPredictions).forEach((schoolName) => {
+      Object.keys(schoolPredictions[schoolName]).forEach((year) => {
+        const rec = schoolPredictions[schoolName][year];
+        const normalized = normalizePercentages(
+          {
+            desnutricao: rec.desnutricao ?? 2.62,
+            magreza: rec.magreza ?? 0,
+            obesidade: rec.obesidade ?? 12.93,
+            sobrepeso: rec.sobrepeso ?? 15.2,
+            eutrofia: rec.eutrofia ?? 61.55
+          },
+          ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+        );
+        rec.desnutricao = normalized.desnutricao;
+        rec.magreza = normalized.magreza;
+        rec.obesidade = normalized.obesidade;
+        rec.sobrepeso = normalized.sobrepeso;
+        rec.eutrofia = normalized.eutrofia;
+      });
+    });
+
     attachRegionalDeltaMetrics(regionalData);
 
     return {
       regionalData,
       temporalData: buildTemporalDataFromRegionalData(regionalData),
       bairroMetrics: {},
+      schoolPredictions,
       source: 'supabase-cloud' as const,
       artifacts: ['previsoes_nutricionais']
     };
@@ -835,10 +902,11 @@ async function loadLocalCsvFallback(cwd: string) {
   const desnutricaoPath = await findCSVFile(['NutriAlerta_Projecao_Desnutricao.csv']);
 
   const regionalData: Record<string, Record<string, any>> = {};
+  const schoolPredictions: Record<string, Record<string, any>> = {};
   const temporalData = createDefaultTemporalData();
 
   if (!obesityPath || !desnutricaoPath) {
-    return { regionalData, temporalData, bairroMetrics: {}, source: 'local-json' as const, artifacts: [] };
+    return { regionalData, temporalData, bairroMetrics: {}, schoolPredictions: {}, source: 'local-json' as const, artifacts: [] };
   }
 
   const obesityRows = parseCSV(await fs.readFile(obesityPath, 'utf-8'));
@@ -861,31 +929,62 @@ async function loadLocalCsvFallback(cwd: string) {
     const year = String(row.Ano);
     const lat = Number(row.lat_ubs);
     const lon = Number(row.lon_ubs);
-    if (!year || isNaN(lat) || isNaN(lon)) return;
+    if (!year) return;
 
-    const ubsName = findNearestUbsName(lat, lon);
-    if (!ubsName) return;
+    const isSchool = isNaN(Number(row.CNES || row.cnes));
 
-    const rec = getOrInit(year, ubsName, row);
-    rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
-    rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
-    rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
-    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
-    rec.total_avaliados = Number(row.Total || 0);
+    if (isSchool) {
+      const schoolName = String(row.CNES || row.cnes);
+      schoolPredictions[schoolName] = schoolPredictions[schoolName] || {};
+      schoolPredictions[schoolName][year] = schoolPredictions[schoolName][year] || {
+        ano: Number(year),
+        status: Number(year) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO'
+      };
+      const rec = schoolPredictions[schoolName][year];
+      rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
+      rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
+      rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
+      rec.total_avaliados = Number(row.Total || 0);
+    } else {
+      if (isNaN(lat) || isNaN(lon)) return;
+      const ubsName = findNearestUbsName(lat, lon);
+      if (!ubsName) return;
+
+      const rec = getOrInit(year, ubsName, row);
+      rec.obesidade = Number(((row.Obesidade_Pct || 0) + (row.Obesidade_Grave_Pct || 0)).toFixed(2));
+      rec.sobrepeso = Number((row.Sobrepeso_Pct || 0).toFixed(2));
+      rec.eutrofia = Number((row.Eutrofia_Pct || 58).toFixed(2));
+      rec.total_avaliados = Number(row.Total || 0);
+    }
   });
 
   desnutricaoRows.forEach((row) => {
     const year = String(row.Ano);
     const lat = Number(row.lat_ubs);
     const lon = Number(row.lon_ubs);
-    if (!year || isNaN(lat) || isNaN(lon)) return;
+    if (!year) return;
 
-    const ubsName = findNearestUbsName(lat, lon);
-    if (!ubsName) return;
+    const isSchool = isNaN(Number(row.CNES || row.cnes));
 
-    const rec = getOrInit(year, ubsName, row);
-    rec.desnutricao = Number((row.Tendencia_Desnutricao || row.Magreza_Pct || 2.62).toFixed(2));
-    rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
+    if (isSchool) {
+      const schoolName = String(row.CNES || row.cnes);
+      schoolPredictions[schoolName] = schoolPredictions[schoolName] || {};
+      schoolPredictions[schoolName][year] = schoolPredictions[schoolName][year] || {
+        ano: Number(year),
+        status: Number(year) >= 2026 ? 'PREVISÃO' : 'DADO HISTÓRICO'
+      };
+      const rec = schoolPredictions[schoolName][year];
+      rec.desnutricao = Number((row.Tendencia_Desnutricao || row.Magreza_Pct || 2.62).toFixed(2));
+      rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
+    } else {
+      if (isNaN(lat) || isNaN(lon)) return;
+      const ubsName = findNearestUbsName(lat, lon);
+      if (!ubsName) return;
+
+      const rec = getOrInit(year, ubsName, row);
+      rec.desnutricao = Number((row.Tendencia_Desnutricao || row.Magreza_Pct || 2.62).toFixed(2));
+      rec.magreza = Number((row.Magreza_Pct || 0).toFixed(2));
+    }
   });
 
   Object.keys(regionalData).forEach((year) => {
@@ -910,15 +1009,88 @@ async function loadLocalCsvFallback(cwd: string) {
     });
   });
 
+  Object.keys(schoolPredictions).forEach((schoolName) => {
+    Object.keys(schoolPredictions[schoolName]).forEach((year) => {
+      const rec = schoolPredictions[schoolName][year];
+      const normalized = normalizePercentages(
+        {
+          desnutricao: rec.desnutricao ?? 2.62,
+          magreza: rec.magreza ?? 0,
+          obesidade: rec.obesidade ?? 12.93,
+          sobrepeso: rec.sobrepeso ?? 15.2,
+          eutrofia: rec.eutrofia ?? 61.55
+        },
+        ['desnutricao', 'magreza', 'obesidade', 'sobrepeso', 'eutrofia']
+      );
+      rec.desnutricao = normalized.desnutricao;
+      rec.magreza = normalized.magreza;
+      rec.obesidade = normalized.obesidade;
+      rec.sobrepeso = normalized.sobrepeso;
+      rec.eutrofia = normalized.eutrofia;
+    });
+  });
+
   attachRegionalDeltaMetrics(regionalData);
 
   return {
     regionalData,
     temporalData: buildTemporalDataFromRegionalData(regionalData),
     bairroMetrics: {},
+    schoolPredictions,
     source: 'local-csv' as const,
     artifacts: ['NutriAlerta_Projecao_Futura.csv', 'NutriAlerta_Projecao_Desnutricao.csv']
   };
+}
+
+function mergeRegionalData(
+  historical: Record<string, Record<string, any>>,
+  predicted: Record<string, Record<string, any>>
+): Record<string, Record<string, any>> {
+  const merged = { ...historical };
+  Object.keys(predicted).forEach((year) => {
+    if (!merged[year]) {
+      merged[year] = { ...predicted[year] };
+    } else {
+      merged[year] = { ...merged[year] };
+      Object.keys(predicted[year]).forEach((ubsName) => {
+        merged[year][ubsName] = {
+          ...(merged[year][ubsName] || {}),
+          ...predicted[year][ubsName]
+        };
+      });
+    }
+  });
+  return merged;
+}
+
+function mergeSchoolPredictions(
+  schoolMetrics: Record<string, any>,
+  schoolPredictions: Record<string, Record<string, any>>
+): Record<string, any> {
+  const merged = { ...schoolMetrics };
+  Object.keys(schoolPredictions).forEach((schoolName) => {
+    if (merged[schoolName]) {
+      merged[schoolName] = {
+        ...merged[schoolName],
+        anos: {
+          ...(merged[schoolName].anos || {}),
+          ...Object.keys(schoolPredictions[schoolName]).reduce((acc: any, year) => {
+            const pred = schoolPredictions[schoolName][year];
+            acc[year] = {
+              desnutricao: pred.desnutricao,
+              magreza: pred.magreza,
+              eutrofia: pred.eutrofia,
+              sobrepeso: pred.sobrepeso,
+              obesidade: pred.obesidade,
+              total_avaliados: pred.total_avaliados || 100
+            };
+            return acc;
+          }, {})
+        }
+      };
+    }
+  });
+  return merged;
 }
 
 export async function GET(req: NextRequest) {
@@ -1044,12 +1216,19 @@ export async function GET(req: NextRequest) {
         });
 
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+        const historicalRegionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
 
         // Carrega prioritariamente as previsões epidemiológicas consolidada da nuvem do Supabase
         const cloudPredictions = await loadSupabasePrevisoes();
         if (cloudPredictions) {
-          regionalData = cloudPredictions.regionalData;
-          temporalData = cloudPredictions.temporalData;
+          regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
+          attachRegionalDeltaMetrics(regionalData);
+          temporalData = buildTemporalDataFromRegionalData(regionalData);
+          
+          if (cloudPredictions.schoolPredictions) {
+            schoolMetrics = mergeSchoolPredictions(schoolMetrics, cloudPredictions.schoolPredictions);
+          }
+
           sourceMeta = {
             source: 'supabase',
             fallbackReason: null,
@@ -1057,7 +1236,7 @@ export async function GET(req: NextRequest) {
             lastUpdated: new Date().toISOString()
           };
         } else {
-          regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+          regionalData = historicalRegionalData;
           attachRegionalDeltaMetrics(regionalData);
           temporalData = buildTemporalDataFromRegionalData(regionalData);
         }
@@ -1076,33 +1255,39 @@ export async function GET(req: NextRequest) {
       };
 
       try {
-        const dbConsolidatedPath = path.join(cwd, 'src', 'lib', 'dbConsolidatedData.json');
-        const dbConsolidatedContent = await fs.readFile(dbConsolidatedPath, 'utf-8');
-        const dbConsolidated = JSON.parse(dbConsolidatedContent);
-        schoolMetrics = JSON.parse(JSON.stringify(dbConsolidated.schoolMetrics || {}));
+        schoolMetrics = JSON.parse(JSON.stringify((dbConsolidatedLocal as any).schoolMetrics || {}));
       } catch (cacheErr) {
         schoolMetrics = {};
       }
 
+      if (Object.keys(schoolMetrics).length > 0) {
+        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+      }
+      const historicalRegionalData = Object.keys(schoolMetrics).length > 0
+        ? buildRegionalDataFromSchoolMetrics(schoolMetrics)
+        : {};
+
       // Tenta prioritariamente carregar previsões em nuvem mesmo no cenário de contingência de escolas
       const cloudPredictions = await loadSupabasePrevisoes();
       if (cloudPredictions) {
-        regionalData = cloudPredictions.regionalData;
-        temporalData = cloudPredictions.temporalData;
+        regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
+        attachRegionalDeltaMetrics(regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
         sourceMeta = {
-          source: 'local-csv',
+          source: 'local-json',
           fallbackReason: dbErr?.message || 'School sync failed, using Cloud ML predictions',
           artifacts: ['previsoes_nutricionais'],
           lastUpdated: new Date().toISOString()
         };
-        if (Object.keys(schoolMetrics).length > 0) {
-          schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
+        
+        if (cloudPredictions.schoolPredictions) {
+          schoolMetrics = mergeSchoolPredictions(schoolMetrics, cloudPredictions.schoolPredictions);
         }
+
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         yearsList = temporalData.map((entry) => entry.ano);
       } else if (Object.keys(schoolMetrics).length > 0) {
-        schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
-        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        regionalData = historicalRegionalData;
         attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         temporalData = buildTemporalDataFromRegionalData(regionalData);
@@ -1115,8 +1300,14 @@ export async function GET(req: NextRequest) {
           artifacts: localFallback.artifacts,
           lastUpdated: new Date().toISOString()
         };
-        regionalData = localFallback.regionalData;
-        temporalData = localFallback.temporalData;
+        regionalData = mergeRegionalData(historicalRegionalData, localFallback.regionalData);
+        attachRegionalDeltaMetrics(regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
+        
+        if (localFallback.schoolPredictions) {
+          schoolMetrics = mergeSchoolPredictions(schoolMetrics, localFallback.schoolPredictions);
+        }
+
         bairroMetrics = localFallback.bairroMetrics;
         yearsList = temporalData.map((entry) => entry.ano);
       }

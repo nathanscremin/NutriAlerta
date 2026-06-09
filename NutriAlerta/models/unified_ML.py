@@ -16,7 +16,9 @@ def obter_caminho_salvamento(nome_arquivo):
     script_dir = Path(__file__).resolve().parent
     candidatos = [
         script_dir.parent / 'project' / 'csv' / nome_arquivo,
+        script_dir.parent / 'project' / 'nutri-alerta' / 'src' / 'lib' / nome_arquivo,
         Path('project') / 'csv' / nome_arquivo,
+        Path('project') / 'nutri-alerta' / 'src' / 'lib' / nome_arquivo,
         script_dir / nome_arquivo,
         Path(nome_arquivo),
     ]
@@ -335,6 +337,97 @@ def run_pipeline(df_master=None):
 
     df_consolidado = gerar_projecoes(df_master, modelos)
 
+    # ── PROJEÇÕES EM NÍVEL DE ESCOLA ─────────────────────────────────────────
+    caminho_json = obter_caminho_salvamento('dbConsolidatedData.json')
+    df_schools_final_futura = pd.DataFrame()
+    df_schools_final_desnutricao = pd.DataFrame()
+
+    if caminho_json.exists():
+        try:
+            print(f"[ML - Escolas] Lendo métricas históricas de escolas a partir de: {caminho_json}")
+            with open(caminho_json, 'r', encoding='utf-8') as f:
+                consolidated_data = json.load(f)
+                school_metrics = consolidated_data.get('schoolMetrics', {})
+                
+                records = []
+                for school_name, info in school_metrics.items():
+                    parent_ubs = info.get('regiao_ubs', 'UBS Jardim Chervezon “Dr. Nicolino Maziotti”')
+                    for year_str, metrics in info.get('anos', {}).items():
+                        year = int(year_str)
+                        records.append({
+                            'CNES': school_name,  # Guardamos o nome da escola no CNES para reuso do fluxo
+                            'Ano': year,
+                            'Faixa_Etaria': '0 a 18 anos',
+                            'Magreza_Acentuada_Pct': float(metrics.get('desnutricao', 2.62)),
+                            'Magreza_Pct': float(metrics.get('magreza', 0.0)),
+                            'Eutrofia_Pct': float(metrics.get('eutrofia', 61.55)),
+                            'Sobrepeso_Pct': float(metrics.get('sobrepeso', 15.2)),
+                            'Obesidade_Pct': float(metrics.get('obesidade', 12.93)),
+                            'Obesidade_Grave_Pct': 0.0,
+                            'Total': int(metrics.get('total_avaliados', 100)),
+                            'parent_ubs': parent_ubs
+                        })
+                
+                if records:
+                    df_schools_nutri = pd.DataFrame(records)
+                    
+                    # Extrai as features espaciais associadas ao parent_ubs da escola
+                    # Agrupamos df_master por CNES para ter um registro por UBS
+                    df_geo_map = df_master.drop_duplicates(subset=['CNES']).copy()
+                    
+                    from supabase_data import UBS_CNES
+                    cnes_mapping = {name: cnes for name, cnes in UBS_CNES.items()}
+                    df_schools_nutri['parent_cnes'] = df_schools_nutri['parent_ubs'].map(cnes_mapping)
+                    
+                    geo_cols = [
+                        'cnes', 'lat_ubs', 'lon_ubs', 'qtd_esc_publicas', 'qtd_esc_privadas',
+                        'esc_media_desnutricao', 'esc_media_obesidade', 'esc_media_sobrepeso', 'esc_media_eutrofia',
+                        'qtd_fastfood', 'qtd_supermercados', 'qtd_pracas_esporte', 'acesso_transporte'
+                    ]
+                    df_geo_cols = df_geo_map[['CNES'] + [c for c in geo_cols if c in df_geo_map.columns]].copy()
+                    df_geo_cols.columns = ['parent_cnes'] + [c for c in geo_cols if c in df_geo_map.columns]
+                    
+                    df_schools_master = pd.merge(df_schools_nutri, df_geo_cols, on='parent_cnes', how='left')
+                    df_schools_master['Faixa_Etaria_Cod'] = 0
+                    df_schools_master = df_schools_master.sort_values(by=['CNES', 'Ano'])
+                    
+                    df_schools_master = criar_tendencias(df_schools_master)
+                    
+                    df_schools_consolidado = gerar_projecoes(df_schools_master, modelos)
+                    
+                    # Obesidade escolas
+                    df_schools_final_futura = df_schools_consolidado.copy()
+                    df_schools_final_futura['Magreza_Acentuada_Pct'] = df_schools_final_futura['Tendencia_Desnutricao']
+                    df_schools_final_futura['Magreza_Pct'] = df_schools_final_futura['Tendencia_Magreza']
+                    df_schools_final_futura['Eutrofia_Pct'] = df_schools_final_futura['Tendencia_Eutrofia']
+                    df_schools_final_futura['Sobrepeso_Pct'] = df_schools_final_futura['Tendencia_Sobrepeso']
+                    df_schools_final_futura['Obesidade_Pct'] = df_schools_final_futura['Tendencia_Obesidade']
+                    if 'Obesidade_Grave_Pct' in df_schools_final_futura.columns:
+                        future_mask = df_schools_final_futura['Status'] == 'PREVISÃO FUTURA'
+                        df_schools_final_futura.loc[future_mask, 'Obesidade_Grave_Pct'] = 0.0
+                    df_schools_final_futura['Delta_Predito'] = df_schools_final_futura.get('Delta_Predito_Obesidade', 0.0)
+                    df_schools_final_futura['Delta_Obesidade'] = df_schools_final_futura['Delta_Predito_Obesidade']
+
+                    # Desnutrição escolas
+                    df_schools_final_desnutricao = df_schools_consolidado.copy()
+                    df_schools_final_desnutricao['Magreza_Acentuada_Pct'] = df_schools_final_desnutricao['Tendencia_Desnutricao']
+                    df_schools_final_desnutricao['Magreza_Pct'] = df_schools_final_desnutricao['Tendencia_Magreza']
+                    df_schools_final_desnutricao['Eutrofia_Pct'] = df_schools_final_desnutricao['Tendencia_Eutrofia']
+                    df_schools_final_desnutricao['Sobrepeso_Pct'] = df_schools_final_desnutricao['Tendencia_Sobrepeso']
+                    df_schools_final_desnutricao['Obesidade_Pct'] = df_schools_final_desnutricao['Tendencia_Obesidade']
+                    if 'Obesidade_Grave_Pct' in df_schools_final_desnutricao.columns:
+                        future_mask = df_schools_final_desnutricao['Status'] == 'PREVISÃO FUTURA'
+                        df_schools_final_desnutricao.loc[future_mask, 'Obesidade_Grave_Pct'] = 0.0
+                    df_schools_final_desnutricao['Delta_Predito'] = df_schools_final_desnutricao['Delta_Predito_Desnutricao']
+                    df_schools_final_desnutricao['Delta_Desnutricao'] = df_schools_final_desnutricao['Delta_Predito_Desnutricao']
+                    
+                    print(f"[OK] Projeções ML geradas com sucesso para {len(school_metrics)} escolas.")
+        except Exception as e:
+            print(f"[ERRO] Falha ao processar predições de escolas: {e}")
+    else:
+        print(f"[AVISO] dbConsolidatedData.json não encontrado em: {caminho_json}. Ignorando predições por escola.")
+
+    # ── PROCESSAMENTO E SALVAMENTO (UBS) ─────────────────────────────────────
     df_final_futura = df_consolidado.copy()
     df_final_futura['Magreza_Acentuada_Pct'] = df_final_futura['Tendencia_Desnutricao']
     df_final_futura['Magreza_Pct'] = df_final_futura['Tendencia_Magreza']
@@ -348,16 +441,22 @@ def run_pipeline(df_master=None):
     df_final_futura['Delta_Predito'] = df_final_futura.get('Delta_Predito_Obesidade', 0.0)
     df_final_futura['Delta_Obesidade'] = df_final_futura['Delta_Predito_Obesidade']
 
+    # Combina com as predições das escolas se disponíveis
+    df_final_futura_combined = df_final_futura
+    if not df_schools_final_futura.empty:
+        common_cols = list(set(df_final_futura.columns).intersection(set(df_schools_final_futura.columns)))
+        df_final_futura_combined = pd.concat([df_final_futura[common_cols], df_schools_final_futura[common_cols]], ignore_index=True)
+
     # 1. Gravação dos arquivos locais para contingência offline do dashboard
     caminho_obesidade = obter_caminho_salvamento('NutriAlerta_Projecao_Futura.csv')
     caminho_obesidade_2 = obter_caminho_salvamento('NutriAlerta_Projecao_Futura-2.csv')
-    df_final_futura.to_csv(caminho_obesidade, index=False)
-    df_final_futura.to_csv(caminho_obesidade_2, index=False)
+    df_final_futura_combined.to_csv(caminho_obesidade, index=False)
+    df_final_futura_combined.to_csv(caminho_obesidade_2, index=False)
 
     # 2. Upsert na tabela do Supabase em nuvem
     try:
         print("[Supabase Cloud Sync] Iniciando upsert das projeções de Obesidade...")
-        upsert_previsoes_supabase(df_final_futura, tipo_projecao='obesidade')
+        upsert_previsoes_supabase(df_final_futura_combined, tipo_projecao='obesidade')
     except Exception as e:
         print(f"[ERRO Supabase Sync] Falha no upsert de obesidade: {e}")
 
@@ -374,14 +473,20 @@ def run_pipeline(df_master=None):
     df_final_desnutricao['Delta_Predito'] = df_final_desnutricao['Delta_Predito_Desnutricao']
     df_final_desnutricao['Delta_Desnutricao'] = df_final_desnutricao['Delta_Predito_Desnutricao']
 
+    # Combina com as predições das escolas se disponíveis
+    df_final_desnutricao_combined = df_final_desnutricao
+    if not df_schools_final_desnutricao.empty:
+        common_cols_des = list(set(df_final_desnutricao.columns).intersection(set(df_schools_final_desnutricao.columns)))
+        df_final_desnutricao_combined = pd.concat([df_final_desnutricao[common_cols_des], df_schools_final_desnutricao[common_cols_des]], ignore_index=True)
+
     # 1. Gravação dos arquivos locais para contingência offline do dashboard
     caminho_desnutricao = obter_caminho_salvamento('NutriAlerta_Projecao_Desnutricao.csv')
-    df_final_desnutricao.to_csv(caminho_desnutricao, index=False)
+    df_final_desnutricao_combined.to_csv(caminho_desnutricao, index=False)
 
     # 2. Upsert na tabela do Supabase em nuvem
     try:
         print("[Supabase Cloud Sync] Iniciando upsert das projeções de Desnutrição...")
-        upsert_previsoes_supabase(df_final_desnutricao, tipo_projecao='desnutricao')
+        upsert_previsoes_supabase(df_final_desnutricao_combined, tipo_projecao='desnutricao')
     except Exception as e:
         print(f"[ERRO Supabase Sync] Falha no upsert de desnutrição: {e}")
 
