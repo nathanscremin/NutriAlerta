@@ -289,10 +289,14 @@ export default function LoginPage() {
   useEffect(() => {
     (async () => {
       const searchParams = new URLSearchParams(window.location.search);
+      const isRestricted = searchParams.get("restricted") === "true";
       if (searchParams.get("logout") === "true") {
         await supabase.auth.signOut();
         const projectRef = getProjectRef();
         document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        if (isRestricted) {
+          setError("Acesso restrito. O usuário de teste possui permissão exclusiva para acessar o NutriAlerta (Painel Gestor).");
+        }
         window.history.replaceState(null, "", window.location.pathname);
         return;
       }
@@ -379,6 +383,16 @@ export default function LoginPage() {
       if (system === "nutrialerta") {
         navigating = true;
         router.push("/dashboard");
+        return;
+      }
+
+      // Bloqueio de segurança para usuário de teste no Nutri for Schools
+      if (email.trim().toLowerCase() === "teste@nutrialerta.com") {
+        setError("Acesso restrito. O usuário de teste possui permissão exclusiva para acessar o NutriAlerta (Painel Gestor).");
+        await supabase.auth.signOut();
+        const projectRef = getProjectRef();
+        document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        setLoading(false);
         return;
       }
 

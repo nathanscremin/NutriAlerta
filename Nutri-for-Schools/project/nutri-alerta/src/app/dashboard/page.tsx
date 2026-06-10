@@ -174,6 +174,21 @@ export default function UnifiedSchoolPortal() {
 
       // Determine active role based on e-mail
       const userEmail = session.user.email || '';
+
+      // Bloqueio de Segurança para o usuário de teste de apresentação no portal escolar
+      if (userEmail.toLowerCase() === 'teste@nutrialerta.com') {
+        await supabase.auth.signOut();
+        const getProjectRef = () => {
+          const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+          const match = url.match(/https:\/\/([^.]+)\.supabase\.(co|net)/);
+          return match ? match[1] : "peqvaslchaxrewhtxltc";
+        };
+        const projectRef = getProjectRef();
+        document.cookie = `sb-${projectRef}-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+        window.location.href = `${nutrialertaUrl}?logout=true&restricted=true`;
+        return;
+      }
+
       const superAdminCheck = userEmail === 'nutrialerta@gmail.com';
       setIsSuperAdmin(superAdminCheck);
 
