@@ -9,7 +9,7 @@ import requests
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, r2_score
 
-from supabase_data import build_master_dataset, get_supabase_config
+from supabase_data import build_master_dataset, get_supabase_config, locate_file
 
 
 def obter_caminho_salvamento(nome_arquivo):
@@ -255,7 +255,7 @@ def upsert_previsoes_supabase(df, tipo_projecao):
     registros = []
     for _, row in df.iterrows():
         registros.append({
-            'cnes':                      str(row['CNES']),
+            'cnes':                      str(row['CNES'])[:50],
             'ano':                       int(row['Ano']),
             'faixa_etaria_cod':          int(row['Faixa_Etaria_Cod']),
             'status':                    str(row['Status']),
@@ -280,7 +280,7 @@ def upsert_previsoes_supabase(df, tipo_projecao):
         print(f"[ERRO] Falha na autenticação Supabase para upsert '{tipo_projecao}': {e}")
         return
 
-    url = f"{base_url}/rest/v1/previsoes_nutricionais"
+    url = f"{base_url}/rest/v1/previsoes_nutricionais?on_conflict=cnes,ano,faixa_etaria_cod,tipo_projecao"
     total = len(registros)
     erros = 0
     for i in range(0, total, BATCH_SIZE):
@@ -338,7 +338,7 @@ def run_pipeline(df_master=None):
     df_consolidado = gerar_projecoes(df_master, modelos)
 
     # ── PROJEÇÕES EM NÍVEL DE ESCOLA ─────────────────────────────────────────
-    caminho_json = obter_caminho_salvamento('dbConsolidatedData.json')
+    caminho_json = locate_file('dbConsolidatedData.json')
     df_schools_final_futura = pd.DataFrame()
     df_schools_final_desnutricao = pd.DataFrame()
 

@@ -1069,11 +1069,14 @@ function mergeSchoolPredictions(
 ): Record<string, any> {
   const merged = { ...schoolMetrics };
   Object.keys(schoolPredictions).forEach((schoolName) => {
-    if (merged[schoolName]) {
-      merged[schoolName] = {
-        ...merged[schoolName],
+    const matchingKey = Object.keys(merged).find(
+      (k) => k === schoolName || k.startsWith(schoolName) || schoolName.startsWith(k)
+    );
+    if (matchingKey) {
+      merged[matchingKey] = {
+        ...merged[matchingKey],
         anos: {
-          ...(merged[schoolName].anos || {}),
+          ...(merged[matchingKey].anos || {}),
           ...Object.keys(schoolPredictions[schoolName]).reduce((acc: any, year) => {
             const pred = schoolPredictions[schoolName][year];
             acc[year] = {
@@ -1216,15 +1219,10 @@ export async function GET(req: NextRequest) {
         });
 
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
-        const historicalRegionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
 
         // Carrega prioritariamente as previsões epidemiológicas consolidada da nuvem do Supabase
         const cloudPredictions = await loadSupabasePrevisoes();
         if (cloudPredictions) {
-          regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
-          attachRegionalDeltaMetrics(regionalData);
-          temporalData = buildTemporalDataFromRegionalData(regionalData);
-          
           if (cloudPredictions.schoolPredictions) {
             schoolMetrics = mergeSchoolPredictions(schoolMetrics, cloudPredictions.schoolPredictions);
           }
@@ -1235,13 +1233,13 @@ export async function GET(req: NextRequest) {
             artifacts: ['previsoes_nutricionais'],
             lastUpdated: new Date().toISOString()
           };
-        } else {
-          regionalData = historicalRegionalData;
-          attachRegionalDeltaMetrics(regionalData);
-          temporalData = buildTemporalDataFromRegionalData(regionalData);
         }
 
+        // Agrupa todas as informações a partir das escolas finalizadas (histórico + previsões)
+        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+        attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
         yearsList = temporalData.map((entry) => entry.ano);
       } else {
         throw new Error('Supabase returned empty school metrics');
@@ -1263,34 +1261,34 @@ export async function GET(req: NextRequest) {
       if (Object.keys(schoolMetrics).length > 0) {
         schoolMetrics = projectSchoolMetricsForward(schoolMetrics);
       }
-      const historicalRegionalData = Object.keys(schoolMetrics).length > 0
-        ? buildRegionalDataFromSchoolMetrics(schoolMetrics)
-        : {};
 
       // Tenta prioritariamente carregar previsões em nuvem mesmo no cenário de contingência de escolas
       const cloudPredictions = await loadSupabasePrevisoes();
       if (cloudPredictions) {
-        regionalData = mergeRegionalData(historicalRegionalData, cloudPredictions.regionalData);
-        attachRegionalDeltaMetrics(regionalData);
-        temporalData = buildTemporalDataFromRegionalData(regionalData);
+        if (cloudPredictions.schoolPredictions) {
+          schoolMetrics = mergeSchoolPredictions(schoolMetrics, cloudPredictions.schoolPredictions);
+        }
         sourceMeta = {
           source: 'local-json',
           fallbackReason: dbErr?.message || 'School sync failed, using Cloud ML predictions',
           artifacts: ['previsoes_nutricionais'],
           lastUpdated: new Date().toISOString()
         };
-        
-        if (cloudPredictions.schoolPredictions) {
-          schoolMetrics = mergeSchoolPredictions(schoolMetrics, cloudPredictions.schoolPredictions);
-        }
+      }
 
-        bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
-        yearsList = temporalData.map((entry) => entry.ano);
-      } else if (Object.keys(schoolMetrics).length > 0) {
-        regionalData = historicalRegionalData;
+      // Agrupa todas as informações a partir das escolas se disponíveis
+      if (Object.keys(schoolMetrics).length > 0) {
+        regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
         attachRegionalDeltaMetrics(regionalData);
         bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
         temporalData = buildTemporalDataFromRegionalData(regionalData);
+        yearsList = temporalData.map((entry) => entry.ano);
+      } else if (cloudPredictions) {
+        // Fallback extremo caso não tenha escolas mas tenha previsões de nuvem de UBS
+        regionalData = cloudPredictions.regionalData;
+        attachRegionalDeltaMetrics(regionalData);
+        temporalData = buildTemporalDataFromRegionalData(regionalData);
+        bairroMetrics = {};
         yearsList = temporalData.map((entry) => entry.ano);
       } else if (obesityPath && desnutricaoPath) {
         const localFallback = await loadLocalCsvFallback(cwd);
@@ -1300,16 +1298,24 @@ export async function GET(req: NextRequest) {
           artifacts: localFallback.artifacts,
           lastUpdated: new Date().toISOString()
         };
-        regionalData = mergeRegionalData(historicalRegionalData, localFallback.regionalData);
-        attachRegionalDeltaMetrics(regionalData);
-        temporalData = buildTemporalDataFromRegionalData(regionalData);
         
         if (localFallback.schoolPredictions) {
           schoolMetrics = mergeSchoolPredictions(schoolMetrics, localFallback.schoolPredictions);
         }
 
-        bairroMetrics = localFallback.bairroMetrics;
-        yearsList = temporalData.map((entry) => entry.ano);
+        if (Object.keys(schoolMetrics).length > 0) {
+          regionalData = buildRegionalDataFromSchoolMetrics(schoolMetrics);
+          attachRegionalDeltaMetrics(regionalData);
+          bairroMetrics = buildBairroMetricsFromSchoolMetrics(schoolMetrics, regionalData);
+          temporalData = buildTemporalDataFromRegionalData(regionalData);
+          yearsList = temporalData.map((entry) => entry.ano);
+        } else {
+          regionalData = localFallback.regionalData;
+          attachRegionalDeltaMetrics(regionalData);
+          temporalData = localFallback.temporalData;
+          bairroMetrics = localFallback.bairroMetrics;
+          yearsList = localFallback.temporalData.map((entry) => entry.ano);
+        }
       }
     }
 

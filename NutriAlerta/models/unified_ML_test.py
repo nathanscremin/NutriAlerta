@@ -253,7 +253,7 @@ def upsert_previsoes_supabase(df, tipo_projecao):
     registros = []
     for _, row in df.iterrows():
         registros.append({
-            'cnes':                      str(row['CNES']),
+            'cnes':                      str(row['CNES'])[:50],
             'ano':                       int(row['Ano']),
             'faixa_etaria_cod':          int(row['Faixa_Etaria_Cod']),
             'status':                    str(row['Status']),
@@ -278,7 +278,7 @@ def upsert_previsoes_supabase(df, tipo_projecao):
         print(f"[ERRO] Falha na autenticação Supabase para upsert '{tipo_projecao}': {e}")
         return
 
-    url = f"{base_url}/rest/v1/previsoes_nutricionais"
+    url = f"{base_url}/rest/v1/previsoes_nutricionais?on_conflict=cnes,ano,faixa_etaria_cod,tipo_projecao"
     total = len(registros)
     erros = 0
     for i in range(0, total, BATCH_SIZE):
